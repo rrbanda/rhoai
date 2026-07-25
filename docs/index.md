@@ -1,6 +1,6 @@
 ---
 template: home.html
-title: RHOAI Tutorials
+title: RHOAI Guides
 hide:
   - toc
 ---
@@ -19,7 +19,7 @@ Fine-tune LLMs with smaller, efficient architectures on RHOAI 3.4. This track co
 
 <div class="featured-track-buttons" markdown>
 
-[Start the Tutorial](getting-started/overview.md){ .md-button .md-button--primary }
+[Start the Guide](getting-started/overview.md){ .md-button .md-button--primary }
 [5-Minute Quickstart](getting-started/quickstart.md){ .md-button }
 
 </div>

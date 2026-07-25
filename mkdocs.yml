@@ -1,6 +1,6 @@
-site_name: RHOAI Tutorials
+site_name: RHOAI Guides
 site_url: https://rrbanda.github.io/rhoai/
-site_description: Hands-on tutorials for Red Hat OpenShift AI 3.4
+site_description: Hands-on guides for Red Hat OpenShift AI 3.4
 repo_url: https://github.com/rrbanda/rhoai
 repo_name: rrbanda/rhoai
 
