@@ -68,3 +68,4 @@ graph LR
 - [Setup & First Pipeline](quickstart.md) — Environment setup and your first training run
 - [Choosing an Algorithm](choosing-an-algorithm.md) — Decide between SFT, OSFT, LoRA, and GRPO
 - [Knowledge Tuning Pipeline](../end-to-end/knowledge-tuning.md) — Full end-to-end walkthrough
+- [Financial Agent Pipeline](../end-to-end/financial-agent.md) — Fine-tune a tool-calling agent for financial services (validated on RHOAI 3.4.2)

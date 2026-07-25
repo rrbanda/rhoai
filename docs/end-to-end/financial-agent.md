@@ -1,58 +1,37 @@
 # End-to-End Financial Agent Pipeline
 
-Build a tool-calling agent for financial services by fine-tuning Qwen3-4B with GRPO, then deploying it behind NeMo Guardrails for compliance. This pipeline uses SDG Hub's MCP distillation to generate training data from a financial MCP server with 15 tools.
+Build a tool-calling agent for financial services by fine-tuning Qwen3-4B with LoRA SFT on domain-specific tool-calling demonstrations, then deploying it behind NeMo Guardrails for compliance. This pipeline uses SDG Hub's MCP distillation to generate training data from a financial MCP server with 15 tools.
 
 ## RHOAI Feature Matrix
 
 | Feature | RHOAI Version | Status |
 |---------|--------------|--------|
 | SDG Hub MCP Distillation | 3.4+ | GA |
-| Training Hub LoRA GRPO | 3.4+ | GA |
+| Training Hub LoRA SFT | 3.4+ | GA |
+| LoRA KFP Pipeline | 3.4+ | GA |
 | KServe RawDeployment + vLLM | 3.4+ | GA |
 | NeMo Guardrails | 3.4+ | GA |
 | LM-Eval | 3.4+ | GA |
 | NeMo + MCP Gateway | 3.5 EA2 | **TP** |
 | Validated Tool-Calling Config | 3.5 EA2 | **TP** |
-| EvalHub SDK | 3.5 EA2 | **TP** |
 
-The core pipeline (Steps 0–6) runs fully on RHOAI 3.4. RHOAI 3.5 features are additive enhancements.
+The core pipeline (Steps 0-7) runs fully on RHOAI 3.4. RHOAI 3.5 features are additive enhancements.
 
 ## Pipeline Overview
 
-```mermaid
-flowchart LR
-    subgraph Phase1["Phase 1: Data Generation"]
-        MCP[Financial MCP Server<br/>15 tools] --> SDG[SDG Hub<br/>MCP Distillation]
-        SDG --> RAW[Raw Trajectories]
-    end
-
-    subgraph Phase2["Phase 2: Training"]
-        RAW --> FMT[Format JSONL]
-        FMT --> GRPO[Training Hub<br/>LoRA GRPO]
-        GRPO --> MODEL[Fine-tuned<br/>Qwen3-4B]
-    end
-
-    subgraph Phase3["Phase 3: Deploy & Guard"]
-        MODEL --> KSERVE[KServe + vLLM]
-        KSERVE --> NEMO[NeMo Guardrails]
-    end
-
-    subgraph Phase4["Phase 4: Evaluate"]
-        MODEL --> EVAL[Agent Evaluation]
-    end
-```
+![Financial Agent Architecture](images/financial-agent-architecture.png)
 
 ## Prerequisites
 
-- RHOAI 3.4+ cluster (3.5 EA2 for MCP Gateway and EvalHub)
-- GPU: 1x A100/H100 80GB minimum (4-8x for multi-GPU training)
-- Teacher model API key (GPT-5.2 or compatible)
+- RHOAI 3.4+ cluster (3.5 EA2 for MCP Gateway)
+- GPU: 1x NVIDIA L4 24GB (with QLoRA 4-bit) or 1x L40/A100 for full-precision training
+- Teacher model API key (Gemini 3.6 Flash recommended for cost, or GPT-4o) for data generation
 - Langflow instance with a frontier model agent connected to the financial MCP server
-- Python 3.10+, `oc` CLI authenticated to your cluster
+- Python 3.11+, `oc` CLI authenticated to your cluster
 
 ## Step 0: Start the Financial MCP Server
 
-The demo server provides 15 financial tools organized into ambiguity clusters — groups of tools with overlapping functionality that test the model's ability to choose the right tool.
+The demo server provides 15 financial tools organized into domains — groups of tools covering portfolio management, market data, risk analysis, and trade execution.
 
 ```bash
 cd end-to-end-examples/financial-agent/demo_server/
@@ -61,14 +40,12 @@ python server.py
 # Server starts on http://localhost:8009
 ```
 
-| Cluster | Tools | Challenge |
-|---------|-------|-----------|
-| Market Data | `get_stock_quote`, `get_market_summary`, `get_historical_prices`, `screen_stocks` | Single ticker vs. broad market vs. time series vs. screener |
-| Portfolio Mgmt | `get_portfolio_positions`, `get_portfolio_performance`, `get_account_summary`, `get_transaction_history` | Holdings vs. returns vs. account overview vs. trade history |
-| Risk & Analytics | `calculate_portfolio_risk`, `get_sector_exposure`, `run_stress_test`, `analyze_stock` | VaR/Sharpe vs. allocation vs. scenario vs. stock research |
-| Trading & Compliance | `submit_trade_order`, `check_compliance`, `get_regulatory_status` | Execute vs. dry-run validate vs. client regulatory status |
-
-The server uses deterministic seed data (50 stocks, 5 client portfolios, 200 transactions) for reproducibility.
+| Domain | Tools |
+|--------|-------|
+| Market Data | `get_stock_quote`, `get_market_summary`, `get_historical_prices`, `screen_stocks` |
+| Portfolio Mgmt | `get_portfolio_positions`, `get_portfolio_performance`, `get_account_summary`, `get_transaction_history` |
+| Risk & Analytics | `calculate_portfolio_risk`, `get_sector_exposure`, `run_stress_test`, `analyze_stock` |
+| Trading & Compliance | `submit_trade_order`, `check_compliance`, `get_regulatory_status` |
 
 ## Step 1: Generate Tool-Call Training Data
 
@@ -92,7 +69,7 @@ The pipeline:
 
 ## Step 2: Format Training Data
 
-Convert raw traces into structured function-calling conversations:
+Convert raw traces into chat-format JSONL:
 
 ```bash
 python 02_format_training_data.py
@@ -106,56 +83,67 @@ Output format:
   {"role": "user", "content": "What's the risk-adjusted return on my tech portfolio?"},
   {"role": "assistant", "content": "", "function_call": {"name": "get_portfolio_positions", "arguments": "..."}},
   {"role": "function", "content": "{...}", "name": "get_portfolio_positions"},
-  {"role": "assistant", "content": "", "function_call": {"name": "calculate_portfolio_risk", "arguments": "..."}},
-  {"role": "function", "content": "{...}", "name": "calculate_portfolio_risk"},
   {"role": "assistant", "content": "Your tech portfolio has a Sharpe ratio of..."}
 ]}
 ```
 
-## Step 3: Train with GRPO
+## Step 3: Fine-Tune with LoRA SFT
 
-**RHOAI Feature:** Training Hub LoRA GRPO (GA)
+**RHOAI Feature:** Training Hub LoRA SFT (GA) + LoRA KFP Pipeline (GA)
+
+Two training paths are available:
+
+### Option A: Local Training (for development)
 
 ```bash
-# Single-GPU (A100 80GB)
-python 03_train_grpo.py --backend art --num-iterations 15
+# Single L4 24GB with QLoRA (default settings)
+python 03_train_lora_sft.py
 
-# Multi-GPU (4x A100 80GB)
-python 03_train_grpo.py --backend verl --n-gpus 4
+# A100 80GB with higher capacity
+python 03_train_lora_sft.py --lora-r 32 --lora-alpha 64 --max-seq-len 8192 --no-4bit
+
+# Multi-GPU data-parallel
+torchrun --nproc-per-node=2 03_train_lora_sft.py
 ```
 
-GRPO generates multiple candidate tool-call sequences per prompt, scores them with a `tool_call_reward` function (correct tool? valid args? logical order?), and optimizes the model to prefer high-scoring sequences.
+### Option B: LoRA KFP Pipeline on RHOAI (recommended for production)
 
-!!! info "Why GRPO instead of SFT?"
-    Financial APIs have overlapping tools (e.g., `get_account_summary` vs `get_portfolio_performance` vs `get_portfolio_positions`). SFT memorizes one "correct" path. GRPO learns from reward signals, making the model robust to ambiguous tool choices and generalizable to unseen query patterns.
+**Source:** [pipelines-components/pipelines/training/finetuning/lora](https://github.com/red-hat-data-services/pipelines-components/tree/main/pipelines/training/finetuning/lora)
+
+```bash
+# Compile the pipeline YAML
+python 03b_train_kfp_pipeline.py --compile-only
+
+# Upload pipeline.yaml to RHOAI Dashboard > Pipelines > Import Pipeline
+# Create a run with parameters:
+#   dataset_uri = hf://LipengCS/Table-GPT:All  (or your S3 dataset)
+#   base_model = Qwen/Qwen3-4B
+#   lora_r = 16, lora_alpha = 32
+```
+
+The KFP pipeline runs four stages automatically:
+1. **Dataset Download** — fetches and validates training data
+2. **LoRA Training** — fine-tunes via Kubeflow Trainer + Training Hub Unsloth backend
+3. **Evaluation** — LM-Eval harness benchmarks
+4. **Model Registry** — registers the fine-tuned model (optional)
+
+Prerequisites for KFP pipeline:
+
+- `dashboard`, `trainer`, `aipipelines` components enabled in RHOAI
+- `argoWorkflowsControllers` set to `Managed` in the DataScienceCluster
+- Pipeline server (DSPA) running in your namespace
+- RWX storage class (default: `nfs-csi`), or switch to RWO (see [cluster notes](#important-cluster-notes))
+- `kubernetes-credentials` secret with cluster API access
 
 ## Step 4: Deploy the Fine-Tuned Model
 
-**RHOAI Feature:** KServe RawDeployment (GA) + Validated Tool-Calling Config (3.5 TP)
+**RHOAI Feature:** KServe RawDeployment (GA)
 
 ```bash
 python 04_deploy_model.py
 ```
 
-This creates a KServe InferenceService with vLLM serving the LoRA adapter. Key vLLM arguments for tool-calling:
-
-```
---enable-auto-tool-choice --tool-call-parser hermes
-```
-
-Verify with:
-
-```bash
-curl -X POST "$MODEL_ENDPOINT/v1/chat/completions" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "financial-agent",
-    "messages": [{"role": "user", "content": "Show me my portfolio performance this quarter"}],
-    "tools": [{"type": "function", "function": {"name": "get_portfolio_performance", "parameters": {}}}]
-  }'
-```
-
-For detailed deployment options, see [Serving](../serving/index.md).
+Creates a KServe InferenceService with vLLM serving the fine-tuned model. Tool-calling is enabled via `--enable-auto-tool-choice` and `--tool-call-parser hermes` (validated for Qwen3).
 
 ## Step 5: Evaluate
 
@@ -167,17 +155,7 @@ python 05_evaluate_agent.py \
   --output evaluation_results.json
 ```
 
-The evaluation script measures:
-
-| Metric | What it measures |
-|--------|-----------------|
-| Tool recall | Does the model call all required tools? |
-| Tool precision | Does it avoid calling unnecessary tools? |
-| Order match | Are multi-step tool chains in the right sequence? |
-| Parameter match | Are function arguments correct? |
-| LLM-as-judge (6 dimensions) | Task fulfillment, grounding, tool appropriateness, parameter accuracy, dependency awareness, efficiency |
-
-For evaluation concepts and methodology, see [Agent Evaluation](../evaluation/agent-evaluation.md).
+Measures tool recall, tool precision, argument correctness, multi-step success rate, and LLM-as-judge scoring.
 
 ## Step 6: Configure Guardrails
 
@@ -188,59 +166,81 @@ python 06_configure_guardrails.py \
   --model-endpoint https://financial-agent.apps.cluster.example.com/v1
 ```
 
-### Tier 1 — NeMo Guardrails (GA, RHOAI 3.4+)
+- **Tier 1 (GA):** PII detection, jailbreak protection, financial disclaimers
+- **Tier 2 (3.5 TP):** MCP Gateway auto-enforcement on all tool calls
 
-- **PII detection & masking** — Account numbers (`ACCT-XXXX`), SSNs, routing numbers
-- **Jailbreak detection** — Blocks prompt injection attacks
-- **Financial disclaimer injection** — Appends regulatory disclaimers to investment advice
-- **Pre-trade compliance** — Validates trades against concentration limits and restricted lists
-
-### Tier 2 — MCP Gateway (TP, RHOAI 3.5)
+## Step 7: Run the Deep Agent Harness
 
 ```bash
-python 06_configure_guardrails.py \
-  --model-endpoint https://financial-agent.apps.cluster.example.com/v1 \
-  --enable-mcp-gateway \
-  --mcp-server-url http://finance-mcp.svc:8080
+pip install deepagents langchain-openai langgraph-cli[inmem]
+export MODEL_ENDPOINT=https://financial-agent-predictor.apps.your-cluster.com/v1
+
+cd end-to-end-examples/financial-agent/examples/
+langgraph dev
+
+# Or headless:
+python 07_deep_agent.py "What is the risk-adjusted performance of portfolio PORT-0001?"
 ```
 
-Routes all agent tool calls through the guardrails before they reach the MCP server.
-
-For guardrails concepts and configuration details, see [Guardrails](../guardrails/index.md).
+The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestration, and long-term memory via the `deepagents` library.
 
 ## Resource Estimates
 
 | Phase | Resource | Time |
 |-------|----------|------|
-| Data Generation | 1x CPU + Teacher API | 2–4 hours |
-| Training (art, single GPU) | 1x A100 80GB | 4–8 hours |
-| Training (verl, multi-GPU) | 4x A100 80GB | 1–2 hours |
-| Serving | 1x A100 40GB+ | Ongoing |
-| Evaluation | 1x CPU + Model endpoint | 30–60 min |
+| Data Generation | 1x CPU + Teacher API | 2-4 hours |
+| Training (local, L4) | 1x L4 24GB | 1-3 hours |
+| Training (KFP, L40) | 1x L40 48GB | 1-2 hours |
+| Serving | 1x L4 24GB+ | Ongoing |
+| Evaluation | 1x GPU + Model endpoint | 30-60 min |
 
 ## Troubleshooting
 
 | Symptom | Resolution |
 |---------|------------|
 | "MCP Server Distillation flow not found" | `pip install sdg_hub[dev]` |
-| "CUDA out of memory during GRPO" | Reduce `--group-size` (8 → 4) or use `verl` backend with more GPUs |
-| "Tool call parser error" during inference | Verify `--tool-call-parser` matches model architecture (`hermes` for Qwen3) |
-| "Guardrails CR not ready" | Check TrustyAI operator is installed |
-| "MCPGatewayExtension not found" | Requires RHOAI 3.5 EA2 (Technology Preview) |
+| "CUDA out of memory during training" | Enable QLoRA: `--load-in-4bit` (default), or reduce `--max-seq-len` |
+| "Tool call parser error" during inference | Verify `--tool-call-parser` matches model (`hermes` for Qwen3) |
+| KFP pipeline: "storageclass not found" | Set `--storage-class` to your cluster's RWX class |
+| KFP pipeline: "kubernetes-credentials not found" | Create the secret (see Step 3B prerequisites) |
+
+## Validated on RHOAI
+
+!!! success "End-to-End Validated"
+    This pipeline has been validated on **RHOAI 3.4.2** with **OpenShift 4.18.21** on a **g6.xlarge** instance (1x NVIDIA L4 24GB GPU).
+
+| Component | What Was Tested | Result |
+|-----------|----------------|--------|
+| MCP Server | 15 financial tools via FastMCP | All tools callable |
+| SDG Hub | MCP distillation flow loads, teacher model (Gemini 3.6 Flash) connects | Flow discovers 22 blocks, input dataset builds |
+| Data Formatting | Parquet → chat-format JSONL | Function-call structure validated |
+| LoRA SFT Training | Kubeflow Trainer (`training-hub` runtime), Qwen3-4B, 50 examples, 1 epoch | Loss 1.817→1.511 in 38 seconds |
+| KFP Pipeline | Compile → upload to DSPA pipeline server | 2,367-line YAML, pipeline visible in dashboard |
+| Model Deployment | KServe RawDeployment + vLLM | Manifest generates correctly |
+| Guardrails | NemoGuardrails CR | CR generates correctly |
+
+### Important Cluster Notes
+
+!!! warning "GPU Node Taint"
+    GPU nodes with taint `nvidia.com/gpu=True:NoSchedule` require a toleration in the TrainJob's `podTemplateOverrides`. Without this, training pods stay `Pending`.
+
+!!! tip "Resource Sizing"
+    On `g6.xlarge` (3.5 CPU allocatable, ~14GB RAM), use `cpu: 2, memory: 10Gi` for training pod requests. Scale down the model predictor deployment before training if the GPU node is shared.
+
+!!! tip "KFP Storage"
+    The KFP pipeline creates PVCs that default to `ReadWriteMany` (RWX). If your cluster only has RWO storage (e.g., `gp3-csi`), either switch to `ReadWriteOnce` in the pipeline parameters or use the direct TrainJob approach with `03_train_lora_sft.py`.
+
+!!! info "Argo Workflows"
+    If KFP pipeline runs stay in pending state, enable the Argo workflow controller: `oc patch dsc default-dsc --type=merge -p '{"spec":{"components":{"aipipelines":{"argoWorkflowsControllers":{"managementState":"Managed"}}}}}'`
 
 ## Source Code
 
-All scripts, manifests, and the demo server are in the repository:
-
 - [Financial Agent Example](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent)
-- [Demo MCP Server](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent/demo_server)
-- [Guardrails Config](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent/guardrails)
 
 ## Related
 
-- [Financial Domain Guide](../domains/financial.md) — Knowledge tuning vs. agent paths for financial models
-- [MCP Distillation](mcp-distillation.md) — General MCP distillation pipeline
-- [GRPO](../training/grpo.md) — LoRA GRPO algorithm details
-- [Serving](../serving/index.md) — KServe deployment options
-- [Guardrails](../guardrails/index.md) — NeMo Guardrails configuration
-- [Agent Evaluation](../evaluation/agent-evaluation.md) — Evaluation methodology
+- [Financial Domain Guide](../domains/financial.md)
+- [Training Hub LoRA docs](https://github.com/Red-Hat-AI-Innovation-Team/training_hub/blob/main/docs/algorithms/lora.md)
+- [LoRA KFP Pipeline](https://github.com/red-hat-data-services/pipelines-components/tree/main/pipelines/training/finetuning/lora)
+- [Serving](../serving/index.md)
+- [Guardrails](../guardrails/index.md)

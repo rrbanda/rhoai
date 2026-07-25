@@ -158,6 +158,7 @@ Evaluation metrics:
 
 ## Related
 
+- [Financial Agent Pipeline](financial-agent.md) — Full end-to-end example using MCP distillation + LoRA SFT for financial services (validated on RHOAI 3.4.2)
 - [GRPO](../training/grpo.md) — Training algorithm details
 - [Agent Evaluation](../evaluation/agent-evaluation.md) — Evaluate tool-use models
 - [Knowledge Tuning Pipeline](knowledge-tuning.md) — Alternative pipeline for knowledge injection

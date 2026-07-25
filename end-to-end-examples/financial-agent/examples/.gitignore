@@ -1,0 +1,7 @@
+.env
+generated_data/
+checkpoints/
+pipelines-components/
+__pycache__/
+*.pyc
+.venv/

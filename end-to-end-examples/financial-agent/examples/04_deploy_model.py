@@ -24,7 +24,7 @@ Requirements:
     pip install kubernetes requests
 
 Usage:
-    python 04_deploy_model.py --model-path s3://my-bucket/models/financial-agent-grpo
+    python 04_deploy_model.py --model-path s3://my-bucket/models/financial-agent-lora
     python 04_deploy_model.py --model-path /mnt/models/financial-agent --storage-type pvc
     python 04_deploy_model.py --model-path s3://bucket/model --tool-call-parser auto --gpu-count 4
 

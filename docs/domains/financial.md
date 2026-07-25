@@ -7,7 +7,7 @@ This guide covers fine-tuning models for financial services — from knowledge-b
 | Path | Algorithm | Use Case | Example |
 |------|-----------|----------|---------|
 | **Knowledge injection** | SFT / OSFT | Answer questions about financial products, regulations, markets | "Explain the wash-sale rule" |
-| **Tool-calling agent** | LoRA GRPO | Call financial APIs, execute trades, manage portfolios | "Buy 100 shares of AAPL in my portfolio" |
+| **Tool-calling agent** | LoRA SFT | Call financial APIs, execute trades, manage portfolios | "Buy 100 shares of AAPL in my portfolio" |
 
 For a full end-to-end worked example of the agent path, see the [Financial Agent Pipeline](../end-to-end/financial-agent.md).
 
@@ -76,14 +76,14 @@ osft(
 
 ## Path 2: Financial Tool-Calling Agent
 
-Train a model to call financial APIs using MCP distillation + GRPO. This path produces an agent that can manage portfolios, execute trades, and perform risk analysis.
+Train a model to call financial APIs using MCP distillation + LoRA SFT. This path produces an agent that can manage portfolios, execute trades, and perform risk analysis.
 
 ### Set Up a Financial MCP Server
 
-Create or use a financial MCP server with tools organized into functional clusters:
+Create or use a financial MCP server with tools organized into functional domains:
 
-| Cluster | Tools | Purpose |
-|---------|-------|---------|
+| Domain | Tools | Purpose |
+|--------|-------|---------|
 | Market Data | `get_stock_quote`, `get_market_summary`, `get_historical_prices`, `screen_stocks` | Real-time and historical market information |
 | Portfolio Management | `get_portfolio_positions`, `get_portfolio_performance`, `get_account_summary`, `get_transaction_history` | Client account and holdings management |
 | Risk & Analytics | `calculate_portfolio_risk`, `get_sector_exposure`, `run_stress_test`, `analyze_stock` | Risk assessment and analysis |
@@ -100,7 +100,7 @@ from sdg_hub import Flow, FlowRegistry
 
 FlowRegistry.discover_flows()
 flow = Flow.from_yaml(FlowRegistry.get_flow_path("MCP Server Distillation"))
-flow.set_model_config(model="gpt-5.2", api_key="...")
+flow.set_model_config(model="gemini/gemini-3.6-flash", api_key="...")
 
 flow.set_agent_config(
     agent_framework="langflow",
@@ -111,22 +111,26 @@ result = flow.generate(tool_dataset)
 result.to_parquet("distillation_output.parquet")
 ```
 
-### Train with GRPO
+### Train with LoRA SFT
 
-GRPO is the recommended algorithm for tool-calling because it learns from verifiable rewards (did the tool call succeed?) rather than imitating examples:
+LoRA SFT trains the model on expert tool-calling demonstrations. The model learns which tool to call for a given query, how to format arguments, and how to chain tools for multi-step workflows:
 
 ```python
-from training_hub import lora_grpo
+from training_hub import lora_sft
 
-lora_grpo(
+lora_sft(
     model_path="Qwen/Qwen3-4B",
-    data_path="tool_traces.jsonl",
+    data_path="training_data.jsonl",
     ckpt_output_dir="./financial-agent",
-    num_iterations=15,
     lora_r=16,
-    lora_alpha=8,
+    lora_alpha=32,
+    num_epochs=2,
+    learning_rate=2e-4,
+    load_in_4bit=True,
 )
 ```
+
+For production on RHOAI, use the [LoRA KFP Pipeline](https://github.com/red-hat-data-services/pipelines-components/tree/main/pipelines/training/finetuning/lora) which wraps the same algorithm in a four-stage pipeline (data download, training, evaluation, model registry).
 
 ### Deploy with Tool-Calling Support
 
@@ -169,15 +173,20 @@ Financial agents require compliance rails. See [Guardrails](../guardrails/index.
     Financial models deployed in production must comply with applicable regulations (SEC, FINRA, MiFID II). Guardrails are a technical control, not a substitute for regulatory review. Work with your compliance team before deploying.
 
 !!! tip "Ambiguous Tool Selection"
-    Financial APIs often have overlapping functionality (e.g., `get_portfolio_positions` vs `get_account_summary`). GRPO handles this better than SFT because it learns from reward signals rather than memorizing one correct path. Design your MCP server with deliberate ambiguity clusters to stress-test this.
+    Financial APIs often have overlapping functionality (e.g., `get_portfolio_positions` vs `get_account_summary`). Ensure your training data includes diverse examples covering these overlapping tools so the model learns the correct tool for each context. For reinforcement-learning-based training (GRPO), see the [LoRA GRPO docs](https://github.com/Red-Hat-AI-Innovation-Team/training_hub/blob/main/docs/algorithms/lora_grpo.md) — GRPO KFP pipeline support is planned.
 
 !!! tip "Deterministic Test Data"
     Use fixed random seeds for financial test data so evaluations are reproducible. The [demo server](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent/demo_server) uses `SEED=42` for all generated data.
 
+## Validated Environment
+
+!!! success "Tested on RHOAI 3.4.2"
+    The tool-calling agent path (MCP distillation → LoRA SFT → vLLM deployment) has been validated end-to-end on RHOAI 3.4.2 / OpenShift 4.18.21 with an NVIDIA L4 GPU. The full walkthrough is in the [Financial Agent Pipeline](../end-to-end/financial-agent.md).
+
 ## Related
 
 - [Financial Agent Pipeline](../end-to-end/financial-agent.md) — Full end-to-end walkthrough
-- [GRPO](../training/grpo.md) — Training algorithm for tool-calling
+- [Training Hub LoRA docs](https://github.com/Red-Hat-AI-Innovation-Team/training_hub/blob/main/docs/algorithms/lora.md) — LoRA SFT algorithm details
 - [Guardrails](../guardrails/index.md) — NeMo Guardrails configuration
 - [Medical Domain](medical.md) — Similar approach for medical knowledge
 - [MCP Distillation](../end-to-end/mcp-distillation.md) — General MCP distillation pipeline
