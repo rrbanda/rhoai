@@ -1,0 +1,100 @@
+site_name: RHOAI Model Customization
+site_url: https://rrbanda.github.io/rhoai/
+site_description: Customize LLMs with smaller models on Red Hat OpenShift AI
+repo_url: https://github.com/rrbanda/rhoai
+repo_name: rrbanda/rhoai
+
+theme:
+  name: material
+  palette:
+    - scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+  features:
+    - navigation.tabs
+    - navigation.tabs.sticky
+    - navigation.sections
+    - navigation.top
+    - navigation.instant
+    - navigation.instant.progress
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+    - content.tabs.link
+    - toc.follow
+  icon:
+    repo: fontawesome/brands/github
+
+plugins:
+  - search
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
+  - pymdownx.inlinehilite
+  - pymdownx.snippets:
+      base_path: ["."]
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed:
+      alternate_style: true
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+
+nav:
+  - Home: index.md
+  - Getting Started:
+    - Overview: getting-started/overview.md
+    - Quickstart: getting-started/quickstart.md
+    - Choosing an Algorithm: getting-started/choosing-an-algorithm.md
+  - Data Generation:
+    - SDG Hub Overview: data-generation/index.md
+    - Knowledge Tuning: data-generation/knowledge-tuning.md
+    - Skills Tuning: data-generation/skills-tuning.md
+    - Text Analysis: data-generation/text-analysis.md
+  - Training:
+    - SFT: training/sft.md
+    - OSFT: training/osft.md
+    - LoRA: training/lora.md
+    - GRPO: training/grpo.md
+    - LAB Multi-Phase: training/lab-multiphase.md
+    - Continual Learning: training/continual-learning.md
+    - Continued Pretraining: training/continued-pretraining.md
+  - Domains:
+    - Medical: domains/medical.md
+    - Model-Specific Configs: domains/model-specific.md
+  - End-to-End:
+    - Knowledge Tuning Pipeline: end-to-end/knowledge-tuning.md
+    - MCP Distillation Pipeline: end-to-end/mcp-distillation.md
+  - Evaluation:
+    - Overview: evaluation/index.md
+    - RAG Evaluation: evaluation/rag-evaluation.md
+    - Code Evaluation: evaluation/code-evaluation.md
+    - Agent Evaluation: evaluation/agent-evaluation.md
+  - Utilities:
+    - Memory Estimator: utilities/memory-estimator.md
+    - Plot Loss: utilities/plot-loss.md
+    - Model Interpolation: utilities/model-interpolation.md
+  - Reference:
+    - Data Formats: reference/data-formats.md
+    - GPU Requirements: reference/gpu-requirements.md

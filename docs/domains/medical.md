@@ -1,0 +1,119 @@
+# Medical Domain Fine-Tuning
+
+This guide shows how to fine-tune a model on medical knowledge using three different algorithms. Medical fine-tuning is a representative example of domain adaptation — the same approach works for legal, financial, or any other specialized domain.
+
+## Algorithm Comparison for Medical Data
+
+| Approach | Preserves general knowledge | GPU requirement | Best when |
+|----------|---------------------------|-----------------|-----------|
+| [SFT](#sft-approach) | No | 2-4x A100 | Maximum medical accuracy is the only goal |
+| [OSFT](#osft-approach) | **Yes** | 2-4x A100 | Model must also handle general queries |
+| [LoRA](#lora-approach) | Partially | 1x A100 | Limited GPU budget |
+
+## Preparing Medical Data
+
+Use SDG Hub to generate medical Q&A pairs from clinical guidelines, textbooks, or research papers:
+
+```python
+from datasets import Dataset
+from sdg_hub import Flow, FlowRegistry
+
+FlowRegistry.discover_flows()
+
+medical_docs = Dataset.from_dict({
+    "document": [
+        "Type 2 diabetes mellitus (T2DM) management includes lifestyle "
+        "modifications and pharmacotherapy. First-line treatment is metformin, "
+        "initiated at 500mg daily with gradual titration to 2000mg...",
+    ],
+    "domain": ["medical"],
+})
+
+flow = Flow.from_yaml(FlowRegistry.get_flow_path(
+    "Document Based Knowledge Tuning Dataset Generation Flow"
+))
+flow.set_model_config(model="gpt-4o-mini")
+result = flow.generate(medical_docs)
+result.to_json("medical_training_data.jsonl", orient="records", lines=True)
+```
+
+## SFT Approach
+
+Maximum learning capacity. Best when the model will be used exclusively for medical tasks.
+
+```python
+from training_hub import sft
+
+sft(
+    model="meta-llama/Llama-3.1-8B-Instruct",
+    data="medical_training_data.jsonl",
+    output_dir="./medical-sft",
+    num_epochs=5,
+    batch_size=32,
+    max_seq_len=4096,
+    lr=2e-5,
+)
+```
+
+## OSFT Approach
+
+Adds medical knowledge while preserving general capabilities. **Recommended** when the model serves both medical and general queries.
+
+```python
+from training_hub import osft
+
+osft(
+    model="meta-llama/Llama-3.1-8B-Instruct",
+    data="medical_training_data.jsonl",
+    output_dir="./medical-osft",
+    num_epochs=5,
+    batch_size=32,
+    max_seq_len=4096,
+    unfreeze_rank_ratio=0.01,
+)
+```
+
+## LoRA Approach
+
+Memory-efficient fine-tuning. Best when you have limited GPU resources or want to maintain multiple specialty adapters.
+
+```python
+from training_hub import lora_sft
+
+lora_sft(
+    model="meta-llama/Llama-3.1-8B-Instruct",
+    data="medical_training_data.jsonl",
+    output_dir="./medical-lora",
+    num_epochs=5,
+    lora_r=32,
+    lora_alpha=64,
+    max_seq_len=4096,
+)
+```
+
+!!! tip "Multiple Specialties"
+    With LoRA, you can maintain separate adapters for cardiology, oncology, endocrinology, etc. — all sharing the same base model. Swap adapters at inference time based on the query domain.
+
+## Evaluation
+
+Compare the three approaches on a held-out medical Q&A test set:
+
+```python
+# Generate evaluation data
+from sdg_hub import Flow, FlowRegistry
+
+FlowRegistry.discover_flows()
+flow = Flow.from_yaml(FlowRegistry.get_flow_path(
+    "Document Based Knowledge Tuning Dataset Generation Flow"
+))
+flow.set_model_config(model="gpt-4o-mini")
+
+eval_result = flow.generate(held_out_medical_docs)
+eval_result.to_json("medical_eval.jsonl", orient="records", lines=True)
+```
+
+## Related
+
+- [Choosing an Algorithm](../getting-started/choosing-an-algorithm.md) — General algorithm selection guide
+- [OSFT](../training/osft.md) — Recommended for medical (preserves general knowledge)
+- [Continual Learning](../training/continual-learning.md) — Add multiple medical specialties sequentially
