@@ -6,15 +6,19 @@ repo_name: rrbanda/rhoai
 
 theme:
   name: material
+  custom_dir: docs/overrides
+  font:
+    text: Inter
+    code: JetBrains Mono
   palette:
     - scheme: default
-      primary: indigo
+      primary: custom
       accent: indigo
       toggle:
         icon: material/brightness-7
         name: Switch to dark mode
     - scheme: slate
-      primary: indigo
+      primary: custom
       accent: indigo
       toggle:
         icon: material/brightness-4
@@ -23,17 +27,25 @@ theme:
     - navigation.tabs
     - navigation.tabs.sticky
     - navigation.sections
+    - navigation.indexes
     - navigation.top
     - navigation.instant
     - navigation.instant.progress
+    - navigation.footer
+    - navigation.path
     - search.suggest
     - search.highlight
     - content.code.copy
     - content.code.annotate
     - content.tabs.link
+    - content.tooltips
     - toc.follow
+    - announce.dismiss
   icon:
     repo: fontawesome/brands/github
+
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search

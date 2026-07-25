@@ -1,0 +1,386 @@
+/* ==========================================================================
+   RHOAI Documentation — Custom Theme
+   Deep navy palette, Inter typography, book-like readability
+   ========================================================================== */
+
+/* --------------- Light Mode Palette --------------- */
+[data-md-color-scheme="default"] {
+  --md-primary-fg-color:        #1a237e;
+  --md-primary-fg-color--light: #3949ab;
+  --md-primary-fg-color--dark:  #0d1259;
+  --md-accent-fg-color:         #2979ff;
+  --md-accent-fg-color--transparent: rgba(41, 121, 255, 0.1);
+}
+
+/* --------------- Dark Mode Palette --------------- */
+[data-md-color-scheme="slate"] {
+  --md-hue: 220;
+  --md-primary-fg-color:        #90caf9;
+  --md-primary-fg-color--light: #bbdefb;
+  --md-primary-fg-color--dark:  #42a5f5;
+  --md-accent-fg-color:         #82b1ff;
+  --md-accent-fg-color--transparent: rgba(130, 177, 255, 0.12);
+}
+
+/* --------------- Typography --------------- */
+.md-typeset {
+  font-size: 0.82rem;
+  line-height: 1.75;
+  letter-spacing: -0.011em;
+}
+
+.md-typeset h1 {
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  margin-bottom: 1rem;
+}
+
+.md-typeset h2 {
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  margin-top: 2.4rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset h3 {
+  font-weight: 600;
+  letter-spacing: -0.015em;
+}
+
+/* --------------- Content Width --------------- */
+.md-grid {
+  max-width: 1440px;
+}
+
+/* --------------- Code Blocks --------------- */
+.md-typeset pre > code,
+.md-typeset code {
+  border-radius: 6px;
+}
+
+.md-typeset pre {
+  border-radius: 8px;
+}
+
+.highlight code {
+  font-size: 0.82em;
+}
+
+/* --------------- Admonitions --------------- */
+.md-typeset .admonition,
+.md-typeset details {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border-width: 0 0 0 4px;
+}
+
+[data-md-color-scheme="slate"] .md-typeset .admonition,
+[data-md-color-scheme="slate"] .md-typeset details {
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+}
+
+/* --------------- Tables --------------- */
+.md-typeset table:not([class]) {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--md-default-fg-color--lightest);
+}
+
+.md-typeset table:not([class]) th {
+  background: var(--md-primary-fg-color);
+  color: var(--md-primary-bg-color);
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.7rem;
+  letter-spacing: 0.05em;
+}
+
+[data-md-color-scheme="slate"] .md-typeset table:not([class]) th {
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--md-default-fg-color);
+}
+
+/* --------------- Navigation --------------- */
+.md-tabs {
+  font-weight: 500;
+}
+
+.md-nav__link {
+  font-size: 0.78rem;
+}
+
+/* --------------- Content Tabs --------------- */
+.md-typeset .tabbed-labels > label {
+  font-weight: 600;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+}
+
+/* --------------- Blockquotes --------------- */
+.md-typeset blockquote {
+  border-left: 4px solid var(--md-accent-fg-color);
+  padding: 0.8rem 1.2rem;
+  background: var(--md-accent-fg-color--transparent);
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+}
+
+/* --------------- Footer --------------- */
+.md-footer {
+  border-top: 1px solid var(--md-default-fg-color--lightest);
+}
+
+/* ==========================================================================
+   HOME PAGE — Hero + Card Grid
+   ========================================================================== */
+
+/* --------------- Hero Section --------------- */
+.home-hero {
+  background: linear-gradient(135deg, #1a237e 0%, #283593 40%, #3f51b5 100%);
+  color: #ffffff;
+  padding: 5rem 2rem 4rem;
+  margin: 0 0 2.5rem;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.home-hero::before {
+  content: "";
+  position: absolute;
+  top: -50%;
+  right: -20%;
+  width: 600px;
+  height: 600px;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+.home-hero::after {
+  content: "";
+  position: absolute;
+  bottom: -40%;
+  left: -10%;
+  width: 400px;
+  height: 400px;
+  background: radial-gradient(circle, rgba(130, 177, 255, 0.08) 0%, transparent 70%);
+  border-radius: 50%;
+}
+
+[data-md-color-scheme="slate"] .home-hero {
+  background: linear-gradient(135deg, #0d1b2a 0%, #1b2838 40%, #253547 100%);
+}
+
+.home-hero .hero-inner {
+  max-width: 800px;
+  margin: 0 auto;
+  position: relative;
+  z-index: 1;
+}
+
+.home-hero h1 {
+  font-size: 2.8rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  margin: 0 0 1rem;
+  line-height: 1.15;
+  color: #ffffff;
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.home-hero .hero-tagline {
+  font-size: 1.15rem;
+  opacity: 0.9;
+  line-height: 1.6;
+  margin: 0 0 2rem;
+  font-weight: 400;
+}
+
+.hero-buttons {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.hero-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.75rem;
+  border-radius: 8px;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.2s ease;
+  letter-spacing: -0.01em;
+}
+
+.hero-btn-primary {
+  background: #ffffff;
+  color: #1a237e;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.hero-btn-primary:hover {
+  background: #e8eaf6;
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+  color: #1a237e;
+}
+
+.hero-btn-secondary {
+  background: rgba(255, 255, 255, 0.12);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(4px);
+}
+
+.hero-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.2);
+  transform: translateY(-1px);
+  color: #ffffff;
+}
+
+[data-md-color-scheme="slate"] .hero-btn-primary {
+  background: #82b1ff;
+  color: #0d1b2a;
+}
+
+[data-md-color-scheme="slate"] .hero-btn-primary:hover {
+  background: #90caf9;
+  color: #0d1b2a;
+}
+
+/* --------------- Feature Cards --------------- */
+.home-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin: 0 0 3rem;
+}
+
+@media screen and (max-width: 960px) {
+  .home-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media screen and (max-width: 600px) {
+  .home-grid {
+    grid-template-columns: 1fr;
+  }
+  .home-hero h1 {
+    font-size: 2rem;
+  }
+  .home-hero {
+    padding: 3rem 1.5rem 2.5rem;
+  }
+}
+
+.home-grid .card {
+  background: var(--md-default-bg-color);
+  border: 1px solid var(--md-default-fg-color--lightest);
+  border-radius: 12px;
+  padding: 1.5rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  text-decoration: none;
+  color: var(--md-default-fg-color);
+  display: block;
+}
+
+.home-grid .card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+[data-md-color-scheme="slate"] .home-grid .card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+}
+
+.home-grid .card h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--md-primary-fg-color);
+}
+
+[data-md-color-scheme="slate"] .home-grid .card h3 {
+  color: var(--md-accent-fg-color);
+}
+
+.home-grid .card p {
+  margin: 0 0 0.75rem;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  opacity: 0.85;
+}
+
+.home-grid .card .card-link {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--md-accent-fg-color);
+  text-decoration: none;
+}
+
+.home-grid .card .card-link:hover {
+  text-decoration: underline;
+}
+
+/* --------------- Algorithm Badge Row --------------- */
+.algo-badges {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin: 2rem 0;
+}
+
+.algo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.4rem 1rem;
+  border-radius: 20px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  background: var(--md-accent-fg-color--transparent);
+  color: var(--md-accent-fg-color);
+  border: 1px solid var(--md-accent-fg-color--transparent);
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.algo-badge:hover {
+  background: var(--md-accent-fg-color);
+  color: var(--md-primary-bg-color);
+}
+
+/* --------------- Mermaid Diagrams --------------- */
+.mermaid {
+  margin: 1.5rem 0;
+}
+
+/* --------------- Announcement Bar --------------- */
+.md-banner {
+  background: linear-gradient(90deg, #1a237e, #3f51b5);
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.78rem;
+}
+
+.md-banner a {
+  color: #ffffff;
+  font-weight: 600;
+}
+
+[data-md-color-scheme="slate"] .md-banner {
+  background: linear-gradient(90deg, #1b2838, #253547);
+}
+
+/* --------------- Scroll to top --------------- */
+.md-top {
+  border-radius: 50%;
+}
