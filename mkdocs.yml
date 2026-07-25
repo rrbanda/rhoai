@@ -1,6 +1,6 @@
-site_name: Model Customization on RHOAI
+site_name: RHOAI Tutorials
 site_url: https://rrbanda.github.io/rhoai/
-site_description: Customize LLMs with smaller models on Red Hat OpenShift AI
+site_description: Hands-on tutorials for Red Hat OpenShift AI 3.4
 repo_url: https://github.com/rrbanda/rhoai
 repo_name: rrbanda/rhoai
 
@@ -103,8 +103,8 @@ nav:
     - Medical: domains/medical.md
     - Model-Specific Configs: domains/model-specific.md
   - End-to-End:
-    - Knowledge Tuning Pipeline: end-to-end/knowledge-tuning.md
-    - MCP Distillation Pipeline: end-to-end/mcp-distillation.md
+    - Knowledge Tuning: end-to-end/knowledge-tuning.md
+    - MCP Distillation: end-to-end/mcp-distillation.md
   - Evaluation:
     - Overview: evaluation/index.md
     - RAG Evaluation: evaluation/rag-evaluation.md
