@@ -1,71 +1,52 @@
 # NeMo Guardrails configuration for the financial advisory agent.
 # Deploys on RHOAI 3.4+ with GA guardrails support.
-# See: https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/ensuring_ai_safety_with_guardrails
+# See: https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails
+#
+# This file is mounted into the NeMo Guardrails server as config.yaml
+# via a Kubernetes ConfigMap referenced in the NemoGuardrails CR.
+# When using the ConfigMap approach, embed this content under the
+# `config.yaml` key (see nemoguardrails_configmap.yaml).
 
 models:
   - type: main
-    engine: vllm
+    engine: openai
     parameters:
-      # Points to the vLLM InferenceService deployed via KServe RawDeployment
-      openai_api_base: "${VLLM_ENDPOINT_URL}/v1"
-      model_name: "granite-8b-finance"
-      temperature: 0.2
-      max_tokens: 1024
+      # Points to the vLLM InferenceService deployed via KServe RawDeployment.
+      # Use the cluster-internal service URL ending in /v1.
+      openai_api_base: "http://<model-predictor-svc>.<namespace>.svc.cluster.local:8080/v1"
+      model_name: "<served-model-name>"
 
 rails:
-  input:
-    flows:
-      - jailbreak detection
-      - pii detection
-
-  output:
-    flows:
-      - pii masking
-      - financial disclaimer injection
-      - response safety
-
   config:
-    # /v1/guardrails/checks endpoint configuration (GA in RHOAI 3.4)
-    enable_guardrails_endpoint: true
-    otel_enabled: true
+    # Presidio-based PII entity detection (built-in)
+    sensitive_data_detection:
+      input:
+        entities:
+          - EMAIL_ADDRESS
+          - PERSON
+          - PHONE_NUMBER
+      output:
+        entities:
+          - PERSON
+          - PHONE_NUMBER
+    # Regex-based detection for financial PII patterns
+    regex_detection:
+      input:
+        patterns:
+          - "\\d{3}-\\d{2}-\\d{4}"
+          - "ACCT-[0-9]{4,12}"
+        case_insensitive: true
+      output:
+        patterns:
+          - "\\d{3}-\\d{2}-\\d{4}"
+          - "ACCT-[0-9]{4,12}"
+        case_insensitive: true
 
-# Regex-based rails for financial PII patterns
-regex_rails:
   input:
-    - name: "account_number_input"
-      pattern: "ACCT-[0-9]{4,12}"
-      action: mask
-      description: "Detect account numbers in ACCT-XXXX format"
-
-    - name: "ssn_input"
-      pattern: "[0-9]{3}-[0-9]{2}-[0-9]{4}"
-      action: block
-      description: "Block Social Security Numbers"
-
-    - name: "routing_number_input"
-      pattern: "\\b[0-9]{9}\\b"
-      action: flag
-      description: "Flag potential routing numbers (9-digit sequences)"
+    flows:
+      - detect sensitive data on input
+      - regex check input
 
   output:
-    - name: "account_number_output"
-      pattern: "ACCT-[0-9]{4,12}"
-      action: mask
-      replacement: "ACCT-****"
-      description: "Mask account numbers in responses"
-
-    - name: "ssn_output"
-      pattern: "[0-9]{3}-[0-9]{2}-[0-9]{4}"
-      action: mask
-      replacement: "***-**-****"
-      description: "Mask SSN patterns in responses"
-
-    - name: "routing_number_output"
-      pattern: "\\b[0-9]{9}\\b"
-      action: mask
-      replacement: "*********"
-      description: "Mask routing numbers in responses"
-
-# Reference to Colang flows for custom financial compliance logic
-colang_flows:
-  - config.co
+    flows:
+      - detect sensitive data on output

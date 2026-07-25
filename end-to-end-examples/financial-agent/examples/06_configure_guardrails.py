@@ -91,6 +91,63 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def build_guardrails_configmap(
+    namespace: str,
+    model_endpoint: str,
+    model_name: str,
+) -> dict:
+    """Construct the ConfigMap with config.yaml and rails.co for NeMo Guardrails."""
+    config_yaml = {
+        "models": [
+            {
+                "type": "main",
+                "engine": "openai",
+                "parameters": {
+                    "openai_api_base": model_endpoint,
+                    "model_name": model_name,
+                },
+            }
+        ],
+        "rails": {
+            "config": {
+                "sensitive_data_detection": {
+                    "input": {"entities": ["EMAIL_ADDRESS", "PERSON", "PHONE_NUMBER"]},
+                    "output": {"entities": ["PERSON", "PHONE_NUMBER"]},
+                },
+                "regex_detection": {
+                    "input": {
+                        "patterns": [r"\\d{3}-\\d{2}-\\d{4}", "ACCT-[0-9]{4,12}"],
+                        "case_insensitive": True,
+                    },
+                    "output": {
+                        "patterns": [r"\\d{3}-\\d{2}-\\d{4}", "ACCT-[0-9]{4,12}"],
+                        "case_insensitive": True,
+                    },
+                },
+            },
+            "input": {
+                "flows": ["detect sensitive data on input", "regex check input"],
+            },
+            "output": {
+                "flows": ["detect sensitive data on output"],
+            },
+        },
+    }
+
+    return {
+        "apiVersion": "v1",
+        "kind": "ConfigMap",
+        "metadata": {
+            "name": "financial-guardrails-config",
+            "namespace": namespace,
+        },
+        "data": {
+            "config.yaml": yaml.dump(config_yaml, default_flow_style=False),
+            "rails.co": "# Using built-in rails for financial PII detection\n",
+        },
+    }
+
+
 def build_nemoguardrails_cr(
     namespace: str,
     model_endpoint: str,
@@ -98,7 +155,11 @@ def build_nemoguardrails_cr(
     otel_endpoint: str,
     mcp_gateway_name: str | None = None,
 ) -> dict:
-    """Construct the NemoGuardrails custom resource manifest."""
+    """Construct the NemoGuardrails custom resource manifest.
+
+    Uses the ``nemoConfigs`` field (required) to reference the ConfigMap
+    containing config.yaml and rails.co, per the RHOAI 3.4 API.
+    """
     manifest = {
         "apiVersion": f"{_CRD_GROUP}/{_CRD_VERSION}",
         "kind": "NemoGuardrails",
@@ -111,28 +172,18 @@ def build_nemoguardrails_cr(
             },
         },
         "spec": {
-            # GA (RHOAI 3.4)
-            "replicas": replicas,
-            "modelEndpoint": {
-                "url": model_endpoint,
-            },
-            "configSecretRef": {
-                "name": "financial-guardrails-config",
-            },
-            "openTelemetry": {
-                "enabled": True,
-                "endpoint": otel_endpoint,
-            },
+            "nemoConfigs": [
+                {
+                    "name": "financial-agent",
+                    "default": True,
+                    "configMaps": ["financial-guardrails-config"],
+                }
+            ],
+            "env": [
+                {"name": "OPENAI_API_KEY", "value": "not-needed"},
+            ],
         },
     }
-
-    if mcp_gateway_name:
-        # Technology Preview (RHOAI 3.5 EA2)
-        # Field name from RHOAI 3.5 EA2 release notes
-        manifest["spec"]["mcpGateway"] = {
-            "name": mcp_gateway_name,
-            "namespace": namespace,
-        }
 
     return manifest
 
@@ -230,12 +281,15 @@ def wait_for_guardrails_ready(name: str, namespace: str, timeout: int) -> str:
 
 def test_guardrails_endpoint(endpoint: str) -> None:
     """Send a test query through the guardrails check endpoint."""
-    checks_url = f"{endpoint}/v1/guardrails/checks"
+    checks_url = f"{endpoint}/v1/guardrail/checks"
     payload = {
-        "input": "What is the current balance for account ACCT-7832? My SSN is 123-45-6789.",
-        "config": {
-            "rails": ["pii_detection", "jailbreak_detection"],
-        },
+        "model": "financial-agent",
+        "messages": [
+            {
+                "role": "user",
+                "content": "What is the current balance for account ACCT-7832? My SSN is 123-45-6789.",
+            }
+        ],
     }
 
     print(f"  Testing guardrails endpoint: {checks_url}")
@@ -248,10 +302,11 @@ def test_guardrails_endpoint(endpoint: str) -> None:
         sys.exit(1)
 
     data = resp.json()
-    violations = data.get("violations", [])
-    print(f"  Response ({latency_ms:.0f}ms): {len(violations)} violation(s) detected")
-    for v in violations:
-        print(f"    - [{v.get('rail', 'unknown')}] {v.get('message', '')}")
+    status = data.get("status", "unknown")
+    rails_status = data.get("rails_status", {})
+    print(f"  Response ({latency_ms:.0f}ms): status={status}")
+    for rail_name, rail_result in rails_status.items():
+        print(f"    - [{rail_name}] {rail_result.get('status', 'unknown')}")
 
 
 def main() -> None:
@@ -292,8 +347,16 @@ def main() -> None:
             mcp_server_url=args.mcp_server_url,
         )
 
+    configmap_manifest = build_guardrails_configmap(
+        namespace=namespace,
+        model_endpoint=args.model_endpoint,
+        model_name=args.model_endpoint.rstrip("/").rsplit("/", 1)[0].rsplit("/", 1)[-1],
+    )
+
     if args.dry_run:
-        print("\n--- NemoGuardrails CR (GA, RHOAI 3.4) ---")
+        print("\n--- ConfigMap (guardrails config) ---")
+        print(yaml.dump(configmap_manifest, default_flow_style=False))
+        print("--- NemoGuardrails CR (GA, RHOAI 3.4) ---")
         print(yaml.dump(guardrails_manifest, default_flow_style=False))
         if gateway_manifest:
             print("--- MCPGatewayExtension CR (Technology Preview, RHOAI 3.5 EA2) ---")
@@ -302,16 +365,29 @@ def main() -> None:
 
     config.load_kube_config()
 
-    print("\n[1/3] Deploying NemoGuardrails CR [GA, RHOAI 3.4]...")
+    print("\n[1/4] Creating ConfigMap with guardrails configuration...")
+    v1 = client.CoreV1Api()
+    try:
+        v1.read_namespaced_config_map("financial-guardrails-config", namespace)
+        v1.replace_namespaced_config_map("financial-guardrails-config", namespace, configmap_manifest)
+        print("  Updated existing ConfigMap 'financial-guardrails-config'")
+    except ApiException as e:
+        if e.status == 404:
+            v1.create_namespaced_config_map(namespace, configmap_manifest)
+            print("  Created ConfigMap 'financial-guardrails-config'")
+        else:
+            raise
+
+    print("\n[2/4] Deploying NemoGuardrails CR [GA, RHOAI 3.4]...")
     apply_custom_resource(guardrails_manifest, _GUARDRAILS_PLURAL, namespace)
 
     if gateway_manifest:
-        print("\n[2/3] Deploying MCPGatewayExtension CR [Technology Preview, RHOAI 3.5 EA2]...")
+        print("\n[3/4] Deploying MCPGatewayExtension CR [Technology Preview, RHOAI 3.5 EA2]...")
         apply_custom_resource(gateway_manifest, _GATEWAY_PLURAL, namespace)
     else:
-        print("\n[2/3] Skipping MCP Gateway (not enabled)")
+        print("\n[3/4] Skipping MCP Gateway (not enabled)")
 
-    print("\n[3/3] Verifying readiness...")
+    print("\n[4/4] Verifying readiness...")
     name = guardrails_manifest["metadata"]["name"]
     endpoint = wait_for_guardrails_ready(name, namespace, args.timeout)
 
