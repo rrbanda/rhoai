@@ -1,0 +1,6 @@
+sdg_hub[dev]
+training_hub[lora]
+fastmcp
+pandas
+python-dotenv
+nest-asyncio

@@ -1,0 +1,7 @@
+sdg_hub[examples]
+training_hub
+datasets
+transformers
+pandas
+python-dotenv
+nest-asyncio
