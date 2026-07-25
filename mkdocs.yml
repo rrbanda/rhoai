@@ -85,7 +85,7 @@ nav:
   - Model Customization:
     - Getting Started:
       - Overview: getting-started/overview.md
-      - Quickstart: getting-started/quickstart.md
+      - Setup & First Pipeline: getting-started/quickstart.md
       - Choosing an Algorithm: getting-started/choosing-an-algorithm.md
     - Data Generation:
       - SDG Hub Overview: data-generation/index.md

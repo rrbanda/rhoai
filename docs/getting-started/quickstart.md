@@ -1,14 +1,43 @@
-# Quickstart
+# Setup & First Pipeline
 
-Get from raw documents to a fine-tuned model in under 5 minutes (excluding training time).
+This page walks through environment setup, package installation, and a minimal end-to-end pipeline: generate training data from a document, train a model, and verify convergence.
 
 ## Prerequisites
 
-```bash
-pip install sdg_hub training_hub
-```
+| Requirement | Details |
+|-------------|---------|
+| **Python** | 3.10+ |
+| **GPU** | NVIDIA A100 (80GB) or L40 for training. Not required for data generation. |
+| **LLM API key** | OpenAI, Anthropic, or any [LiteLLM-supported provider](https://docs.redhat.com/en/documentation/red_hat_openshift_ai/3.4) for synthetic data generation |
+| **Model access** | Hugging Face token for gated models (Llama, Mistral) |
 
-Set your LLM API key for synthetic data generation:
+## Environment Options
+
+=== "RHOAI Workbench"
+
+    SDG Hub and Training Hub are pre-installed in Red Hat-curated workbench images. Launch a workbench from the RHOAI dashboard and select an image with GPU support.
+
+    ```bash
+    # Verify installation
+    python -c "import sdg_hub; print(sdg_hub.__version__)"
+    python -c "import training_hub; print(training_hub.__version__)"
+    ```
+
+=== "Local / Custom Environment"
+
+    ```bash
+    pip install sdg_hub training_hub
+    ```
+
+    For QLoRA (4-bit quantized training):
+
+    ```bash
+    pip install bitsandbytes
+    ```
+
+## Configure API Keys
+
+SDG Hub uses LiteLLM under the hood, which reads standard environment variables:
 
 ```bash
 export OPENAI_API_KEY="sk-..."
@@ -16,15 +45,34 @@ export OPENAI_API_KEY="sk-..."
 export ANTHROPIC_API_KEY="sk-ant-..."
 ```
 
-## Step 1: Generate Training Data
+For gated Hugging Face models:
 
-Create a seed document and generate Q&A training pairs:
+```bash
+export HF_TOKEN="hf_..."
+```
+
+## Check GPU Resources
+
+Before training, verify you have enough VRAM:
+
+```python
+from training_hub import estimate
+
+train_mem, grad_mem, total_mem = estimate(
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    max_seq_len=4096,
+)
+print(f"Estimated VRAM: {total_mem / 1e9:.1f} GB")
+```
+
+See [GPU Requirements](../reference/gpu-requirements.md) for per-model and per-algorithm breakdowns.
+
+## Step 1: Prepare Seed Data
+
+Training data generation starts with a dataset containing your domain documents. Each row needs a `document` column with the text content:
 
 ```python
 from datasets import Dataset
-from sdg_hub import Flow, FlowRegistry
-
-FlowRegistry.discover_flows()
 
 seed_data = Dataset.from_dict({
     "document": [
@@ -35,6 +83,18 @@ seed_data = Dataset.from_dict({
     ],
     "domain": ["rhoai"],
 })
+```
+
+For real workloads, use [Docling](https://docs.redhat.com/en/documentation/red_hat_openshift_ai/3.4) to extract text from PDFs, HTML, or DOCX files. See [Knowledge Tuning Data Generation](../data-generation/knowledge-tuning.md) for details.
+
+## Step 2: Generate Training Data
+
+Use SDG Hub to generate Q&A pairs from your documents:
+
+```python
+from sdg_hub import Flow, FlowRegistry
+
+FlowRegistry.discover_flows()
 
 flow = Flow.from_yaml(
     FlowRegistry.get_flow_path(
@@ -42,17 +102,30 @@ flow = Flow.from_yaml(
     )
 )
 flow.set_model_config(model="gpt-4o-mini")
-result = flow.generate(seed_data)
 
+result = flow.generate(seed_data)
 result.to_json("training_data.jsonl", orient="records", lines=True)
 print(f"Generated {len(result)} training examples")
 ```
 
-## Step 2: Train a Model
+!!! tip "Dry run first"
+    Use `flow.dry_run(seed_data)` to validate the pipeline end-to-end without making LLM calls.
 
-Fine-tune a small model on the generated data:
+The output is JSONL in the messages format expected by Training Hub:
 
-=== "SFT (Full Fine-Tune)"
+```json
+{"messages": [{"role": "user", "content": "What is MaaS in RHOAI 3.4?"}, {"role": "assistant", "content": "Models-as-a-Service (MaaS) ..."}]}
+```
+
+See [Data Formats](../reference/data-formats.md) for the full specification.
+
+## Step 3: Train
+
+Choose an algorithm based on your constraints. Each tab shows minimal working code — see the individual [training guides](../training/sft.md) for all parameters.
+
+=== "SFT — Maximum learning"
+
+    Updates all parameters. Best when you have ample data and GPU.
 
     ```python
     from training_hub import sft
@@ -67,7 +140,9 @@ Fine-tune a small model on the generated data:
     )
     ```
 
-=== "OSFT (Knowledge-Preserving)"
+=== "OSFT — Preserve base knowledge"
+
+    Constrains updates to an orthogonal subspace. Best for adding domain knowledge without forgetting.
 
     ```python
     from training_hub import osft
@@ -85,7 +160,9 @@ Fine-tune a small model on the generated data:
     )
     ```
 
-=== "LoRA (Memory-Efficient)"
+=== "LoRA — Single GPU"
+
+    Trains ~1% of parameters via low-rank adapters. Runs on a single A100 or L40.
 
     ```python
     from training_hub import lora_sft
@@ -100,9 +177,11 @@ Fine-tune a small model on the generated data:
     )
     ```
 
-## Step 3: Evaluate
+Not sure which to pick? See [Choosing an Algorithm](choosing-an-algorithm.md).
 
-Check training loss convergence:
+## Step 4: Verify Training
+
+Check that training loss converged:
 
 ```python
 from training_hub import plot_loss
@@ -110,8 +189,13 @@ from training_hub import plot_loss
 plot_loss("./my-model")
 ```
 
-## Next Steps
+A healthy training run shows loss decreasing and flattening. If loss plateaus early or spikes, adjust learning rate or add more data. See [Plot Loss](../utilities/plot-loss.md) for interpretation guidance.
 
-- [Choosing an Algorithm](choosing-an-algorithm.md) — When to use SFT vs OSFT vs LoRA vs GRPO
-- [Knowledge Tuning Pipeline](../end-to-end/knowledge-tuning.md) — Full end-to-end walkthrough with evaluation
-- [Memory Estimator](../utilities/memory-estimator.md) — Check GPU requirements before training
+## What to Read Next
+
+Follow these in order for the full depth:
+
+1. [Choosing an Algorithm](choosing-an-algorithm.md) — Decision flowchart and side-by-side comparison
+2. [Knowledge Tuning Pipeline](../end-to-end/knowledge-tuning.md) — Full end-to-end walkthrough with multi-flow data generation, data mixing, evaluation, and serving
+3. [MCP Distillation Pipeline](../end-to-end/mcp-distillation.md) — Teach a model to use tools via GRPO
+4. [GPU Requirements](../reference/gpu-requirements.md) — Per-model VRAM estimates and hardware guidance
