@@ -5,53 +5,63 @@ hide:
   - toc
 ---
 
-## Tutorial Tracks
-
-<div class="home-grid" markdown>
-
-<div class="card" markdown>
+<div class="featured-track" markdown>
 
 ### Model Customization
 
-Fine-tune LLMs with smaller, efficient architectures. Covers synthetic data generation (SDG Hub), training algorithms (SFT, OSFT, LoRA, GRPO), evaluation, and deployment on RHOAI 3.4.
+Fine-tune LLMs with smaller, efficient architectures on RHOAI 3.4. This track covers the full lifecycle — from generating synthetic training data with **SDG Hub** to training with **Training Hub** (SFT, OSFT, LoRA, GRPO), evaluation, and deployment.
 
-<span class="card-link">[Start Tutorial →](getting-started/overview.md)</span>
+<div class="featured-track-meta" markdown>
 
-</div>
-
-<div class="card card-coming-soon" markdown>
-
-### Model Serving
-
-Deploy and serve fine-tuned models with KServe, vLLM, and distributed inference using llm-d. *Coming soon.*
+**8 training guides** · **2 end-to-end walkthroughs** · **4 algorithms** · **6 supported model families**
 
 </div>
 
-<div class="card card-coming-soon" markdown>
+<div class="featured-track-buttons" markdown>
 
-### RAG Pipelines
-
-Build retrieval-augmented generation pipelines with AutoRAG, vector stores, and evaluation flows. *Coming soon.*
-
-</div>
-
-<div class="card card-coming-soon" markdown>
-
-### Guardrails & Safety
-
-Add safety layers with NVIDIA NeMo Guardrails, red-teaming workflows, and TrustyAI bias detection. *Coming soon.*
+[Start the Tutorial](getting-started/overview.md){ .md-button .md-button--primary }
+[5-Minute Quickstart](getting-started/quickstart.md){ .md-button }
 
 </div>
 
 </div>
 
-## What's Inside
+<div class="track-sections" markdown>
 
-| Track | Status | Topics |
-|-------|--------|--------|
-| **Model Customization** | Available | SDG Hub, Training Hub, SFT, OSFT, LoRA, GRPO, evaluation, GPU planning |
-| **Model Serving** | Coming soon | KServe, vLLM, llm-d, distributed inference |
-| **RAG Pipelines** | Coming soon | AutoRAG, vector stores, retrieval evaluation |
-| **Guardrails & Safety** | Coming soon | NeMo Guardrails, red-teaming, TrustyAI |
+<div class="track-section-item" markdown>
 
-All tutorials target **RHOAI 3.4** and use open-source libraries pre-installed in Red Hat-curated workbench images. For official product documentation, visit [docs.redhat.com](https://docs.redhat.com/en/documentation/red_hat_openshift_ai/3.4).
+**Data Generation** — Generate Q&A pairs, tool-use traces, and structured data from documents using SDG Hub flows.
+[Browse flows →](data-generation/index.md)
+
+</div>
+
+<div class="track-section-item" markdown>
+
+**Training Algorithms** — Compare SFT, OSFT, LoRA, and GRPO side by side and pick the right one for your constraints.
+[Choose an algorithm →](getting-started/choosing-an-algorithm.md)
+
+</div>
+
+<div class="track-section-item" markdown>
+
+**End-to-End Pipelines** — Full walkthroughs for knowledge tuning and MCP distillation, from raw documents to deployed model.
+[Knowledge tuning →](end-to-end/knowledge-tuning.md) · [MCP distillation →](end-to-end/mcp-distillation.md)
+
+</div>
+
+<div class="track-section-item" markdown>
+
+**Evaluation & Utilities** — Measure quality with RAG benchmarks, estimate GPU memory, visualize training loss.
+[Evaluation →](evaluation/index.md) · [GPU planning →](reference/gpu-requirements.md)
+
+</div>
+
+</div>
+
+## Coming Soon
+
+| Track | Description |
+|-------|-------------|
+| **Model Serving** | Deploy models with KServe, vLLM, and distributed inference (llm-d) |
+| **RAG Pipelines** | Build retrieval-augmented generation with AutoRAG and vector stores |
+| **Guardrails & Safety** | NeMo Guardrails, red-teaming workflows, and TrustyAI bias detection |

@@ -82,38 +82,39 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started:
-    - Overview: getting-started/overview.md
-    - Quickstart: getting-started/quickstart.md
-    - Choosing an Algorithm: getting-started/choosing-an-algorithm.md
-  - Data Generation:
-    - SDG Hub Overview: data-generation/index.md
-    - Knowledge Tuning: data-generation/knowledge-tuning.md
-    - Skills Tuning: data-generation/skills-tuning.md
-    - Text Analysis: data-generation/text-analysis.md
-  - Training:
-    - SFT: training/sft.md
-    - OSFT: training/osft.md
-    - LoRA: training/lora.md
-    - GRPO: training/grpo.md
-    - LAB Multi-Phase: training/lab-multiphase.md
-    - Continual Learning: training/continual-learning.md
-    - Continued Pretraining: training/continued-pretraining.md
-  - Domains:
-    - Medical: domains/medical.md
-    - Model-Specific Configs: domains/model-specific.md
-  - End-to-End:
-    - Knowledge Tuning: end-to-end/knowledge-tuning.md
-    - MCP Distillation: end-to-end/mcp-distillation.md
-  - Evaluation:
-    - Overview: evaluation/index.md
-    - RAG Evaluation: evaluation/rag-evaluation.md
-    - Code Evaluation: evaluation/code-evaluation.md
-    - Agent Evaluation: evaluation/agent-evaluation.md
-  - Utilities:
-    - Memory Estimator: utilities/memory-estimator.md
-    - Plot Loss: utilities/plot-loss.md
-    - Model Interpolation: utilities/model-interpolation.md
-  - Reference:
-    - Data Formats: reference/data-formats.md
-    - GPU Requirements: reference/gpu-requirements.md
+  - Model Customization:
+    - Getting Started:
+      - Overview: getting-started/overview.md
+      - Quickstart: getting-started/quickstart.md
+      - Choosing an Algorithm: getting-started/choosing-an-algorithm.md
+    - Data Generation:
+      - SDG Hub Overview: data-generation/index.md
+      - Knowledge Tuning: data-generation/knowledge-tuning.md
+      - Skills Tuning: data-generation/skills-tuning.md
+      - Text Analysis: data-generation/text-analysis.md
+    - Training:
+      - SFT: training/sft.md
+      - OSFT: training/osft.md
+      - LoRA: training/lora.md
+      - GRPO: training/grpo.md
+      - LAB Multi-Phase: training/lab-multiphase.md
+      - Continual Learning: training/continual-learning.md
+      - Continued Pretraining: training/continued-pretraining.md
+    - Domains:
+      - Medical: domains/medical.md
+      - Model-Specific Configs: domains/model-specific.md
+    - End-to-End:
+      - Knowledge Tuning: end-to-end/knowledge-tuning.md
+      - MCP Distillation: end-to-end/mcp-distillation.md
+    - Evaluation:
+      - Overview: evaluation/index.md
+      - RAG Evaluation: evaluation/rag-evaluation.md
+      - Code Evaluation: evaluation/code-evaluation.md
+      - Agent Evaluation: evaluation/agent-evaluation.md
+    - Utilities:
+      - Memory Estimator: utilities/memory-estimator.md
+      - Plot Loss: utilities/plot-loss.md
+      - Model Interpolation: utilities/model-interpolation.md
+    - Reference:
+      - Data Formats: reference/data-formats.md
+      - GPU Requirements: reference/gpu-requirements.md
