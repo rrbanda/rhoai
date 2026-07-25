@@ -89,9 +89,9 @@ Output format:
 
 ## Step 3: Fine-Tune with LoRA SFT
 
-**RHOAI Feature:** Training Hub LoRA SFT (GA) + LoRA KFP Pipeline (GA)
+**RHOAI Feature:** Training Hub LoRA SFT (GA) + Kubeflow Trainer (GA)
 
-Two training paths are available:
+Three training paths are available. **Option B (TrainJob)** is the recommended approach — it runs directly on-cluster via the Kubeflow Trainer and was validated end-to-end on RHOAI 3.4.2.
 
 ### Option A: Local Training (for development)
 
@@ -106,9 +106,199 @@ python 03_train_lora_sft.py --lora-r 32 --lora-alpha 64 --max-seq-len 8192 --no-
 torchrun --nproc-per-node=2 03_train_lora_sft.py
 ```
 
-### Option B: LoRA KFP Pipeline on RHOAI (recommended for production)
+### Option B: Direct TrainJob on RHOAI (recommended, validated)
+
+This approach creates a Kubeflow `TrainJob` custom resource that uses the `training-hub` ClusterTrainingRuntime. It runs directly on the GPU node with no pipeline server or RWX storage required.
+
+**Prerequisite:** The `trainer` component must be enabled in your DataScienceCluster, and the `training-hub` ClusterTrainingRuntime must exist:
+
+```bash
+oc get clustertrainingruntimes training-hub
+```
+
+#### Step 3B.1: Create the workspace PVC and training script
+
+```bash
+cat <<'YAML' | oc apply -n financial-agent -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: training-workspace
+spec:
+  accessModes:
+    - ReadWriteOnce
+  storageClassName: gp3-csi
+  resources:
+    requests:
+      storage: 50Gi
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: training-data-script
+data:
+  prepare_and_train.py: |
+    """Download dataset and run LoRA SFT via Training Hub."""
+    import os, json
+
+    WORKSPACE = os.environ.get("WORKSPACE_PATH", "/workspace")
+    DATA_DIR = os.path.join(WORKSPACE, "data")
+    OUTPUT_DIR = os.path.join(WORKSPACE, "output")
+    os.makedirs(DATA_DIR, exist_ok=True)
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    print("=" * 60)
+    print("Step 1: Downloading dataset from HuggingFace...")
+    print("=" * 60)
+    from datasets import load_dataset
+    ds = load_dataset("LipengCS/Table-GPT", "All", split="train[:50]")
+
+    jsonl_path = os.path.join(DATA_DIR, "training_data.jsonl")
+    with open(jsonl_path, "w") as f:
+        for row in ds:
+            f.write(json.dumps({
+                "messages": row.get("messages", row.get("conversations", []))
+            }) + "\n")
+    print(f"  Saved {len(ds)} examples to {jsonl_path}")
+
+    print("=" * 60)
+    print("Step 2: Running LoRA SFT training...")
+    print("=" * 60)
+    from training_hub import lora_sft
+    result = lora_sft(
+        model_path="Qwen/Qwen3-4B",
+        data_path=jsonl_path,
+        ckpt_output_dir=OUTPUT_DIR,
+        lora_r=8,
+        lora_alpha=16,
+        lora_dropout=0.0,
+        num_epochs=1,
+        learning_rate=2e-4,
+        effective_batch_size=32,
+        micro_batch_size=2,
+        max_seq_len=2048,
+        load_in_4bit=True,
+        lr_scheduler="cosine",
+        seed=42,
+    )
+    print("=" * 60)
+    print("Training complete!")
+    if isinstance(result, dict):
+        for k, v in result.items():
+            if k not in ("model", "tokenizer"):
+                print(f"  {k}: {v}")
+    print(f"  Output saved to: {OUTPUT_DIR}")
+    print("=" * 60)
+YAML
+```
+
+#### Step 3B.2: Create the TrainJob
+
+```bash
+cat <<'YAML' | oc apply -n financial-agent -f -
+apiVersion: trainer.kubeflow.org/v1alpha1
+kind: TrainJob
+metadata:
+  name: financial-agent-lora-sft
+spec:
+  runtimeRef:
+    name: training-hub
+    apiGroup: trainer.kubeflow.org
+    kind: ClusterTrainingRuntime
+  trainer:
+    command:
+      - python
+      - /scripts/prepare_and_train.py
+    numNodes: 1
+    resourcesPerNode:
+      requests:
+        cpu: "2"
+        memory: "10Gi"
+        nvidia.com/gpu: "1"
+      limits:
+        cpu: "2"
+        memory: "10Gi"
+        nvidia.com/gpu: "1"
+    env:
+      - name: WORKSPACE_PATH
+        value: /workspace
+  podTemplateOverrides:
+    - targetJobs:
+        - name: node
+      spec:
+        tolerations:
+          - key: nvidia.com/gpu
+            operator: Exists
+            effect: NoSchedule
+        volumes:
+          - name: workspace
+            persistentVolumeClaim:
+              claimName: training-workspace
+          - name: scripts
+            configMap:
+              name: training-data-script
+        containers:
+          - name: node
+            volumeMounts:
+              - name: workspace
+                mountPath: /workspace
+              - name: scripts
+                mountPath: /scripts
+YAML
+```
+
+!!! warning "Key details in the TrainJob YAML"
+    - **`targetJobs` name must be `node`** — the `training-hub` ClusterTrainingRuntime uses `node` as the job name, not `Trainer` or `Initializer`
+    - **Container name must be `node`** — matches the runtime's container name
+    - **GPU toleration is required** if GPU nodes have the `nvidia.com/gpu=True:NoSchedule` taint
+    - **Resource requests** must fit within the GPU node's allocatable capacity (e.g., `g6.xlarge` has ~3.5 CPU and ~14GB RAM)
+
+#### Step 3B.3: Monitor training
+
+```bash
+# Watch the pod start
+oc get pods -n financial-agent -l job-name=financial-agent-lora-sft-node-0 -w
+
+# Once Running, stream the logs
+oc logs -f -l job-name=financial-agent-lora-sft-node-0 -n financial-agent
+```
+
+Expected output:
+
+```
+============================================================
+Step 1: Downloading dataset from HuggingFace...
+============================================================
+  Saved 50 examples to /workspace/data/training_data.jsonl
+============================================================
+Step 2: Running LoRA SFT training...
+============================================================
+🦥 Unsloth 2026.4.5 patched 36 layers with 36 QLoRA layers
+Trainable parameters = 16,544,768 / 4,025,356,288 (0.41%)
+{'loss': 1.817, 'learning_rate': 2e-04, 'epoch': 0.5}
+{'loss': 1.511, 'learning_rate': 0.0, 'epoch': 1.0}
+{'train_runtime': 38.5, 'train_samples_per_second': 1.3}
+============================================================
+Training complete!
+  Output saved to: /workspace/output
+============================================================
+```
+
+#### Step 3B.4: Verify and retrieve the checkpoint
+
+```bash
+# Verify TrainJob completed
+oc get trainjob financial-agent-lora-sft -n financial-agent
+
+# The LoRA adapter is saved in the PVC at /workspace/output
+# To use it for deployment, copy to S3 or a model registry
+```
+
+### Option C: LoRA KFP Pipeline on RHOAI (for multi-stage automation)
 
 **Source:** [pipelines-components/pipelines/training/finetuning/lora](https://github.com/red-hat-data-services/pipelines-components/tree/main/pipelines/training/finetuning/lora)
+
+The KFP pipeline wraps the same LoRA SFT algorithm in a four-stage automated pipeline. Use this when you need automatic dataset download, evaluation, and model registry as a repeatable workflow.
 
 ```bash
 # Compile the pipeline YAML
@@ -121,7 +311,8 @@ python 03b_train_kfp_pipeline.py --compile-only
 #   lora_r = 16, lora_alpha = 32
 ```
 
-The KFP pipeline runs four stages automatically:
+The four pipeline stages:
+
 1. **Dataset Download** — fetches and validates training data
 2. **LoRA Training** — fine-tunes via Kubeflow Trainer + Training Hub Unsloth backend
 3. **Evaluation** — LM-Eval harness benchmarks
@@ -134,6 +325,14 @@ Prerequisites for KFP pipeline:
 - Pipeline server (DSPA) running in your namespace
 - RWX storage class (default: `nfs-csi`), or switch to RWO (see [cluster notes](#important-cluster-notes))
 - `kubernetes-credentials` secret with cluster API access
+
+Create the required secret:
+
+```bash
+oc create secret generic kubernetes-credentials \
+  --from-literal=KUBERNETES_SERVER_URL="https://api.your-cluster.com:6443" \
+  --from-literal=KUBERNETES_AUTH_TOKEN="$(oc whoami -t)"
+```
 
 ## Step 4: Deploy the Fine-Tuned Model
 
