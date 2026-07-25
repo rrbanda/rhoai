@@ -4,6 +4,30 @@
 
 Teach a small language model to use MCP server tools through synthetic data generation and reinforcement learning. Combines SDG Hub's MCP Distillation flow for tool-use data generation with Training Hub's LoRA GRPO method for efficient fine-tuning.
 
+## Start Here
+
+| Approach | File | Best for |
+|----------|------|----------|
+| **Interactive notebook** | [`mcp_distillation_e2e.ipynb`](mcp_distillation_e2e.ipynb) | Learning the full pipeline step-by-step, prototyping |
+| **CLI scripts** | [`examples/`](examples/) | Production pipelines, automation, CI/CD integration |
+
+The notebook walks through the **complete lifecycle** — from exploring a demo MCP server through data generation, formatting, training, and evaluation — all in one place.
+
+The CLI scripts break the same workflow into composable steps that can be run independently.
+
+## Demo MCP Server
+
+The [`demo_server/`](demo_server/) directory contains a standalone **ShopInsights Analytics Platform** — a FastMCP e-commerce server with 15 tools organized into ambiguity clusters:
+
+```bash
+cd demo_server/
+pip install fastmcp
+python server.py
+# Server starts on http://localhost:8008
+```
+
+The tools are deliberately designed with overlapping functionality (e.g., `search_products` vs `browse_catalog` vs `get_trending_products`) to test the student model's ability to select the right tool for a given query. See [`demo_server/README.md`](demo_server/README.md) for details.
+
 ## Architecture
 
 ```
@@ -34,6 +58,7 @@ Teach a small language model to use MCP server tools through synthetic data gene
 - Formatting Langflow tool traces into function-calling JSONL
 - Training with LoRA GRPO via Training Hub
 - Scaling data generation with runtime parameter overrides
+- Evaluating the fine-tuned model on tool-use tasks
 
 ## Prerequisites
 
@@ -45,21 +70,29 @@ Teach a small language model to use MCP server tools through synthetic data gene
 
 ## Quick Start
 
-### 1. Install dependencies
+### 1. Start the demo MCP server
+
+```bash
+cd demo_server/
+pip install fastmcp
+python server.py
+```
+
+### 2. Install dependencies
 
 ```bash
 cd examples/
 pip install -r requirements.txt
 ```
 
-### 2. Configure environment
+### 3. Configure environment
 
 ```bash
 cp .env.example .env
 # Edit .env with your API keys, Langflow URL, and model preferences
 ```
 
-### 3. Generate training data
+### 4. Generate training data
 
 ```bash
 python 01_generate_tool_data.py --num-samples 10
@@ -72,7 +105,7 @@ This runs the full MCP distillation pipeline:
 - Quality filters remove low-quality questions and incomplete trajectories
 - Output is saved as `generated_data/distillation_output.parquet`
 
-### 4. Format for training
+### 5. Format for training
 
 ```bash
 python 02_format_training_data.py
@@ -94,7 +127,7 @@ Converts tool traces into structured function-calling conversations:
 
 Output is saved as `generated_data/training_data.jsonl`.
 
-### 5. Train with GRPO
+### 6. Train with GRPO
 
 ```bash
 python 03_train_grpo.py --backend art --num-iterations 15
@@ -106,15 +139,20 @@ For multi-GPU training:
 python 03_train_grpo.py --backend verl --n-gpus 4
 ```
 
-## What's in examples/
+## What's in This Directory
 
-| File | Description |
+| Path | Description |
 |------|-------------|
-| `.env.example` | Template for API keys, Langflow URL, model config, and paths |
-| `requirements.txt` | Python dependencies for all three steps |
-| `01_generate_tool_data.py` | Runs SDG Hub's MCP distillation flow to generate tool-use training data |
-| `02_format_training_data.py` | Converts Langflow tool traces into function-calling JSONL for SFT |
-| `03_train_grpo.py` | Trains a student model with LoRA GRPO via Training Hub |
+| `mcp_distillation_e2e.ipynb` | Full end-to-end tutorial notebook (interactive, all steps in one place) |
+| `demo_server/` | Standalone demo MCP server (FastMCP, 15 e-commerce tools) |
+| `demo_server/server.py` | FastMCP server with 15 tool definitions |
+| `demo_server/data.py` | Deterministic data generation for the demo server |
+| `examples/` | CLI scripts for production use |
+| `examples/01_generate_tool_data.py` | Runs SDG Hub's MCP distillation flow |
+| `examples/02_format_training_data.py` | Converts tool traces to function-calling JSONL |
+| `examples/03_train_grpo.py` | Trains student model with LoRA GRPO |
+| `examples/.env.example` | Template for API keys and configuration |
+| `examples/requirements.txt` | Python dependencies |
 
 ## CLI Reference
 
