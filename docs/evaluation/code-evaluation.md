@@ -21,7 +21,7 @@ seed_data = Dataset.from_dict({
     ],
 })
 
-code_flows = FlowRegistry.search_flows("code")
+code_flows = FlowRegistry.search_flows(tag="code-evaluation")
 flow = Flow.from_yaml(FlowRegistry.get_flow_path(code_flows[0]["name"]))
 flow.set_model_config(model="gpt-4o")
 

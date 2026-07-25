@@ -45,13 +45,13 @@ Maximum learning capacity. Best when the model will be used exclusively for medi
 from training_hub import sft
 
 sft(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="medical_training_data.jsonl",
-    output_dir="./medical-sft",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="medical_training_data.jsonl",
+    ckpt_output_dir="./medical-sft",
     num_epochs=5,
-    batch_size=32,
+    effective_batch_size=32,
     max_seq_len=4096,
-    lr=2e-5,
+    learning_rate=2e-5,
 )
 ```
 
@@ -63,13 +63,15 @@ Adds medical knowledge while preserving general capabilities. **Recommended** wh
 from training_hub import osft
 
 osft(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="medical_training_data.jsonl",
-    output_dir="./medical-osft",
-    num_epochs=5,
-    batch_size=32,
-    max_seq_len=4096,
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="medical_training_data.jsonl",
+    ckpt_output_dir="./medical-osft",
     unfreeze_rank_ratio=0.01,
+    effective_batch_size=32,
+    max_tokens_per_gpu=16384,
+    max_seq_len=4096,
+    learning_rate=2e-5,
+    num_epochs=5,
 )
 ```
 
@@ -81,9 +83,9 @@ Memory-efficient fine-tuning. Best when you have limited GPU resources or want t
 from training_hub import lora_sft
 
 lora_sft(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="medical_training_data.jsonl",
-    output_dir="./medical-lora",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="medical_training_data.jsonl",
+    ckpt_output_dir="./medical-lora",
     num_epochs=5,
     lora_r=32,
     lora_alpha=64,
@@ -93,24 +95,6 @@ lora_sft(
 
 !!! tip "Multiple Specialties"
     With LoRA, you can maintain separate adapters for cardiology, oncology, endocrinology, etc. — all sharing the same base model. Swap adapters at inference time based on the query domain.
-
-## Evaluation
-
-Compare the three approaches on a held-out medical Q&A test set:
-
-```python
-# Generate evaluation data
-from sdg_hub import Flow, FlowRegistry
-
-FlowRegistry.discover_flows()
-flow = Flow.from_yaml(FlowRegistry.get_flow_path(
-    "Document Based Knowledge Tuning Dataset Generation Flow"
-))
-flow.set_model_config(model="gpt-4o-mini")
-
-eval_result = flow.generate(held_out_medical_docs)
-eval_result.to_json("medical_eval.jsonl", orient="records", lines=True)
-```
 
 ## Related
 

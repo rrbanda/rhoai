@@ -26,11 +26,11 @@ dataset = Dataset.from_dict({
     "domain": ["general", "data", "support"],
 })
 
-# Search for skills-related flows
-skills_flows = FlowRegistry.search_flows("skills")
+# Search for skills-related flows by tag
+skills_flows = FlowRegistry.search_flows(tag="skills")
 
 for flow_info in skills_flows:
-    print(f"{flow_info['name']}: {flow_info['description']}")
+    print(f"{flow_info['id']}: {flow_info['name']}")
 
 # Use a skills flow
 flow = Flow.from_yaml(FlowRegistry.get_flow_path(skills_flows[0]["name"]))
@@ -52,13 +52,11 @@ For [LAB multi-phase training](../training/lab-multiphase.md), keep knowledge an
 ```python
 from training_hub import sft
 
-# Phase 1: Knowledge
-sft(model="base-model", data="knowledge_data.jsonl", output_dir="./phase1",
-    num_epochs=7, lr=2e-5)
+sft(model_path="base-model", data_path="knowledge_data.jsonl",
+    ckpt_output_dir="./phase1", num_epochs=7, learning_rate=2e-5)
 
-# Phase 2: Skills (starting from Phase 1)
-sft(model="./phase1", data="skills_data.jsonl", output_dir="./phase2",
-    num_epochs=3, lr=5e-6)
+sft(model_path="./phase1/hf_format/samples_0", data_path="skills_data.jsonl",
+    ckpt_output_dir="./phase2", num_epochs=3, learning_rate=5e-6)
 ```
 
 ## Output Format

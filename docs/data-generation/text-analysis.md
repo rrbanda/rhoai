@@ -27,8 +27,8 @@ dataset = Dataset.from_dict({
     "domain": ["product-review", "product-review"],
 })
 
-# Find text analysis flows
-text_flows = FlowRegistry.search_flows("text analysis")
+# Find text analysis flows by tag
+text_flows = FlowRegistry.search_flows(tag="text-analysis")
 flow_info = text_flows[0]
 
 flow = Flow.from_yaml(FlowRegistry.get_flow_path(flow_info["name"]))

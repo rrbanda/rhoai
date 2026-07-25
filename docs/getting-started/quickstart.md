@@ -28,7 +28,7 @@ FlowRegistry.discover_flows()
 
 seed_data = Dataset.from_dict({
     "document": [
-        "RHOAI 3.4 introduces Models-as-a-Service (MaaS), allowing users "
+        "RHOAI 3.4 brings Models-as-a-Service (MaaS) to GA, allowing users "
         "to access hosted LLMs directly from the dashboard without deploying "
         "model servers. Supported providers include OpenAI, Anthropic, and "
         "IBM watsonx. MaaS endpoints are rate-limited and metered per-token."
@@ -58,11 +58,11 @@ Fine-tune a small model on the generated data:
     from training_hub import sft
 
     sft(
-        model="meta-llama/Llama-3.1-8B-Instruct",
-        data="training_data.jsonl",
-        output_dir="./my-model",
+        model_path="meta-llama/Llama-3.1-8B-Instruct",
+        data_path="training_data.jsonl",
+        ckpt_output_dir="./my-model",
         num_epochs=4,
-        batch_size=32,
+        effective_batch_size=32,
         max_seq_len=4096,
     )
     ```
@@ -73,12 +73,15 @@ Fine-tune a small model on the generated data:
     from training_hub import osft
 
     osft(
-        model="meta-llama/Llama-3.1-8B-Instruct",
-        data="training_data.jsonl",
-        output_dir="./my-model",
+        model_path="meta-llama/Llama-3.1-8B-Instruct",
+        data_path="training_data.jsonl",
+        ckpt_output_dir="./my-model",
         num_epochs=4,
-        batch_size=32,
+        effective_batch_size=32,
         max_seq_len=4096,
+        learning_rate=2e-5,
+        max_tokens_per_gpu=16384,
+        unfreeze_rank_ratio=0.01,
     )
     ```
 
@@ -88,9 +91,9 @@ Fine-tune a small model on the generated data:
     from training_hub import lora_sft
 
     lora_sft(
-        model="meta-llama/Llama-3.1-8B-Instruct",
-        data="training_data.jsonl",
-        output_dir="./my-model",
+        model_path="meta-llama/Llama-3.1-8B-Instruct",
+        data_path="training_data.jsonl",
+        ckpt_output_dir="./my-model",
         num_epochs=4,
         lora_r=16,
         lora_alpha=32,

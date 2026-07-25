@@ -15,9 +15,9 @@ Low-Rank Adaptation (LoRA) adds small trainable adapter matrices to the model wh
 from training_hub import lora_sft
 
 lora_sft(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="training_data.jsonl",
-    output_dir="./lora-output",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="training_data.jsonl",
+    ckpt_output_dir="./lora-output",
     num_epochs=4,
     lora_r=16,
     lora_alpha=32,
@@ -30,7 +30,7 @@ lora_sft(
 |-----------|-------------|----------|
 | `lora_r` | Rank of the adapter matrices. Higher = more capacity | Start with 16, increase to 64 for complex tasks |
 | `lora_alpha` | Scaling factor. Controls how much the adapter affects output | Typically set to `2 * lora_r` |
-| `lora_dropout` | Dropout on adapter weights | `0.05` for regularization |
+| `lora_dropout` | Dropout on adapter weights | Optional, for regularization |
 
 !!! tip "Rule of Thumb"
     Set `lora_alpha = 2 * lora_r`. For most tasks, `lora_r=16, lora_alpha=32` works well. Increase `lora_r` to 64 for complex domain adaptation.
@@ -43,13 +43,13 @@ QLoRA quantizes the base model to 4-bit precision, reducing memory usage by ~4x 
 from training_hub import lora_sft
 
 lora_sft(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="training_data.jsonl",
-    output_dir="./qlora-output",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="training_data.jsonl",
+    ckpt_output_dir="./qlora-output",
     num_epochs=4,
     lora_r=16,
     lora_alpha=32,
-    quantize=True,  # Enable QLoRA
+    load_in_4bit=True,
 )
 ```
 
@@ -57,18 +57,21 @@ lora_sft(
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `model` | str | required | HuggingFace model ID or local path |
-| `data` | str | required | Path to JSONL training data |
-| `output_dir` | str | required | Where to save the adapter |
-| `num_epochs` | int | `4` | Number of training epochs |
-| `lora_r` | int | `16` | Rank of LoRA adapter matrices |
-| `lora_alpha` | int | `32` | LoRA scaling factor |
-| `lora_dropout` | float | `0.05` | Dropout for LoRA layers |
-| `batch_size` | int | `32` | Effective batch size |
-| `max_seq_len` | int | `4096` | Maximum sequence length |
-| `lr` | float | `2e-4` | Learning rate (higher than SFT) |
-| `quantize` | bool | `False` | Enable QLoRA (4-bit base model) |
-| `target_modules` | list | auto | Which layers to apply LoRA to |
+| `model_path` | str | required | HuggingFace model ID or local path |
+| `data_path` | str | required | Path to JSONL training data |
+| `ckpt_output_dir` | str | required | Where to save the adapter |
+| `num_epochs` | int | None | Number of training epochs |
+| `lora_r` | int | None | Rank of LoRA adapter matrices |
+| `lora_alpha` | int | None | LoRA scaling factor |
+| `lora_dropout` | float | None | Dropout for LoRA layers |
+| `effective_batch_size` | int | None | Effective batch size |
+| `micro_batch_size` | int | None | Per-device batch size |
+| `max_seq_len` | int | None | Maximum sequence length |
+| `learning_rate` | float | None | Learning rate |
+| `load_in_4bit` | bool | None | Enable QLoRA (4-bit base model) |
+| `load_in_8bit` | bool | None | Enable 8-bit quantization |
+| `target_modules` | list | None | Which layers to apply LoRA to |
+| `nproc_per_node` | int/str | None | Number of GPUs |
 
 ## GPU Requirements
 

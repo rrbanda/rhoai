@@ -10,14 +10,14 @@ Meta's flagship open model. Strong general capabilities and well-supported acros
 from training_hub import sft
 
 sft(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="training_data.jsonl",
-    output_dir="./llama-output",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="training_data.jsonl",
+    ckpt_output_dir="./llama-output",
     num_epochs=4,
-    batch_size=32,
+    effective_batch_size=32,
     max_seq_len=4096,
-    lr=2e-5,
-    warmup_ratio=0.1,
+    learning_rate=2e-5,
+    warmup_steps=50,
 )
 ```
 
@@ -36,14 +36,14 @@ Strong multilingual and reasoning capabilities. Good for non-English domains.
 from training_hub import sft
 
 sft(
-    model="Qwen/Qwen2.5-7B-Instruct",
-    data="training_data.jsonl",
-    output_dir="./qwen-output",
+    model_path="Qwen/Qwen2.5-7B-Instruct",
+    data_path="training_data.jsonl",
+    ckpt_output_dir="./qwen-output",
     num_epochs=4,
-    batch_size=32,
+    effective_batch_size=32,
     max_seq_len=4096,
-    lr=2e-5,
-    warmup_ratio=0.1,
+    learning_rate=2e-5,
+    warmup_steps=50,
 )
 ```
 
@@ -62,14 +62,14 @@ Microsoft's dense, efficient model. Best cost-performance ratio for many tasks.
 from training_hub import sft
 
 sft(
-    model="microsoft/Phi-4-mini-instruct",
-    data="training_data.jsonl",
-    output_dir="./phi-output",
+    model_path="microsoft/Phi-4-mini-instruct",
+    data_path="training_data.jsonl",
+    ckpt_output_dir="./phi-output",
     num_epochs=5,
-    batch_size=64,
+    effective_batch_size=64,
     max_seq_len=4096,
-    lr=3e-5,
-    warmup_ratio=0.1,
+    learning_rate=3e-5,
+    warmup_steps=50,
 )
 ```
 
@@ -91,14 +91,14 @@ Red Hat / IBM's enterprise-focused models. Optimized for enterprise workloads.
 from training_hub import sft
 
 sft(
-    model="ibm-granite/granite-3.3-8b-instruct",
-    data="training_data.jsonl",
-    output_dir="./granite-output",
+    model_path="ibm-granite/granite-3.3-8b-instruct",
+    data_path="training_data.jsonl",
+    ckpt_output_dir="./granite-output",
     num_epochs=4,
-    batch_size=32,
+    effective_batch_size=32,
     max_seq_len=4096,
-    lr=2e-5,
-    warmup_ratio=0.1,
+    learning_rate=2e-5,
+    warmup_steps=50,
 )
 ```
 
@@ -117,14 +117,14 @@ Large-scale open model. Use when maximum capacity is needed and GPU resources ar
 from training_hub import sft
 
 sft(
-    model="gpt-oss/gpt-oss-20b",
-    data="training_data.jsonl",
-    output_dir="./gpt-oss-output",
+    model_path="gpt-oss/gpt-oss-20b",
+    data_path="training_data.jsonl",
+    ckpt_output_dir="./gpt-oss-output",
     num_epochs=3,
-    batch_size=16,
+    effective_batch_size=16,
     max_seq_len=4096,
-    lr=1e-5,
-    warmup_ratio=0.1,
+    learning_rate=1e-5,
+    warmup_steps=50,
 )
 ```
 
@@ -143,13 +143,13 @@ Compact Mistral model for highly constrained environments.
 from training_hub import sft
 
 sft(
-    model="mistralai/Ministral-3B-Instruct",
-    data="training_data.jsonl",
-    output_dir="./ministral-output",
+    model_path="mistralai/Ministral-3B-Instruct",
+    data_path="training_data.jsonl",
+    ckpt_output_dir="./ministral-output",
     num_epochs=5,
-    batch_size=64,
+    effective_batch_size=64,
     max_seq_len=4096,
-    lr=3e-5,
+    learning_rate=3e-5,
 )
 ```
 

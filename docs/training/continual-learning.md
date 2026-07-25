@@ -26,37 +26,40 @@ Each OSFT phase updates weights in an **orthogonal subspace**, meaning Phase 2 u
 ```python
 from training_hub import osft
 
-# Phase 1: Add medical knowledge
 osft(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="medical_data.jsonl",
-    output_dir="./phase1-medical",
-    num_epochs=4,
-    batch_size=32,
-    max_seq_len=4096,
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="medical_data.jsonl",
+    ckpt_output_dir="./phase1-medical",
     unfreeze_rank_ratio=0.01,
+    effective_batch_size=32,
+    max_tokens_per_gpu=16384,
+    max_seq_len=4096,
+    learning_rate=2e-5,
+    num_epochs=4,
 )
 
-# Phase 2: Add legal knowledge (without losing medical)
 osft(
-    model="./phase1-medical",
-    data="legal_data.jsonl",
-    output_dir="./phase2-legal",
-    num_epochs=4,
-    batch_size=32,
-    max_seq_len=4096,
+    model_path="./phase1-medical/hf_format/samples_0",
+    data_path="legal_data.jsonl",
+    ckpt_output_dir="./phase2-legal",
     unfreeze_rank_ratio=0.01,
+    effective_batch_size=32,
+    max_tokens_per_gpu=16384,
+    max_seq_len=4096,
+    learning_rate=2e-5,
+    num_epochs=4,
 )
 
-# Phase 3: Add financial knowledge (without losing medical or legal)
 osft(
-    model="./phase2-legal",
-    data="finance_data.jsonl",
-    output_dir="./phase3-finance",
-    num_epochs=4,
-    batch_size=32,
-    max_seq_len=4096,
+    model_path="./phase2-legal/hf_format/samples_0",
+    data_path="finance_data.jsonl",
+    ckpt_output_dir="./phase3-finance",
     unfreeze_rank_ratio=0.01,
+    effective_batch_size=32,
+    max_tokens_per_gpu=16384,
+    max_seq_len=4096,
+    learning_rate=2e-5,
+    num_epochs=4,
 )
 ```
 

@@ -20,7 +20,7 @@ seed_data = Dataset.from_dict({
     "complexity": ["single-tool", "multi-tool"],
 })
 
-agent_flows = FlowRegistry.search_flows("agent")
+agent_flows = FlowRegistry.search_flows(tag="agent-evaluation")
 flow = Flow.from_yaml(FlowRegistry.get_flow_path(agent_flows[0]["name"]))
 flow.set_model_config(model="gpt-4o")
 

@@ -13,7 +13,7 @@ Large frontier models (70B+ parameters) are powerful but expensive to serve. A w
 
 ## The RHOAI Model Customization Stack
 
-RHOAI provides two key libraries that work together:
+The RHOAI model customization workflow uses two open-source Python libraries, both officially referenced in RHOAI 3.4 documentation and included in Red Hat-curated workbench images:
 
 ### SDG Hub — Synthetic Data Generation
 
@@ -36,9 +36,9 @@ result = flow.generate(dataset)
 from training_hub import sft, osft, lora_sft
 
 sft(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="training_data.jsonl",
-    output_dir="./output",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="training_data.jsonl",
+    ckpt_output_dir="./output",
 )
 ```
 

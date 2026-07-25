@@ -109,12 +109,12 @@ Use GRPO (Group Relative Policy Optimization) to train the student model:
 from training_hub import lora_grpo
 
 lora_grpo(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="grpo_training_data.jsonl",
-    output_dir="./tool-use-model",
-    num_epochs=2,
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="grpo_training_data.jsonl",
+    ckpt_output_dir="./tool-use-model",
+    num_iterations=15,
     lora_r=16,
-    lora_alpha=32,
+    lora_alpha=8,
 )
 ```
 

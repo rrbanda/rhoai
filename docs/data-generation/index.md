@@ -59,9 +59,14 @@ from sdg_hub import FlowRegistry
 
 FlowRegistry.discover_flows()
 
-# List all available flows
+# List all available flows (returns dicts with "id" and "name" keys)
 for flow in FlowRegistry.list_flows():
-    print(f"{flow['name']}: {flow['description']}")
+    print(f"{flow['id']}: {flow['name']}")
+
+    # For detailed metadata (description, tags, author):
+    metadata = FlowRegistry.get_flow_metadata(flow["name"])
+    if metadata:
+        print(f"  {metadata.description}")
 ```
 
 ## Available Flows

@@ -108,13 +108,15 @@ Choose your algorithm based on the [decision guide](../getting-started/choosing-
     from training_hub import osft
 
     osft(
-        model="meta-llama/Llama-3.1-8B-Instruct",
-        data="training_data.jsonl",
-        output_dir="./knowledge-model",
-        num_epochs=4,
-        batch_size=32,
-        max_seq_len=4096,
+        model_path="meta-llama/Llama-3.1-8B-Instruct",
+        data_path="training_data.jsonl",
+        ckpt_output_dir="./knowledge-model",
         unfreeze_rank_ratio=0.01,
+        effective_batch_size=32,
+        max_tokens_per_gpu=16384,
+        max_seq_len=4096,
+        learning_rate=2e-5,
+        num_epochs=4,
     )
     ```
 
@@ -126,11 +128,11 @@ Choose your algorithm based on the [decision guide](../getting-started/choosing-
     from training_hub import sft
 
     sft(
-        model="meta-llama/Llama-3.1-8B-Instruct",
-        data="training_data.jsonl",
-        output_dir="./knowledge-model",
+        model_path="meta-llama/Llama-3.1-8B-Instruct",
+        data_path="training_data.jsonl",
+        ckpt_output_dir="./knowledge-model",
         num_epochs=4,
-        batch_size=32,
+        effective_batch_size=32,
         max_seq_len=4096,
     )
     ```
@@ -143,9 +145,9 @@ Choose your algorithm based on the [decision guide](../getting-started/choosing-
     from training_hub import lora_sft
 
     lora_sft(
-        model="meta-llama/Llama-3.1-8B-Instruct",
-        data="training_data.jsonl",
-        output_dir="./knowledge-model",
+        model_path="meta-llama/Llama-3.1-8B-Instruct",
+        data_path="training_data.jsonl",
+        ckpt_output_dir="./knowledge-model",
         num_epochs=4,
         lora_r=16,
         lora_alpha=32,

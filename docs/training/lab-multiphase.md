@@ -27,26 +27,24 @@ graph LR
 ```python
 from training_hub import sft
 
-# Phase 1: Knowledge training
 sft(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="knowledge_data.jsonl",
-    output_dir="./phase1-knowledge",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="knowledge_data.jsonl",
+    ckpt_output_dir="./phase1-knowledge",
     num_epochs=7,
-    batch_size=32,
+    effective_batch_size=32,
     max_seq_len=4096,
-    lr=2e-5,
+    learning_rate=2e-5,
 )
 
-# Phase 2: Skills training (starting from Phase 1 output)
 sft(
-    model="./phase1-knowledge",
-    data="skills_data.jsonl",
-    output_dir="./phase2-skills",
+    model_path="./phase1-knowledge/hf_format/samples_0",
+    data_path="skills_data.jsonl",
+    ckpt_output_dir="./phase2-skills",
     num_epochs=3,
-    batch_size=32,
+    effective_batch_size=32,
     max_seq_len=4096,
-    lr=5e-6,
+    learning_rate=5e-6,
 )
 ```
 
@@ -69,22 +67,28 @@ You can also run multi-phase training with OSFT for knowledge preservation:
 ```python
 from training_hub import osft
 
-# Phase 1: Knowledge with OSFT
 osft(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="knowledge_data.jsonl",
-    output_dir="./phase1-knowledge",
-    num_epochs=7,
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="knowledge_data.jsonl",
+    ckpt_output_dir="./phase1-knowledge",
     unfreeze_rank_ratio=0.01,
+    effective_batch_size=32,
+    max_tokens_per_gpu=16384,
+    max_seq_len=4096,
+    learning_rate=2e-5,
+    num_epochs=7,
 )
 
-# Phase 2: Skills with OSFT
 osft(
-    model="./phase1-knowledge",
-    data="skills_data.jsonl",
-    output_dir="./phase2-skills",
+    model_path="./phase1-knowledge/hf_format/samples_0",
+    data_path="skills_data.jsonl",
+    ckpt_output_dir="./phase2-skills",
+    unfreeze_rank_ratio=0.005,
+    effective_batch_size=32,
+    max_tokens_per_gpu=16384,
+    max_seq_len=4096,
+    learning_rate=5e-6,
     num_epochs=3,
-    unfreeze_rank_ratio=0.005,  # More conservative for skills
 )
 ```
 

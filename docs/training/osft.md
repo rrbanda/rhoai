@@ -29,30 +29,40 @@ The `unfreeze_rank_ratio` parameter controls the trade-off between learning new 
 from training_hub import osft
 
 osft(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="training_data.jsonl",
-    output_dir="./osft-output",
-    num_epochs=4,
-    batch_size=32,
-    max_seq_len=4096,
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="training_data.jsonl",
+    ckpt_output_dir="./osft-output",
     unfreeze_rank_ratio=0.01,
+    effective_batch_size=32,
+    max_tokens_per_gpu=16384,
+    max_seq_len=4096,
+    learning_rate=2e-5,
+    num_epochs=4,
 )
 ```
 
 ## Parameter Reference
 
-| Parameter | Type | Default | Description |
-|-----------|------|---------|-------------|
-| `model` | str | required | HuggingFace model ID or local path |
-| `data` | str | required | Path to JSONL training data |
-| `output_dir` | str | required | Where to save the trained model |
-| `num_epochs` | int | `4` | Number of training epochs |
-| `batch_size` | int | `32` | Effective batch size |
-| `max_seq_len` | int | `4096` | Maximum sequence length |
-| `lr` | float | `2e-5` | Learning rate |
-| `unfreeze_rank_ratio` | float | `0.01` | Controls learning vs preservation |
-| `warmup_ratio` | float | `0.1` | Warmup proportion |
-| `chat_template` | str | auto | Override chat template format |
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `model_path` | str | Yes | — | HuggingFace model ID or local path |
+| `data_path` | str | Yes | — | Path to JSONL training data |
+| `ckpt_output_dir` | str | Yes | — | Where to save the trained model |
+| `unfreeze_rank_ratio` | float | Yes | — | Controls learning vs preservation trade-off |
+| `effective_batch_size` | int | Yes | — | Effective batch size |
+| `max_tokens_per_gpu` | int | Yes | — | Token budget per GPU per step |
+| `max_seq_len` | int | Yes | — | Maximum sequence length |
+| `learning_rate` | float | Yes | — | Learning rate |
+| `num_epochs` | int | No | None | Number of training epochs |
+| `warmup_steps` | int | No | None | Number of warmup steps |
+| `use_liger` | bool | No | None | Use Liger kernel for efficiency |
+| `unmask_messages` | bool | No | None | Train on all message roles |
+| `is_pretraining` | bool | No | None | Enable continued pretraining mode |
+| `checkpoint_at_epoch` | bool | No | None | Save checkpoint at each epoch |
+| `nproc_per_node` | int/str | No | None | Number of GPUs |
+
+!!! warning "Required Parameters"
+    Unlike SFT, OSFT requires you to explicitly set `unfreeze_rank_ratio`, `effective_batch_size`, `max_tokens_per_gpu`, `max_seq_len`, and `learning_rate`. These have no defaults.
 
 ## Continual Learning
 
@@ -61,20 +71,26 @@ OSFT is uniquely suited for continual learning — training on new data batches 
 ```python
 from training_hub import osft
 
-# Phase 1: Train on medical data
 osft(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="medical_data.jsonl",
-    output_dir="./phase1",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="medical_data.jsonl",
+    ckpt_output_dir="./phase1",
     unfreeze_rank_ratio=0.01,
+    effective_batch_size=32,
+    max_tokens_per_gpu=16384,
+    max_seq_len=4096,
+    learning_rate=2e-5,
 )
 
-# Phase 2: Add legal knowledge to the same model
 osft(
-    model="./phase1",
-    data="legal_data.jsonl",
-    output_dir="./phase2",
+    model_path="./phase1/hf_format/samples_0",
+    data_path="legal_data.jsonl",
+    ckpt_output_dir="./phase2",
     unfreeze_rank_ratio=0.01,
+    effective_batch_size=32,
+    max_tokens_per_gpu=16384,
+    max_seq_len=4096,
+    learning_rate=2e-5,
 )
 ```
 

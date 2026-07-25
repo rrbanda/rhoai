@@ -21,8 +21,8 @@ corpus = Dataset.from_dict({
     "domain": ["rhoai", "rhoai"],
 })
 
-# Search for RAG evaluation flows
-rag_flows = FlowRegistry.search_flows("rag evaluation")
+# Search for RAG evaluation flows by tag
+rag_flows = FlowRegistry.search_flows(tag="rag-evaluation")
 
 flow = Flow.from_yaml(FlowRegistry.get_flow_path(rag_flows[0]["name"]))
 flow.set_model_config(model="gpt-4o-mini")

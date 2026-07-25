@@ -13,7 +13,7 @@ graph LR
     E --> F[KServe / vLLM Serving]
 ```
 
-**SDG Hub** generates high-quality synthetic training data from your documents using a teacher LLM. **Training Hub** fine-tunes a smaller student model on that data. The result is a compact, domain-expert model you can deploy on RHOAI.
+[**SDG Hub**](https://github.com/Red-Hat-AI-Innovation-Team/sdg_hub) generates high-quality synthetic training data from your documents using a teacher LLM. [**Training Hub**](https://github.com/Red-Hat-AI-Innovation-Team/training_hub) fine-tunes a smaller student model on that data. Both are open-source Python libraries officially referenced in RHOAI 3.4 docs and pre-installed in Red Hat-curated workbench images. The result is a compact, domain-expert model you can deploy on RHOAI via KServe.
 
 ## Start Here
 

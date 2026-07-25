@@ -20,7 +20,7 @@ graph LR
     C --> D[Domain Expert<br/>Chat Model]
 ```
 
-CPT uses the `unmask_input=True` flag to train on all tokens (not just assistant responses), since the data is plain text rather than conversations.
+CPT uses the `is_pretraining=True` flag to train on all tokens (not just assistant responses), since the data is plain text rather than conversations.
 
 ## Example: Spreadsheet Domain
 
@@ -31,25 +31,25 @@ Train a model to understand spreadsheet formulas and operations:
     ```python
     from training_hub import sft
 
-    # Step 1: Continued pretraining on raw spreadsheet documentation
     sft(
-        model="ibm-granite/granite-3.3-8b-instruct",
-        data="spreadsheet_docs.jsonl",
-        output_dir="./cpt-spreadsheet",
+        model_path="ibm-granite/granite-3.3-8b-instruct",
+        data_path="spreadsheet_docs.jsonl",
+        ckpt_output_dir="./cpt-spreadsheet",
+        is_pretraining=True,
+        block_size=2048,
+        document_column_name="document",
         num_epochs=2,
-        batch_size=16,
-        max_seq_len=8192,
-        lr=1e-5,
-        unmask_input=True,
+        effective_batch_size=64,
+        max_seq_len=4096,
+        learning_rate=2e-6,
     )
 
-    # Step 2: SFT on spreadsheet Q&A pairs
     sft(
-        model="./cpt-spreadsheet",
-        data="spreadsheet_qa.jsonl",
-        output_dir="./sft-spreadsheet",
+        model_path="./cpt-spreadsheet/hf_format/samples_0",
+        data_path="spreadsheet_qa.jsonl",
+        ckpt_output_dir="./sft-spreadsheet",
         num_epochs=4,
-        batch_size=32,
+        effective_batch_size=32,
         max_seq_len=4096,
     )
     ```
@@ -59,58 +59,56 @@ Train a model to understand spreadsheet formulas and operations:
     ```python
     from training_hub import sft, osft
 
-    # Step 1: Continued pretraining
     sft(
-        model="ibm-granite/granite-3.3-8b-instruct",
-        data="spreadsheet_docs.jsonl",
-        output_dir="./cpt-spreadsheet",
+        model_path="ibm-granite/granite-3.3-8b-instruct",
+        data_path="spreadsheet_docs.jsonl",
+        ckpt_output_dir="./cpt-spreadsheet",
+        is_pretraining=True,
+        block_size=2048,
+        document_column_name="document",
         num_epochs=2,
-        batch_size=16,
-        max_seq_len=8192,
-        lr=1e-5,
-        unmask_input=True,
+        effective_batch_size=64,
+        max_seq_len=4096,
+        learning_rate=2e-6,
     )
 
-    # Step 2: OSFT to preserve general capabilities
     osft(
-        model="./cpt-spreadsheet",
-        data="spreadsheet_qa.jsonl",
-        output_dir="./osft-spreadsheet",
-        num_epochs=4,
-        batch_size=32,
-        max_seq_len=4096,
+        model_path="./cpt-spreadsheet/hf_format/samples_0",
+        data_path="spreadsheet_qa.jsonl",
+        ckpt_output_dir="./osft-spreadsheet",
         unfreeze_rank_ratio=0.01,
+        effective_batch_size=32,
+        max_tokens_per_gpu=16384,
+        max_seq_len=4096,
+        learning_rate=2e-5,
+        num_epochs=4,
     )
     ```
 
 ## CPT Data Format
 
-CPT data uses the same JSONL messages format, but with a single message containing the raw text:
+CPT data uses JSONL with a `document` column containing raw text:
 
 ```json
-{
-  "messages": [
-    {
-      "role": "user",
-      "content": "The VLOOKUP function searches for a value in the first column of a table range and returns a value in the same row from another column..."
-    }
-  ]
-}
+{"document": "The VLOOKUP function searches for a value in the first column of a table range and returns a value in the same row from another column..."}
+{"document": "SUMIFS adds cells in a range that meet multiple criteria. Syntax: SUMIFS(sum_range, criteria_range1, criteria1, ...)"}
 ```
 
-Set `unmask_input=True` to train on these user-role tokens.
+Set `is_pretraining=True` and `document_column_name="document"` to train on these raw text entries. The SFT function handles tokenization and packing internally.
 
 ## Key Parameters for CPT
 
 | Parameter | Recommended Value | Why |
 |-----------|------------------|-----|
-| `lr` | `1e-5` | Lower than SFT to avoid destabilizing pretrained weights |
+| `learning_rate` | `2e-6` | Lower than SFT to avoid destabilizing pretrained weights |
 | `num_epochs` | `1-2` | More epochs risk overfitting on repetitive text |
-| `unmask_input` | `True` | Train on all tokens, not just assistant responses |
-| `max_seq_len` | `8192` | Longer sequences for document-level context |
+| `is_pretraining` | `True` | Train on all tokens, not just assistant responses |
+| `block_size` | `2048` | Document packing block size |
+| `document_column_name` | `"document"` | Column name in JSONL containing raw text |
+| `max_seq_len` | `4096-8192` | Longer sequences for document-level context |
 
 ## Related
 
-- [SFT](sft.md) — The algorithm used for CPT (with `unmask_input=True`)
+- [SFT](sft.md) — The algorithm used for CPT (with `is_pretraining=True`)
 - [OSFT](osft.md) — Recommended follow-up for knowledge preservation
 - [Knowledge Tuning](../data-generation/knowledge-tuning.md) — Generate Q&A data for the SFT follow-up phase

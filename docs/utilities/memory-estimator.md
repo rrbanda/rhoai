@@ -7,15 +7,76 @@ Estimate GPU VRAM requirements before launching a training job. This avoids cost
 ```python
 from training_hub import estimate
 
-result = estimate(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    batch_size=32,
-    max_seq_len=4096,
-    method="sft",
+lower, expected, upper = estimate(
+    training_method="sft",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    num_gpus=2,
+    gpu_memory=85_899_345_920,  # 80 GB in bytes
 )
 
-print(f"Estimated VRAM: {result['total_gb']:.1f} GB")
-print(f"Recommended GPUs: {result['recommended_gpus']}")
+print(f"Estimated VRAM per GPU: {expected / 1e9:.1f} GB")
+print(f"Range: {lower / 1e9:.1f} - {upper / 1e9:.1f} GB")
+```
+
+The function returns a **3-tuple of integers** `(lower_bound, expected, upper_bound)` in **bytes** (per-GPU VRAM estimate).
+
+## Parameters
+
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `training_method` | str | `"sft"` | One of `"sft"`, `"osft"`, `"lora"`, `"qlora"` |
+| `model_path` | str | `"ibm-granite/granite-3.3-8b-instruct"` | HuggingFace model ID |
+| `num_gpus` | int | `8` | Number of GPUs |
+| `gpu_memory` | int | `85899345920` | Per-GPU VRAM in bytes (default: 80 GB) |
+| `max_tokens_per_gpu` | int | None | Token budget per GPU (SFT/OSFT) |
+| `unfreeze_rank_ratio` | float | `0.25` | OSFT unfreeze ratio |
+| `lora_r` | int | `32` | LoRA rank (LoRA/QLoRA) |
+| `batch_size` | int | None | Batch size (LoRA/QLoRA) |
+| `max_seq_len` | int | None | Max sequence length (LoRA/QLoRA) |
+| `verbose` | int | `1` | Print detailed breakdown |
+
+## Examples by Method
+
+```python
+from training_hub import estimate
+
+# SFT estimate for 8B model on 4 GPUs
+lower, expected, upper = estimate(
+    training_method="sft",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    num_gpus=4,
+    max_tokens_per_gpu=18000,
+    verbose=1,
+)
+
+# OSFT estimate
+lower, expected, upper = estimate(
+    training_method="osft",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    num_gpus=4,
+    max_tokens_per_gpu=16384,
+    unfreeze_rank_ratio=0.01,
+)
+
+# LoRA estimate (single GPU)
+lower, expected, upper = estimate(
+    training_method="lora",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    num_gpus=1,
+    lora_r=16,
+    batch_size=4,
+    max_seq_len=4096,
+)
+
+# QLoRA estimate (single GPU, 4-bit)
+lower, expected, upper = estimate(
+    training_method="qlora",
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    num_gpus=1,
+    lora_r=16,
+    batch_size=4,
+    max_seq_len=4096,
+)
 ```
 
 ## How Memory is Calculated
@@ -24,12 +85,12 @@ Training memory consists of four components:
 
 | Component | Formula | Example (8B model) |
 |-----------|---------|-------------------|
-| Model weights | params × dtype_size | 8B × 2 bytes = 16 GB |
-| Optimizer states | params × 8 bytes (AdamW) | 8B × 8 = 64 GB |
-| Gradients | params × dtype_size | 8B × 2 = 16 GB |
-| Activations | batch × seq_len × hidden × layers | ~20 GB |
+| Model weights | params x dtype_size | 8B x 2 bytes = 16 GB |
+| Optimizer states | params x 8 bytes (AdamW) | 8B x 8 = 64 GB |
+| Gradients | params x dtype_size | 8B x 2 = 16 GB |
+| Activations | batch x seq_len x hidden x layers | ~20 GB |
 
-**Total for 8B SFT:** ~116 GB (≈ 2x A100 80GB)
+**Total for 8B SFT:** ~116 GB (split across GPUs with FSDP)
 
 ### LoRA Reduces Memory
 
@@ -42,29 +103,7 @@ With LoRA, only adapter parameters need optimizer states and gradients:
 | Optimizer states | ~0.8 GB (adapters only) |
 | Activations | ~10 GB |
 
-**Total for 8B LoRA:** ~27 GB (≈ 1x A100 80GB)
-
-### QLoRA Further Reduces Memory
-
-QLoRA quantizes the base model to 4-bit:
-
-| Component | QLoRA (r=16) |
-|-----------|-------------|
-| Base model weights | 4 GB (4-bit quantized) |
-| Adapter parameters | ~0.1 GB |
-| Optimizer states | ~0.8 GB |
-| Activations | ~10 GB |
-
-**Total for 8B QLoRA:** ~15 GB (≈ 1x L40 48GB or T4 16GB)
-
-## Parameter Effects
-
-| Parameter change | Memory impact |
-|-----------------|---------------|
-| Batch size ×2 | Activations ×2 |
-| Sequence length ×2 | Activations ×2 |
-| LoRA rank ×2 | Adapter memory ×2 (negligible) |
-| Model size ×2 | Everything ×2 |
+**Total for 8B LoRA:** ~27 GB (1x A100 80GB)
 
 ## Quick Reference Table
 

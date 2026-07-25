@@ -15,10 +15,10 @@ GRPO is a reinforcement learning algorithm that trains models to use tools effec
 from training_hub import lora_grpo
 
 lora_grpo(
-    model="meta-llama/Llama-3.1-8B-Instruct",
-    data="tool_traces.jsonl",
-    output_dir="./grpo-output",
-    num_epochs=2,
+    model_path="meta-llama/Llama-3.1-8B-Instruct",
+    data_path="tool_traces.jsonl",
+    ckpt_output_dir="./grpo-output",
+    num_iterations=15,
 )
 ```
 
@@ -72,15 +72,20 @@ GRPO expects tool-use traces in messages format with tool calls and results:
 
 | Parameter | Type | Default | Description |
 |-----------|------|---------|-------------|
-| `model` | str | required | HuggingFace model ID or local path |
-| `data` | str | required | Path to JSONL tool traces |
-| `output_dir` | str | required | Where to save the trained adapter |
-| `num_epochs` | int | `2` | Number of training epochs |
-| `lora_r` | int | `16` | LoRA adapter rank |
-| `lora_alpha` | int | `32` | LoRA scaling factor |
-| `batch_size` | int | `16` | Effective batch size |
-| `max_seq_len` | int | `4096` | Maximum sequence length |
-| `lr` | float | `5e-6` | Learning rate (lower than SFT) |
+| `model_path` | str | required | HuggingFace model ID or local path |
+| `ckpt_output_dir` | str | required | Where to save the trained adapter |
+| `data_path` | str | None | Path to JSONL tool traces |
+| `num_iterations` | int | 15 | Number of GRPO iterations |
+| `group_size` | int | 8 | Number of candidate responses per prompt |
+| `prompt_batch_size` | int | 100 | Number of prompts per iteration |
+| `learning_rate` | float | 1e-5 | Learning rate |
+| `lora_r` | int | 16 | LoRA adapter rank |
+| `lora_alpha` | int | 8 | LoRA scaling factor |
+| `temperature` | float | 0.7 | Sampling temperature for candidate generation |
+| `max_tokens` | int | 512 | Max tokens per generated response |
+| `max_prompt_length` | int | 16384 | Max prompt length |
+| `n_gpus` | int | 1 | Number of GPUs |
+| `gpu_memory_utilization` | float | 0.45 | vLLM GPU memory fraction |
 
 ## GPU Requirements
 
