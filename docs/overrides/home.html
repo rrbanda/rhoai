@@ -4,8 +4,6 @@
   {{ super() }}
 
   <style>
-    .md-header { position: initial; }
-    .md-main__inner { margin: 0; }
     .md-content__inner > h1 { display: none; }
 
     @media screen and (min-width: 60em) {
@@ -15,15 +13,6 @@
       .md-sidebar--primary { display: none; }
     }
   </style>
-
-  <section class="home-hero">
-    <div class="hero-inner">
-      <h1>Red Hat OpenShift AI</h1>
-      <p class="hero-tagline">
-        Hands-on guides, runnable notebooks, and references for RHOAI&nbsp;3.4.
-      </p>
-    </div>
-  </section>
 
 {% endblock %}
 
