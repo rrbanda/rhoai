@@ -1,6 +1,6 @@
 ---
 template: home.html
-title: RHOAI Model Customization
+title: Model Customization on RHOAI
 hide:
   - toc
 ---
