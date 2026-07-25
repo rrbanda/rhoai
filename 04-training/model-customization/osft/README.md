@@ -28,6 +28,10 @@ from training_hub import osft
 - [Customize models for Gen AI and Agentic AI](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/customize_models_for_gen_ai_and_agentic_ai_applications)
 - [Training Hub repository](https://github.com/Red-Hat-AI-Innovation-Team/training_hub)
 
-## What's in examples/
+## Examples
 
-Examples demonstrate OSFT training with various `unfreeze_rank_ratio` settings, comparing forgetting metrics against standard SFT on the same dataset.
+| File | Description |
+|------|-------------|
+| `examples/osft_quickstart.py` | Minimal OSFT example with argparse and env var config |
+| `examples/osft_comprehensive_tutorial.ipynb` | All OSFT parameters, orthogonal subspace theory, `unfreeze_rank_ratio` guidance |
+| `examples/osft_continual_learning.py` | Demonstrates adding new domain knowledge without catastrophic forgetting |

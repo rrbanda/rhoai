@@ -28,6 +28,10 @@ from training_hub import sft
 - [Customize models for Gen AI and Agentic AI](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/customize_models_for_gen_ai_and_agentic_ai_applications)
 - [Training Hub repository](https://github.com/Red-Hat-AI-Innovation-Team/training_hub)
 
-## What's in examples/
+## Examples
 
-Examples show how to run SFT on instruction-tuning datasets, configure distributed training across multiple GPUs, and evaluate the fine-tuned model.
+| File | Description |
+|------|-------------|
+| `examples/sft_quickstart.py` | Minimal SFT example with argparse and env var config |
+| `examples/sft_comprehensive_tutorial.ipynb` | All SFT parameters, model configs (Qwen, Llama, Phi), distributed training presets |
+| `examples/sample_data.jsonl` | Sample training data in messages format |

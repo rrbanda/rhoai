@@ -372,7 +372,7 @@ def main() -> None:
     if args.flow_id:
         flow_path = FlowRegistry.get_flow_path(args.flow_id)
     else:
-        flow_path = FlowRegistry.get_flow_path_by_name("Red Teaming Prompt Generation Flow")
+        flow_path = FlowRegistry.get_flow_path("Red Teaming Prompt Generation Flow")
 
     flow = Flow.from_yaml(flow_path)
     print(f"  Flow loaded from: {flow_path}")
@@ -406,7 +406,7 @@ def main() -> None:
 
     result = flow.generate(
         base_dataset,
-        runtime_params={"num_samples": args.samples_per_concept},
+        runtime_params={"replicate_rows": {"num_samples": args.samples_per_concept}},
     )
 
     print(f"\nGeneration complete: {result.shape[0]} rows, {result.shape[1]} columns")

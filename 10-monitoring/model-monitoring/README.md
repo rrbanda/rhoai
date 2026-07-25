@@ -16,6 +16,6 @@ Monitor model bias and data drift in production by configuring metrics, threshol
 
 - [Monitoring Your AI Systems](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/monitoring_your_ai_systems)
 
-## What's in examples/
+## Examples
 
-Examples will include metric configuration manifests, Grafana dashboard JSON exports, alerting rule definitions, and notebooks demonstrating drift detection workflows.
+> **Coming soon.** This section will include metric configuration manifests, Grafana dashboard JSON exports, alerting rule definitions, and drift detection notebooks. Contributions welcome.

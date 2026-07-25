@@ -149,10 +149,10 @@ def main() -> None:
             f"No flow found with tag '{FLOW_TAG}'. "
             "Ensure sdg_hub is installed with: pip install sdg_hub"
         )
-    flow_id = text_flows[0]
+    flow_id = text_flows[0]["id"]
     flow_path = FlowRegistry.get_flow_path(flow_id)
     flow = Flow.from_yaml(flow_path)
-    print(f"Loaded flow: {flow_id}")
+    print(f"Loaded flow: {text_flows[0]['name']} ({flow_id})")
 
     # --- Configure model -----------------------------------------------------
     model_kwargs: dict = {"model": args.model}

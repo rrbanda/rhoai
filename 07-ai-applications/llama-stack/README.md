@@ -17,6 +17,6 @@ Llama Stack is a unified AI runtime that integrates model inference, embedding g
 
 - [Working with Llama Stack](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/working_with_llama_stack)
 
-## What's in examples/
+## Examples
 
-Examples demonstrating Llama Stack deployment, API usage, and integration with inference and retrieval services. See the `rag/` and `agents/` subdirectories for workflow-specific examples.
+> **Coming soon.** This section will include Llama Stack deployment manifests, API usage notebooks, and RAG/agent workflow examples. See the `rag/` and `agents/` subdirectories for workflow-specific placeholders. Contributions welcome.

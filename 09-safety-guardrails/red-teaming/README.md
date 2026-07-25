@@ -72,6 +72,6 @@ The generated adversarial prompts can be used to:
 
 ## References
 
-- [SDG Hub Documentation](https://github.com/redhat-ai/sdg_hub)
-- [Red Team Prompt Generation Flow](https://github.com/redhat-ai/sdg_hub/tree/main/src/sdg_hub/flows/red_team/prompt_generation)
+- [SDG Hub Documentation](https://github.com/Red-Hat-AI-Innovation-Team/sdg_hub)
+- [Red Team Prompt Generation Flow](https://github.com/Red-Hat-AI-Innovation-Team/sdg_hub/tree/main/src/sdg_hub/flows/red_team/prompt_generation)
 - [RHOAI Safety & Guardrails](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/ensuring_ai_safety_with_guardrails)

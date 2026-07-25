@@ -1,6 +1,13 @@
 # Red Hat OpenShift AI (RHOAI) 3.4 -- Feature Reference
 
-A hands-on reference repository organized by RHOAI 3.4 features and capabilities. Each folder maps to a lifecycle phase of the AI/ML workflow, with documentation and example placeholders for every component.
+A hands-on reference repository organized by RHOAI 3.4 features and capabilities. Each folder maps to a lifecycle phase of the AI/ML workflow, with documentation and runnable examples.
+
+## Start Here
+
+| Use case | Notebook | What it covers |
+|----------|----------|---------------|
+| **Customize a model with your own data** | [model_customization_e2e.ipynb](end-to-end-examples/knowledge-tuning/model_customization_e2e.ipynb) | Document prep -> SDG Hub data generation -> Training Hub (SFT/OSFT) -> Evaluation -> Serving |
+| **Teach a model to use your tools** | [mcp_distillation_e2e.ipynb](end-to-end-examples/mcp-distillation/mcp_distillation_e2e.ipynb) | MCP server exploration -> Synthetic tool-use data -> LoRA GRPO training -> Evaluation |
 
 ## Feature Maturity Matrix
 

@@ -23,18 +23,29 @@ import pandas as pd
 from datasets import load_dataset
 from dotenv import load_dotenv
 
-from sdg_hub import Flow
+from sdg_hub import Flow, FlowRegistry
 
 nest_asyncio.apply()
 
-FLOW_BASE = "src/sdg_hub/flows/knowledge_infusion/enhanced_multi_summary_qa"
-
-FLOW_VARIANTS = {
-    "extractive_summary": f"{FLOW_BASE}/extractive_summary/flow.yaml",
-    "detailed_summary": f"{FLOW_BASE}/detailed_summary/flow.yaml",
-    "key_facts": f"{FLOW_BASE}/key_facts/flow.yaml",
-    "doc_direct_qa": f"{FLOW_BASE}/doc_direct_qa/flow.yaml",
+FLOW_VARIANT_NAMES = {
+    "extractive_summary": "Extractive Summary Knowledge Tuning Dataset Generation Flow",
+    "detailed_summary": "Detailed Summary Knowledge Tuning Dataset Generation Flow",
+    "key_facts": "Key Facts Knowledge Tuning Dataset Generation Flow",
+    "doc_direct_qa": "Document Based Knowledge Tuning Dataset Generation Flow",
 }
+
+
+def resolve_flow_variants() -> dict[str, str]:
+    """Resolve flow names to YAML paths via the FlowRegistry."""
+    FlowRegistry.discover_flows()
+    variants = {}
+    for key, flow_name in FLOW_VARIANT_NAMES.items():
+        path = FlowRegistry.get_flow_path(flow_name)
+        if path is None:
+            print(f"WARNING: Flow '{flow_name}' not found in registry, skipping.")
+            continue
+        variants[key] = path
+    return variants
 
 
 def load_documents(document_dir: str) -> pd.DataFrame:
@@ -132,8 +143,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--flows",
         nargs="+",
-        choices=list(FLOW_VARIANTS.keys()),
-        default=list(FLOW_VARIANTS.keys()),
+        choices=list(FLOW_VARIANT_NAMES.keys()),
+        default=list(FLOW_VARIANT_NAMES.keys()),
         help="Which flow variants to run (default: all)",
     )
     return parser.parse_args()
@@ -160,6 +171,12 @@ def main() -> None:
 
     dataset = load_documents(document_dir)
 
+    flow_variants = resolve_flow_variants()
+    if not flow_variants:
+        print("ERROR: No knowledge flows found in the SDG Hub registry.")
+        print("Ensure sdg_hub is installed: pip install sdg_hub[examples]")
+        sys.exit(1)
+
     print(f"\nTeacher model : {teacher_model}")
     print(f"API base      : {api_base or '(default)'}")
     print(f"Output dir    : {output_dir}")
@@ -167,7 +184,10 @@ def main() -> None:
 
     results: dict[str, pd.DataFrame] = {}
     for variant in args.flows:
-        flow_path = FLOW_VARIANTS[variant]
+        if variant not in flow_variants:
+            print(f"Skipping {variant}: flow not found in registry")
+            continue
+        flow_path = flow_variants[variant]
         result = run_flow(
             variant_name=variant,
             flow_yaml_path=flow_path,

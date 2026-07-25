@@ -301,9 +301,14 @@ def main() -> None:
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
 
     # -- Load the distillation flow -------------------------------------------
-    from sdg_hub import Flow
+    from sdg_hub import Flow, FlowRegistry
 
-    flow_yaml = "src/sdg_hub/flows/agentic/mcp_distillation/flow.yaml"
+    FlowRegistry.discover_flows()
+    flow_yaml = FlowRegistry.get_flow_path("MCP Server Distillation")
+    if flow_yaml is None:
+        print("ERROR: MCP Server Distillation flow not found in registry.")
+        print("Ensure sdg_hub is installed: pip install sdg_hub[examples]")
+        sys.exit(1)
     print(f"Loading flow from: {flow_yaml}")
     flow = Flow.from_yaml(flow_yaml)
     print(f"  Flow: {flow.metadata.name}")

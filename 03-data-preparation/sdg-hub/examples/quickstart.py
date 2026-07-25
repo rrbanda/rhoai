@@ -3,10 +3,11 @@
 Core concept:  seed dataset -> Flow -> enriched dataset
 
 Usage:
-    export OPENAI_API_KEY="your-key"
+    export MODEL_API_KEY="your-key"
     python quickstart.py path/to/flow.yaml
 """
 
+import os
 import sys
 
 import nest_asyncio
@@ -17,7 +18,18 @@ nest_asyncio.apply()
 
 
 def main() -> None:
-    flow_path = sys.argv[1] if len(sys.argv) > 1 else "path/to/flow.yaml"
+    if len(sys.argv) < 2:
+        print("Usage: python quickstart.py <path/to/flow.yaml>")
+        print("  Set MODEL_API_KEY env var or OPENAI_API_KEY before running.")
+        sys.exit(1)
+
+    flow_path = sys.argv[1]
+    api_key = os.environ.get("MODEL_API_KEY") or os.environ.get("OPENAI_API_KEY", "")
+    model = os.environ.get("TEACHER_MODEL", "openai/gpt-4o")
+
+    if not api_key:
+        print("ERROR: Set MODEL_API_KEY or OPENAI_API_KEY environment variable.")
+        sys.exit(1)
 
     dataset = pd.DataFrame({
         "document": ["Your document text here..."],
@@ -25,7 +37,7 @@ def main() -> None:
     })
 
     flow = Flow.from_yaml(flow_path)
-    flow.set_model_config(model="openai/gpt-4o", api_key="your-key")
+    flow.set_model_config(model=model, api_key=api_key)
 
     result = flow.generate(dataset)
     print(f"Generated {len(result)} rows")

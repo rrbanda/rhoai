@@ -17,8 +17,6 @@ KServe RawDeployment is the primary model serving platform in RHOAI 3.4, replaci
 
 - [Deploy Large Models Using KServe RawDeployment](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/deploy_large_models_using_the_single-model_serving_platform_kserve_rawdeployment)
 
-## What's in examples/
+## Examples
 
-- Sample `InferenceService` manifests for RawDeployment and Knative modes
-- Runtime configuration examples for vLLM and MLServer
-- Scripts for testing inference endpoints with authentication
+> **Coming soon.** This section will include `InferenceService` manifests, runtime configuration examples, and scripts for testing inference endpoints. Contributions welcome.
