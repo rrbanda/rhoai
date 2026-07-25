@@ -58,10 +58,5 @@ Fine-tune LLMs with smaller, efficient architectures on RHOAI 3.4. This track co
 
 </div>
 
-## Coming Soon
-
-| Track | Description |
-|-------|-------------|
-| **Model Serving** | Deploy models with KServe, vLLM, and distributed inference (llm-d) |
-| **RAG Pipelines** | Build retrieval-augmented generation with AutoRAG and vector stores |
-| **Guardrails & Safety** | NeMo Guardrails, red-teaming workflows, and TrustyAI bias detection |
+!!! note "Disclaimer"
+    These guides are community-maintained and intended as supplementary learning material. For official product documentation, refer to [Red Hat OpenShift AI 3.4 documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai/3.4).
