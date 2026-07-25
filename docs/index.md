@@ -1,6 +1,8 @@
 ---
 template: home.html
 title: RHOAI Model Customization
+hide:
+  - toc
 ---
 
 <div class="home-grid" markdown>
