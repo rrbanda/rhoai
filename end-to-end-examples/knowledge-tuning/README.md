@@ -4,6 +4,12 @@
 
 Full pipeline for injecting domain-specific knowledge into a language model. Covers the complete workflow from document processing through evaluation: Synthetic Data Generation (SDG Hub) -> Data Mixing -> Training (Training Hub SFT/OSFT) -> Evaluation.
 
+## Start Here
+
+**[`model_customization_e2e.ipynb`](model_customization_e2e.ipynb)** — A single unified notebook that walks through the complete model customization lifecycle in one place: document preparation → synthetic data generation → data formatting → model training → evaluation → serving. Open this first.
+
+The individual Python scripts below are standalone CLI versions of each step, useful for production pipelines or CI/CD.
+
 ## What's Covered
 
 - Generating training data with SDG Hub knowledge flows (extractive summary, detailed summary, key facts, document-based QA)
