@@ -5,10 +5,10 @@ Training Hub provides four algorithms, each optimized for different constraints.
 ## Decision Flowchart
 
 ```mermaid
-graph TD
-    A[Start] --> B{Training for<br/>tool-use / agents?}
+graph LR
+    A([Start]) --> B{Tool-use?}
     B -->|Yes| GRPO[GRPO]
-    B -->|No| C{Need to preserve<br/>base knowledge?}
+    B -->|No| C{Preserve base<br/>knowledge?}
     C -->|Yes| OSFT[OSFT]
     C -->|No| D{Memory<br/>constrained?}
     D -->|Yes| LORA[LoRA / QLoRA]

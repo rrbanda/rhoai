@@ -5,12 +5,12 @@ This walkthrough takes you through the complete model customization lifecycle: p
 ## Pipeline Overview
 
 ```mermaid
-graph TD
-    A[1. Prepare Documents] --> B[2. Generate Training Data<br/>SDG Hub]
-    B --> C[3. Mix & Validate Data]
-    C --> D[4. Train Model<br/>Training Hub]
+graph LR
+    A[1. Prepare<br/>Documents] --> B[2. Generate Data<br/>SDG Hub]
+    B --> C[3. Mix &<br/>Validate]
+    C --> D[4. Train<br/>Training Hub]
     D --> E[5. Evaluate]
-    E -->|"Iterate"| B
+    E -->|Iterate| B
     E -->|"Ready"| F[6. Serve on RHOAI]
 ```
 

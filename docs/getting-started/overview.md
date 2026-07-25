@@ -47,13 +47,13 @@ sft(
 Every model customization project follows the same high-level flow:
 
 ```mermaid
-graph TD
-    A[1. Prepare Documents] --> B[2. Generate Training Data]
-    B --> C[3. Choose Algorithm]
-    C --> D[4. Train Model]
+graph LR
+    A[1. Prepare<br/>Documents] --> B[2. Generate<br/>Data]
+    B --> C[3. Choose<br/>Algorithm]
+    C --> D[4. Train]
     D --> E[5. Evaluate]
-    E -->|"Not good enough"| B
-    E -->|"Ready"| F[6. Deploy on RHOAI]
+    E -->|Iterate| B
+    E -->|Ready| F[6. Deploy]
 ```
 
 1. **Prepare** — Gather your domain documents (PDFs, Markdown, web pages)

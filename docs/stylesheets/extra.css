@@ -340,6 +340,15 @@
 /* --------------- Mermaid --------------- */
 .mermaid {
   margin: 1rem 0;
+  max-width: 100%;
+  overflow-x: auto;
+}
+
+.mermaid svg {
+  max-height: 320px;
+  width: auto;
+  display: block;
+  margin: 0 auto;
 }
 
 /* --------------- Announcement Bar --------------- */

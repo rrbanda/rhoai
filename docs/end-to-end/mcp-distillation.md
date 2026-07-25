@@ -5,13 +5,13 @@ MCP (Model Context Protocol) distillation teaches a smaller model to use tools b
 ## Pipeline Overview
 
 ```mermaid
-graph TD
-    A[1. Set Up MCP Server] --> B[2. Generate Tool-Use Traces<br/>SDG Hub + Teacher LLM]
-    B --> C[3. Format Training Data]
-    C --> D[4. Train with GRPO<br/>Training Hub]
-    D --> E[5. Evaluate Tool-Use Quality]
-    E -->|"Iterate"| B
-    E -->|"Ready"| F[6. Deploy Agent]
+graph LR
+    A[1. MCP<br/>Server] --> B[2. Generate<br/>Traces]
+    B --> C[3. Format<br/>Data]
+    C --> D[4. GRPO<br/>Training]
+    D --> E[5. Evaluate]
+    E -->|Iterate| B
+    E -->|Ready| F[6. Deploy]
 ```
 
 ## Step 1: Set Up Your MCP Server
