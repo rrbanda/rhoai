@@ -16,7 +16,7 @@ graph TD
 
 ## Step 1: Prepare Documents
 
-Convert your source documents to structured text. Use [Docling](https://github.com/DS4SD/docling) for PDFs and web pages:
+Convert your source documents to structured text. Use Docling for PDFs and web pages:
 
 ```python
 from docling.document_converter import DocumentConverter

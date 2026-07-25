@@ -25,7 +25,7 @@ FlowRegistry.discover_flows()
 # Prepare your documents
 dataset = Dataset.from_dict({
     "document": [
-        "RHOAI 3.4 introduces Models-as-a-Service (MaaS)...",
+        "RHOAI 3.4 brings Models-as-a-Service (MaaS) to GA...",
         "The Kubeflow Training Operator manages distributed...",
     ],
     "domain": ["rhoai", "rhoai"],

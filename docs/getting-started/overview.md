@@ -17,7 +17,7 @@ The RHOAI model customization workflow uses two open-source Python libraries, bo
 
 ### SDG Hub — Synthetic Data Generation
 
-[SDG Hub](https://github.com/Red-Hat-AI-Innovation-Team/sdg_hub) generates high-quality training data from your raw documents. A teacher LLM (like GPT-4 or Claude) reads your documents and generates question-answer pairs, summaries, and other training examples in the JSONL messages format.
+SDG Hub generates high-quality training data from your raw documents. A teacher LLM (like GPT-4 or Claude) reads your documents and generates question-answer pairs, summaries, and other training examples in the JSONL messages format.
 
 ```python
 from sdg_hub import Flow, FlowRegistry
@@ -30,7 +30,7 @@ result = flow.generate(dataset)
 
 ### Training Hub — Model Fine-Tuning
 
-[Training Hub](https://github.com/Red-Hat-AI-Innovation-Team/training_hub) provides multiple fine-tuning algorithms optimized for different use cases:
+Training Hub provides multiple fine-tuning algorithms optimized for different use cases:
 
 ```python
 from training_hub import sft, osft, lora_sft

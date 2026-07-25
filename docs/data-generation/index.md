@@ -1,6 +1,6 @@
 # Synthetic Data Generation with SDG Hub
 
-[SDG Hub](https://github.com/Red-Hat-AI-Innovation-Team/sdg_hub) is a Python framework for generating high-quality synthetic training data using composable blocks and flows. A teacher LLM reads your documents and generates training examples that you can use to fine-tune smaller models.
+SDG Hub is a Python framework for generating high-quality synthetic training data using composable blocks and flows. A teacher LLM reads your documents and generates training examples that you can use to fine-tune smaller models.
 
 ## Why Synthetic Data?
 
@@ -107,7 +107,7 @@ result.to_json("training_data.jsonl", orient="records", lines=True)
 
 ## Supported LLM Providers
 
-SDG Hub uses [LiteLLM](https://docs.litellm.ai/) under the hood, supporting 100+ providers:
+SDG Hub uses LiteLLM under the hood, supporting 100+ providers:
 
 | Provider | Model prefix | Example |
 |----------|-------------|---------|
