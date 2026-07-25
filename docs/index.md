@@ -9,7 +9,7 @@ hide:
 
 ### Model Customization
 
-Fine-tune LLMs with smaller, efficient architectures on RHOAI 3.4. This track covers the full lifecycle — from generating synthetic training data with **SDG Hub** to training with **Training Hub** (SFT, OSFT, LoRA, GRPO), evaluation, and deployment.
+Fine-tune LLMs with smaller, efficient architectures on RHOAI. This track covers the full lifecycle — from generating synthetic training data with **SDG Hub** to training with **Training Hub** (SFT, OSFT, LoRA, GRPO), evaluation, and deployment.
 
 <div class="featured-track-meta" markdown>
 
@@ -59,4 +59,4 @@ Fine-tune LLMs with smaller, efficient architectures on RHOAI 3.4. This track co
 </div>
 
 !!! note "Disclaimer"
-    These guides are community-maintained and intended as supplementary learning material. For official product documentation, refer to [Red Hat OpenShift AI 3.4 documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai/3.4).
+    These guides are community-maintained and intended as supplementary learning material. For official product documentation, refer to the [latest Red Hat OpenShift AI documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai/latest).

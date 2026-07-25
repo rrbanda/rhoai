@@ -1,6 +1,6 @@
 site_name: RHOAI Guides
 site_url: https://rrbanda.github.io/rhoai/
-site_description: Hands-on guides for Red Hat OpenShift AI 3.4
+site_description: Hands-on guides for Red Hat OpenShift AI
 repo_url: https://github.com/rrbanda/rhoai
 repo_name: rrbanda/rhoai
 
@@ -48,7 +48,7 @@ extra:
     - icon: fontawesome/brands/github
       link: https://github.com/rrbanda/rhoai
     - icon: fontawesome/solid/book
-      link: https://docs.redhat.com/en/documentation/red_hat_openshift_ai/3.4
+      link: https://docs.redhat.com/en/documentation/red_hat_openshift_ai/latest
       name: Official RHOAI Docs
 
 extra_css:
