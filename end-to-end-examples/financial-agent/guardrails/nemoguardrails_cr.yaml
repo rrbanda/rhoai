@@ -1,0 +1,29 @@
+# NemoGuardrails custom resource for the financial advisory agent.
+# GA features available in RHOAI 3.4+.
+# MCP Gateway integration is Technology Preview in RHOAI 3.5 EA2.
+apiVersion: trustyai.opendatahub.io/v1alpha1
+kind: NemoGuardrails
+metadata:
+  name: financial-agent-guardrails
+  namespace: rhoai-guardrails
+  labels:
+    app.kubernetes.io/part-of: financial-agent
+    app.kubernetes.io/managed-by: rhoai-examples
+spec:
+  # --- GA (RHOAI 3.4) ---
+  replicas: 2
+  modelEndpoint:
+    url: "https://granite-8b-finance-rhoai-serving.apps.cluster.example.com/v1"
+  configSecretRef:
+    name: financial-guardrails-config
+  openTelemetry:
+    enabled: true
+    endpoint: "http://otel-collector.observability.svc:4317"
+
+  # --- Technology Preview (RHOAI 3.5 EA2) ---
+  # MCP Gateway integration: protects agent tool calls at the gateway layer
+  # against PII leakage, prompt injection, and content safety violations.
+  # Field name from RHOAI 3.5 EA2 release notes
+  mcpGateway:
+    name: financial-mcp-gateway
+    namespace: rhoai-guardrails

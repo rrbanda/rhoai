@@ -1,0 +1,8 @@
+docling
+langchain-text-splitters
+pymilvus
+psycopg2-binary
+pgvector
+requests
+kubernetes
+python-dotenv

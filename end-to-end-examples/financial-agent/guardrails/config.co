@@ -1,0 +1,97 @@
+# Colang 2.0 flows for financial compliance guardrails.
+# Used with NeMo Guardrails on RHOAI 3.4+.
+
+# ---------------------------------------------------------------------------
+# Flow 1: Pre-trade compliance check
+# Before executing any trade, the agent MUST verify compliance status.
+# ---------------------------------------------------------------------------
+
+define flow pre-trade compliance check
+  """Ensure compliance check passes before any trade execution."""
+  when user requests trade execution
+    $compliance_result = execute check_compliance(order=$user_order)
+
+    if $compliance_result.status == "failed"
+      bot say "Trade blocked: {$compliance_result.reason}. This order cannot be executed due to compliance restrictions. Please contact your compliance officer for details."
+      stop
+
+    bot say "Compliance check passed. Proceeding with trade execution."
+
+define subflow check trade intent
+  """Detect when a user intends to submit a trade order."""
+  when user said something like "execute trade" or "submit order" or "buy" or "sell" or "place order"
+    $user_order = $last_user_message
+    activate pre-trade compliance check
+
+
+# ---------------------------------------------------------------------------
+# Flow 2: PII masking for financial data
+# Detect and mask account numbers, SSNs, and routing numbers in output.
+# ---------------------------------------------------------------------------
+
+define flow pii masking
+  """Mask financial PII before returning responses to the user."""
+  when bot said something
+    $response = $last_bot_message
+
+    # Mask account numbers (ACCT-XXXX pattern)
+    if $response matches "ACCT-[0-9]+"
+      $response = mask_pattern($response, pattern="ACCT-[0-9]+", replacement="ACCT-****")
+
+    # Mask SSN patterns (XXX-XX-XXXX)
+    if $response matches "[0-9]{3}-[0-9]{2}-[0-9]{4}"
+      $response = mask_pattern($response, pattern="[0-9]{3}-[0-9]{2}-[0-9]{4}", replacement="***-**-****")
+
+    # Mask routing numbers (9 consecutive digits)
+    if $response matches "\\b[0-9]{9}\\b"
+      $response = mask_pattern($response, pattern="\\b[0-9]{9}\\b", replacement="*********")
+
+    bot say $response
+
+
+# ---------------------------------------------------------------------------
+# Flow 3: Regulatory disclaimer injection
+# Append a disclaimer when the model provides investment advice.
+# ---------------------------------------------------------------------------
+
+define flow financial disclaimer injection
+  """Append regulatory disclaimer to investment recommendations."""
+  when bot said something like "recommend" or "suggest investing" or "you should buy" or "investment advice" or "financial advice" or "portfolio allocation"
+    $disclaimer = "This information is for educational purposes only and does not constitute investment advice. Past performance does not guarantee future results. Consult a qualified financial advisor before making investment decisions."
+    bot say "{$last_bot_message}\n\n---\n⚠️ {$disclaimer}"
+
+
+# ---------------------------------------------------------------------------
+# Flow 4: Trade size validation
+# Validate that trade orders do not exceed client risk tolerance thresholds.
+# ---------------------------------------------------------------------------
+
+define flow trade size validation
+  """Block trades that exceed the client's risk tolerance profile."""
+  when user requests trade execution
+    $risk_profile = execute get_client_risk_profile(client_id=$client_id)
+    $order_value = execute calculate_order_value(order=$user_order)
+
+    if $order_value > $risk_profile.max_single_trade
+      bot say "Trade blocked: Order value (${$order_value}) exceeds your maximum single trade limit (${$risk_profile.max_single_trade}) based on your {$risk_profile.tier} risk profile. Please reduce the order size or contact your advisor to adjust your risk tolerance."
+      stop
+
+    if $order_value > $risk_profile.daily_remaining
+      bot say "Trade blocked: This order would exceed your remaining daily trading limit (${$risk_profile.daily_remaining}). Current daily utilization: {$risk_profile.daily_utilization_pct}%. Try again tomorrow or reduce the order size."
+      stop
+
+
+# ---------------------------------------------------------------------------
+# Flow 5: Restricted securities enforcement
+# Block trades involving securities on the restricted list.
+# ---------------------------------------------------------------------------
+
+define flow restricted securities check
+  """Prevent trades on restricted securities."""
+  when user requests trade execution
+    $ticker = extract_ticker($user_order)
+    $restricted = execute check_restricted_list(ticker=$ticker)
+
+    if $restricted.is_restricted
+      bot say "Trade blocked: {$ticker} is on the restricted securities list. Reason: {$restricted.reason}. Restriction effective: {$restricted.effective_date}. This security cannot be traded through this platform. Please contact compliance for further information."
+      stop

@@ -8,6 +8,7 @@ A hands-on reference repository organized by RHOAI 3.4 features and capabilities
 |----------|----------|---------------|
 | **Customize a model with your own data** | [model_customization_e2e.ipynb](end-to-end-examples/knowledge-tuning/model_customization_e2e.ipynb) | Document prep -> SDG Hub data generation -> Training Hub (SFT/OSFT) -> Evaluation -> Serving |
 | **Teach a model to use your tools** | [mcp_distillation_e2e.ipynb](end-to-end-examples/mcp-distillation/mcp_distillation_e2e.ipynb) | MCP server exploration -> Synthetic tool-use data -> LoRA GRPO training -> Evaluation |
+| **Build a financial tool-calling agent** | [financial-agent/](end-to-end-examples/financial-agent/) | 15-tool MCP server -> MCP distillation -> LoRA GRPO -> KServe + vLLM -> NeMo Guardrails |
 
 ## Feature Maturity Matrix
 
@@ -63,7 +64,7 @@ rhoai/
 ├── 10-monitoring/             Model monitoring, platform observability, telemetry
 ├── 11-pipelines/              KFP pipelines (SDG + training), Spark Operator
 ├── 12-administration/         RBAC, hardware profiles, certificates, backup/restore
-└── end-to-end-examples/       Knowledge tuning, MCP distillation, RAG application
+└── end-to-end-examples/       Knowledge tuning, MCP distillation, financial agent, RAG application
 ```
 
 ## RHOAI Lifecycle Flow

@@ -1,0 +1,18 @@
+# MCPGatewayExtension custom resource for the financial advisory agent.
+# Technology Preview in RHOAI 3.5 EA2.
+# TrustyAI operator auto-provisions an EnvoyFilter for SSE-to-JSON conversion.
+apiVersion: trustyai.opendatahub.io/v1alpha1
+kind: MCPGatewayExtension
+metadata:
+  name: financial-mcp-gateway
+  namespace: rhoai-guardrails
+  labels:
+    app.kubernetes.io/part-of: financial-agent
+    app.kubernetes.io/managed-by: rhoai-examples
+spec:
+  # MCP server that provides financial tools (portfolio lookup, trade execution, etc.)
+  mcpServerUrl: "http://finance-insights-mcp.rhoai-agent.svc:8080"
+  # NemoGuardrails instance that protects tool calls through this gateway
+  guardrailsRef:
+    name: financial-agent-guardrails
+    namespace: rhoai-guardrails

@@ -100,12 +100,18 @@ nav:
       - LAB Multi-Phase: training/lab-multiphase.md
       - Continual Learning: training/continual-learning.md
       - Continued Pretraining: training/continued-pretraining.md
+    - Serving:
+      - Deploy & Serve: serving/index.md
+    - Guardrails:
+      - Safety & Compliance: guardrails/index.md
     - Domains:
       - Medical: domains/medical.md
+      - Financial: domains/financial.md
       - Model-Specific Configs: domains/model-specific.md
     - End-to-End:
       - Knowledge Tuning: end-to-end/knowledge-tuning.md
       - MCP Distillation: end-to-end/mcp-distillation.md
+      - Financial Agent: end-to-end/financial-agent.md
     - Evaluation:
       - Overview: evaluation/index.md
       - RAG Evaluation: evaluation/rag-evaluation.md

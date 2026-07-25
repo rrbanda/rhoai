@@ -1,0 +1,90 @@
+# TrainJob manifest for distributed Supervised Fine-Tuning (SFT).
+#
+# Runs Training Hub full-parameter SFT across multiple nodes using
+# PyTorch DistributedDataParallel (DDP).  Each worker gets 4 GPUs,
+# and the job trains on data stored in a shared PVC.
+#
+# Prerequisites:
+#   - Kubeflow Training Operator installed on the RHOAI 3.4 cluster
+#   - PVC "training-storage" provisioned with model weights and data
+#   - GPU quota available in the target namespace
+#
+# Apply:
+#   oc apply -f trainjob_sft.yaml -n distributed-training
+
+apiVersion: kubeflow.org/v2alpha1
+kind: TrainJob
+metadata:
+  name: sft-distributed
+  namespace: distributed-training
+  labels:
+    app.kubernetes.io/name: sft-distributed
+    app.kubernetes.io/component: training
+    app.kubernetes.io/part-of: training-hub
+    training-hub.rhoai.io/algorithm: sft
+spec:
+  suspend: false
+  trainer:
+    image: quay.io/modh/training-hub:latest
+    command:
+      - torchrun
+    args:
+      - --nnodes=2
+      - --nproc-per-node=4
+      - --rdzv-backend=c10d
+      - --rdzv-endpoint=$(MASTER_ADDR):$(MASTER_PORT)
+      - -m
+      - training_hub.run
+      - sft
+      - --model-path=$(MODEL_PATH)
+      - --data-path=$(DATA_PATH)
+      - --ckpt-output-dir=$(CHECKPOINT_DIR)
+      - --num-epochs=3
+      - --effective-batch-size=128
+      - --learning-rate=5e-6
+      - --max-seq-len=4096
+      - --max-tokens-per-gpu=25000
+      - --checkpoint-at-epoch
+    env:
+      - name: MODEL_PATH
+        value: /mnt/storage/models/meta-llama/Llama-3.1-8B-Instruct
+      - name: DATA_PATH
+        value: /mnt/storage/data/training_data.jsonl
+      - name: CHECKPOINT_DIR
+        value: /mnt/storage/checkpoints/sft
+      - name: NCCL_DEBUG
+        value: INFO
+      - name: NCCL_IB_DISABLE
+        value: "1"
+      - name: TRANSFORMERS_CACHE
+        value: /mnt/storage/cache
+      - name: HF_HOME
+        value: /mnt/storage/cache
+    numNodes: 2
+    resourcesPerNode:
+      requests:
+        cpu: "16"
+        memory: 128Gi
+        nvidia.com/gpu: "4"
+      limits:
+        cpu: "32"
+        memory: 256Gi
+        nvidia.com/gpu: "4"
+    volumeMounts:
+      - name: training-storage
+        mountPath: /mnt/storage
+      - name: dshm
+        mountPath: /dev/shm
+  podSpecOverrides:
+    volumes:
+      - name: training-storage
+        persistentVolumeClaim:
+          claimName: training-storage
+      - name: dshm
+        emptyDir:
+          medium: Memory
+          sizeLimit: 64Gi
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule

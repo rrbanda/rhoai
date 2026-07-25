@@ -1,0 +1,52 @@
+# InferenceService — Deploy a fine-tuned Granite model via vLLM on RHOAI 3.4
+#
+# This manifest uses RawDeployment mode (the RHOAI 3.4 default) with S3 model
+# storage.  Adjust storageUri, GPU resources, and runtime parameters to match
+# your model size and cluster capacity.
+#
+# Apply:
+#   oc apply -f inferenceservice_vllm.yaml
+#
+# Verify:
+#   oc get inferenceservice granite-8b-finetuned -n rhoai-serving
+---
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: granite-8b-finetuned
+  namespace: rhoai-serving
+  labels:
+    app.kubernetes.io/part-of: rhoai-serving
+    app.kubernetes.io/managed-by: rhoai-examples
+    opendatahub.io/dashboard: "true"
+  annotations:
+    serving.kserve.io/deploymentMode: RawDeployment
+    serving.kserve.io/secretName: aws-connection-models
+    openshift.io/display-name: "Granite 8B Fine-Tuned"
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: vLLM
+      runtime: vllm-runtime
+      storageUri: s3://rhoai-models/fine-tuned/granite-3.3-8b-instruct
+      resources:
+        requests:
+          cpu: "8"
+          memory: 48Gi
+          nvidia.com/gpu: "4"
+        limits:
+          cpu: "8"
+          memory: 48Gi
+          nvidia.com/gpu: "4"
+      env:
+        - name: VLLM_MAX_MODEL_LEN
+          value: "8192"
+        - name: VLLM_TENSOR_PARALLEL_SIZE
+          value: "4"
+        - name: VLLM_DTYPE
+          value: "bfloat16"
+        - name: VLLM_GPU_MEMORY_UTILIZATION
+          value: "0.90"
+    minReplicas: 1
+    maxReplicas: 3

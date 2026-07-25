@@ -1,0 +1,76 @@
+# LLMInferenceService — Distributed deployment with llm-d on RHOAI 3.4
+#
+# Deploys a Llama 3.1 70B model across multiple replicas with
+# prefix-cache-aware routing and disaggregated prefill/decode phases.
+# Each replica uses 4 GPUs with tensor parallelism for the 70B model.
+#
+# Apply:
+#   oc apply -f llminferenceservice.yaml
+#
+# Verify:
+#   oc get llminferenceservice llama-3-1-70b-instruct -n rhoai-serving
+---
+apiVersion: inference.llm-d.ai/v1alpha1
+kind: LLMInferenceService
+metadata:
+  name: llama-3-1-70b-instruct
+  namespace: rhoai-serving
+  labels:
+    app.kubernetes.io/part-of: rhoai-serving
+    app.kubernetes.io/managed-by: rhoai-examples
+    llm-d.ai/model-family: llama
+  annotations:
+    llm-d.ai/description: "Multi-replica Llama 3.1 70B with prefix caching and disaggregated serving"
+spec:
+  modelRef:
+    name: meta-llama/Llama-3.1-70B-Instruct
+  storageSecretRef:
+    name: aws-connection-models
+  replicas: 4
+  routing:
+    prefixCaching:
+      enabled: true
+    loadBalancing:
+      strategy: LeastLoad
+  engine:
+    name: vllm
+    args:
+      - "--max-model-len=8192"
+      - "--tensor-parallel-size=4"
+      - "--enable-prefix-caching"
+      - "--dtype=bfloat16"
+      - "--gpu-memory-utilization=0.90"
+      - "--max-num-seqs=128"
+    resources:
+      requests:
+        cpu: "16"
+        memory: 192Gi
+        nvidia.com/gpu: "4"
+      limits:
+        cpu: "16"
+        memory: 192Gi
+        nvidia.com/gpu: "4"
+  disaggregated:
+    enabled: true
+    prefill:
+      replicas: 2
+      resources:
+        requests:
+          cpu: "16"
+          memory: 192Gi
+          nvidia.com/gpu: "4"
+        limits:
+          cpu: "16"
+          memory: 192Gi
+          nvidia.com/gpu: "4"
+    decode:
+      replicas: 2
+      resources:
+        requests:
+          cpu: "16"
+          memory: 192Gi
+          nvidia.com/gpu: "4"
+        limits:
+          cpu: "16"
+          memory: 192Gi
+          nvidia.com/gpu: "4"

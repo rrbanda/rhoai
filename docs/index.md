@@ -13,7 +13,7 @@ Fine-tune LLMs with smaller, efficient architectures on RHOAI. This track covers
 
 <div class="featured-track-meta" markdown>
 
-**8 training guides** · **2 end-to-end walkthroughs** · **4 algorithms** · **6 supported model families**
+**8 training guides** · **3 end-to-end walkthroughs** · **4 algorithms** · **6 supported model families**
 
 </div>
 
@@ -44,8 +44,15 @@ Fine-tune LLMs with smaller, efficient architectures on RHOAI. This track covers
 
 <div class="track-section-item" markdown>
 
-**End-to-End Pipelines** — Full walkthroughs for knowledge tuning and MCP distillation, from raw documents to deployed model.
-[Knowledge tuning →](end-to-end/knowledge-tuning.md) · [MCP distillation →](end-to-end/mcp-distillation.md)
+**End-to-End Pipelines** — Full walkthroughs from raw data to deployed model with guardrails.
+[Knowledge tuning →](end-to-end/knowledge-tuning.md) · [MCP distillation →](end-to-end/mcp-distillation.md) · [Financial agent →](end-to-end/financial-agent.md)
+
+</div>
+
+<div class="track-section-item" markdown>
+
+**Serving & Guardrails** — Deploy fine-tuned models with KServe + vLLM and protect them with NeMo Guardrails.
+[Deploy →](serving/index.md) · [Guardrails →](guardrails/index.md)
 
 </div>
 

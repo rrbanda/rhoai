@@ -1,0 +1,38 @@
+apiVersion: trustyai.opendatahub.io/v1alpha1
+kind: LMEvalJob
+metadata:
+  name: eval-mmlu-5shot
+  namespace: eval-lm
+  labels:
+    app.kubernetes.io/part-of: lm-eval
+    evaluation/benchmark: mmlu
+    evaluation/model: granite-3-8b-instruct
+spec:
+  model: local-completions
+  modelArgs:
+    - name: model
+      value: granite-3-8b-instruct
+    - name: base_url
+      value: "https://granite-3-8b-instruct-eval-lm.apps.cluster.example.com/v1/completions"
+    - name: tokenized_requests
+      value: "False"
+  taskList:
+    taskNames:
+      - mmlu
+  numFewShot: 5
+  batchSize: "8"
+  logSamples: true
+  pod:
+    container:
+      resources:
+        requests:
+          cpu: "4"
+          memory: 8Gi
+          nvidia.com/gpu: "1"
+        limits:
+          cpu: "8"
+          memory: 16Gi
+          nvidia.com/gpu: "1"
+  outputs:
+    pvcManaged:
+      size: 5Gi
