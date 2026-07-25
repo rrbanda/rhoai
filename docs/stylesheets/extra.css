@@ -145,7 +145,7 @@
 .home-hero {
   background: linear-gradient(135deg, #1a237e 0%, #283593 40%, #3f51b5 100%);
   color: #ffffff;
-  padding: 2.5rem 2rem 2rem;
+  padding: 1.3rem 2rem 1.1rem;
   text-align: center;
 }
 
@@ -154,32 +154,32 @@
 }
 
 .home-hero .hero-inner {
-  max-width: 720px;
+  max-width: 800px;
   margin: 0 auto;
 }
 
 .home-hero h1 {
-  font-size: 1.85rem;
-  font-weight: 800;
-  letter-spacing: -0.035em;
-  margin: 0 0 0.6rem;
-  line-height: 1.2;
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+  margin: 0 0 0.35rem;
+  line-height: 1.25;
   color: #ffffff;
   border-bottom: none;
   padding-bottom: 0;
 }
 
 .home-hero .hero-tagline {
-  font-size: 0.92rem;
-  opacity: 0.88;
-  line-height: 1.55;
-  margin: 0 0 1.25rem;
+  font-size: 0.78rem;
+  opacity: 0.85;
+  line-height: 1.5;
+  margin: 0 0 0.75rem;
   font-weight: 400;
 }
 
 .hero-buttons {
   display: flex;
-  gap: 0.75rem;
+  gap: 0.6rem;
   justify-content: center;
   flex-wrap: wrap;
 }
@@ -187,12 +187,12 @@
 .hero-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.4rem;
-  padding: 0.55rem 1.4rem;
-  border-radius: 6px;
+  gap: 0.3rem;
+  padding: 0.4rem 1.1rem;
+  border-radius: 5px;
   text-decoration: none;
   font-weight: 600;
-  font-size: 0.82rem;
+  font-size: 0.74rem;
   transition: all 0.15s ease;
   letter-spacing: -0.01em;
 }
@@ -236,9 +236,9 @@
 .home-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 1rem;
-  margin: 0 0 1.5rem;
-  padding: 0 0.5rem;
+  gap: 0.75rem;
+  margin: 0 0 1.25rem;
+  padding: 0;
 }
 
 @media screen and (max-width: 960px) {
@@ -252,18 +252,18 @@
     grid-template-columns: 1fr;
   }
   .home-hero h1 {
-    font-size: 1.5rem;
+    font-size: 1.15rem;
   }
   .home-hero {
-    padding: 2rem 1.25rem 1.5rem;
+    padding: 1rem 1rem 0.8rem;
   }
 }
 
 .home-grid .card {
   background: var(--md-default-bg-color);
   border: 1px solid var(--md-default-fg-color--lightest);
-  border-radius: 10px;
-  padding: 1.1rem 1.2rem;
+  border-radius: 8px;
+  padding: 0.85rem 1rem;
   transition: transform 0.12s ease, box-shadow 0.12s ease;
   text-decoration: none;
   color: var(--md-default-fg-color);
@@ -280,8 +280,8 @@
 }
 
 .home-grid .card h3 {
-  margin: 0 0 0.35rem;
-  font-size: 0.88rem;
+  margin: 0 0 0.25rem;
+  font-size: 0.82rem;
   font-weight: 700;
   color: var(--md-primary-fg-color);
 }
@@ -291,9 +291,9 @@
 }
 
 .home-grid .card p {
-  margin: 0 0 0.5rem;
-  font-size: 0.76rem;
-  line-height: 1.55;
+  margin: 0 0 0.35rem;
+  font-size: 0.72rem;
+  line-height: 1.5;
   opacity: 0.82;
 }
 

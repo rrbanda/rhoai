@@ -40,9 +40,16 @@ theme:
     - content.tabs.link
     - content.tooltips
     - toc.follow
-    - announce.dismiss
   icon:
     repo: fontawesome/brands/github
+
+extra:
+  social:
+    - icon: fontawesome/brands/github
+      link: https://github.com/rrbanda/rhoai
+    - icon: fontawesome/solid/book
+      link: https://docs.redhat.com/en/documentation/red_hat_openshift_ai/3.4
+      name: Official RHOAI Docs
 
 extra_css:
   - stylesheets/extra.css
