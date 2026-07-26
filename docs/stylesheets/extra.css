@@ -171,39 +171,28 @@
   left: 0;
   right: 0;
   z-index: 100;
-  font-size: 0.72rem;
 }
 
 .md-footer__inner {
-  padding: 0.3rem 0.8rem;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+  padding: 0.25rem 0.6rem;
 }
 
 .md-footer__link {
-  padding: 0.3rem 0.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
+  padding: 0.2rem 0.4rem;
 }
 
-.md-footer-nav__title {
-  font-size: 0.66rem;
-  margin: 0;
-  padding: 0;
+.md-footer__title {
+  font-size: 0.72rem;
   line-height: 1.3;
 }
 
-.md-footer-nav__direction {
-  font-size: 0.5rem;
-  line-height: 1.2;
-  opacity: 0.7;
+.md-footer__direction {
+  font-size: 0.52rem;
 }
 
-.md-footer-nav__link .md-icon {
-  width: 0.7rem;
-  height: 0.7rem;
+.md-footer__button.md-icon svg {
+  width: 1rem;
+  height: 1rem;
 }
 
 /* Hide the "Made with Material" meta bar */
@@ -213,7 +202,7 @@
 
 /* Prevent content from hiding behind the fixed footer */
 .md-main {
-  padding-bottom: 40px;
+  padding-bottom: 44px;
 }
 
 /* Sidebar and content scroll within remaining viewport */
