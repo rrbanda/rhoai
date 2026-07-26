@@ -183,7 +183,7 @@ Choose an algorithm based on your constraints. Each tab shows minimal working co
         max_seq_len=4096,
         learning_rate=2e-5,
         max_tokens_per_gpu=16384,
-        unfreeze_rank_ratio=0.01,
+        unfreeze_rank_ratio=0.25,
     )
     ```
 

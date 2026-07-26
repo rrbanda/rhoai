@@ -75,7 +75,7 @@ osft(
     model_path="meta-llama/Llama-3.1-8B-Instruct",
     data_path="medical_training_data.jsonl",
     ckpt_output_dir="./medical-osft",
-    unfreeze_rank_ratio=0.01,
+    unfreeze_rank_ratio=0.25,
     effective_batch_size=32,
     max_tokens_per_gpu=16384,
     max_seq_len=4096,

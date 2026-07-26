@@ -120,7 +120,7 @@ def run_osft(
         model_path=model_path,
         data_path=data_path,
         ckpt_output_dir=ckpt_output_dir,
-        unfreeze_rank_ratio=0.01,  # 0.01 preserves general capability; increase to 0.05-0.1 for aggressive domain specialization
+        unfreeze_rank_ratio=0.25,  # 0.25 is the recommended starting point (upstream default); reduce to 0.1 for conservative preservation
         num_epochs=num_epochs,
         effective_batch_size=effective_batch_size,
         learning_rate=learning_rate,

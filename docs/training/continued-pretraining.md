@@ -76,7 +76,7 @@ Train a model to understand spreadsheet formulas and operations:
         model_path="./cpt-spreadsheet/hf_format/samples_0",
         data_path="spreadsheet_qa.jsonl",
         ckpt_output_dir="./osft-spreadsheet",
-        unfreeze_rank_ratio=0.01,
+        unfreeze_rank_ratio=0.25,
         effective_batch_size=32,
         max_tokens_per_gpu=16384,
         max_seq_len=4096,

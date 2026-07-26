@@ -55,7 +55,7 @@ lower, expected, upper = estimate(
     model_path="meta-llama/Llama-3.1-8B-Instruct",
     num_gpus=4,
     max_tokens_per_gpu=16384,
-    unfreeze_rank_ratio=0.01,
+    unfreeze_rank_ratio=0.25,
 )
 
 # LoRA estimate (single GPU)

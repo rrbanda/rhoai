@@ -71,7 +71,7 @@ osft(
     model_path="Qwen/Qwen3-4B",
     data_path="financial_training_data.jsonl",
     ckpt_output_dir="./financial-knowledge-model",
-    unfreeze_rank_ratio=0.01,
+    unfreeze_rank_ratio=0.25,
     effective_batch_size=32,
     max_tokens_per_gpu=16384,
     max_seq_len=4096,

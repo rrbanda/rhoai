@@ -7,7 +7,7 @@ Teach a model your domain knowledge — financial regulations, product documenta
 
     - **SDG Hub** outputs `question`/`response` columns (not `messages`)
     - **Data mixing** correctly converts to `messages` format with `unmask: true`
-    - **OSFT** uses `unfreeze_rank_ratio=0.01` (preserves general capability)
+    - **OSFT** uses `unfreeze_rank_ratio=0.25` (preserves general capability)
     - **LoRA SFT** option available alongside SFT and OSFT
     - **Hyperparameters** aligned: `num_epochs=4`, `learning_rate=2e-5`, `effective_batch_size=32`
 
@@ -204,7 +204,7 @@ Choose your algorithm based on the [decision guide](../getting-started/choosing-
         model_path="meta-llama/Llama-3.1-8B-Instruct",
         data_path="training_data.jsonl",
         ckpt_output_dir="./knowledge-model",
-        unfreeze_rank_ratio=0.01,
+        unfreeze_rank_ratio=0.25,
         unmask_messages=True,
         effective_batch_size=32,
         max_tokens_per_gpu=16384,

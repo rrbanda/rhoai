@@ -15,13 +15,13 @@ The `unfreeze_rank_ratio` parameter controls the trade-off between learning new 
 
 | Value | Effect | Use Case |
 |-------|--------|----------|
-| `0.005` | Very conservative — preserves almost all base knowledge | Light knowledge injection |
-| `0.01` | Balanced — good default for most tasks | Domain adaptation |
-| `0.05` | Aggressive — learns more but may drift from base | Heavy domain specialization |
-| `0.1` | Very aggressive — close to full SFT behavior | Maximum learning capacity |
+| `0.1–0.3` | Conservative — strong preservation, minimal adaptation | Light knowledge injection |
+| `0.25` | **Recommended starting point** | Domain adaptation (default) |
+| `0.3–0.5` | Balanced — good learning with reasonable preservation | Heavy domain specialization |
+| `>0.5` | Aggressive — rarely needed, approaches full fine-tuning | Maximum learning capacity |
 
 !!! tip
-    Start with `unfreeze_rank_ratio=0.01` and increase if the model doesn't learn enough, or decrease if general capabilities degrade.
+    Start with `unfreeze_rank_ratio=0.25` and increase if the model doesn't learn enough, or decrease if general capabilities degrade.
 
 ## Quick Start
 
@@ -32,7 +32,7 @@ osft(
     model_path="meta-llama/Llama-3.1-8B-Instruct",
     data_path="training_data.jsonl",
     ckpt_output_dir="./osft-output",
-    unfreeze_rank_ratio=0.01,
+    unfreeze_rank_ratio=0.25,
     effective_batch_size=32,
     max_tokens_per_gpu=16384,
     max_seq_len=4096,
@@ -75,7 +75,7 @@ osft(
     model_path="meta-llama/Llama-3.1-8B-Instruct",
     data_path="medical_data.jsonl",
     ckpt_output_dir="./phase1",
-    unfreeze_rank_ratio=0.01,
+    unfreeze_rank_ratio=0.25,
     effective_batch_size=32,
     max_tokens_per_gpu=16384,
     max_seq_len=4096,
@@ -86,7 +86,7 @@ osft(
     model_path="./phase1/hf_format/samples_0",
     data_path="legal_data.jsonl",
     ckpt_output_dir="./phase2",
-    unfreeze_rank_ratio=0.01,
+    unfreeze_rank_ratio=0.25,
     effective_batch_size=32,
     max_tokens_per_gpu=16384,
     max_seq_len=4096,
