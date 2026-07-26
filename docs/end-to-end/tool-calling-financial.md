@@ -32,7 +32,15 @@ The core pipeline (Steps 0-7) runs fully on RHOAI 3.4. RHOAI 3.5 features are ad
 
 ## Pipeline Overview
 
-![Financial Agent Architecture](images/financial-agent-architecture.png)
+```mermaid
+graph LR
+    A["0. MCP Server<br/>(FastMCP)"] --> B["1. Generate Traces<br/>(SDG Hub)"]
+    B --> C["2. Format Data<br/>(tool_calls JSONL)"]
+    C --> D["3. Train<br/>(LoRA SFT)"]
+    D --> E["4. Deploy<br/>(KServe + vLLM)"]
+    E --> F["5. Evaluate<br/>(Tool-Use Metrics)"]
+    F --> G["6. Guardrails<br/>(NeMo)"]
+```
 
 ## Prerequisites
 

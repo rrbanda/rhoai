@@ -628,7 +628,7 @@ spec:
 YAML
 ```
 
-### 6.4 Monitor deployment
+### 6.3 Monitor deployment
 
 ```bash
 # Watch until READY=True (typically 2-5 minutes for initial model download)
@@ -645,7 +645,7 @@ INFO:     Application startup complete.
 INFO:     Uvicorn running on http://0.0.0.0:8080
 ```
 
-### 6.5 Test the deployed model
+### 6.4 Test the deployed model
 
 ```bash
 # Get the internal endpoint
