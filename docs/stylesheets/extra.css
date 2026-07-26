@@ -109,25 +109,23 @@
 
 /* --------------- Header --------------- */
 .md-header {
-  height: 36px;
-  min-height: 36px;
+  min-height: 42px;
 }
 
 .md-header__inner {
-  padding: 0 0.6rem;
-  height: 36px;
+  padding: 0 0.8rem;
+  min-height: 42px;
 }
 
 /* --------------- Navigation Tabs --------------- */
 .md-tabs {
   font-weight: 500;
-  height: 28px;
-  min-height: 0;
+  min-height: 32px;
 }
 
 .md-tabs__link {
-  font-size: 0.68rem;
-  padding: 0.2rem 0.8rem;
+  font-size: 0.72rem;
+  padding: 0.35rem 0.8rem;
 }
 
 .md-nav__link {
@@ -150,99 +148,64 @@
   font-style: italic;
 }
 
-/* --------------- Sticky Footer + Internal Scroll --------------- */
-.md-content {
-  overflow-y: auto;
-  max-height: calc(100vh - 48px - 48px - 36px);
-}
-
-.md-sidebar {
-  overflow-y: auto;
-  max-height: calc(100vh - 48px - 48px - 36px);
-}
-
+/* --------------- Footer --------------- */
 .md-footer {
-  position: fixed !important;
-  bottom: 0 !important;
-  left: 0;
-  right: 0;
-  z-index: 100;
-  height: 48px;
-  display: flex !important;
-  flex-direction: column;
-  justify-content: center;
   border-top: 1px solid var(--md-default-fg-color--lightest);
-  font-size: 0.65rem;
-  padding: 0;
+  font-size: 0.72rem;
 }
 
-/* Prevent content from hiding behind the fixed footer */
-.md-main {
-  padding-bottom: 52px;
-}
-
-/* Previous / Next nav takes the full row */
 .md-footer__inner {
-  padding: 0 0.8rem;
-  min-height: 0;
-  line-height: 1;
-  flex: 1;
+  padding: 0.4rem 0.8rem;
   display: flex;
   align-items: center;
 }
 
 .md-footer__link {
-  padding: 0 0.4rem;
-}
-
-.md-footer-nav__link {
-  padding: 0 0.4rem;
+  padding: 0.3rem 0.5rem;
 }
 
 .md-footer-nav__title {
-  font-size: 0.56rem;
+  font-size: 0.68rem;
   margin: 0;
   padding: 0;
-  line-height: 1.1;
+  line-height: 1.3;
 }
 
 .md-footer-nav__direction {
-  font-size: 0.42rem;
-  line-height: 1;
+  font-size: 0.58rem;
+  line-height: 1.2;
 }
 
 .md-footer-nav__link .md-icon {
-  width: 0.75rem;
-  height: 0.75rem;
+  width: 0.85rem;
+  height: 0.85rem;
 }
 
-/* "Made with Material for MkDocs" bar — inline, minimal */
+/* "Made with Material for MkDocs" bar */
 .md-footer-meta {
-  padding: 0;
-  min-height: 0;
+  padding: 0.2rem 0;
 }
 
 .md-footer-meta__inner {
-  padding: 0 0.8rem;
-  font-size: 0.44rem;
-  line-height: 1;
+  padding: 0.2rem 0.8rem;
+  font-size: 0.58rem;
+  line-height: 1.3;
   display: flex;
   align-items: center;
-  min-height: 0;
-  height: 12px;
+  min-height: 20px;
 }
 
 .md-footer-meta .md-copyright {
-  font-size: 0.44rem;
+  font-size: 0.58rem;
 }
 
 .md-footer-meta .md-social {
-  padding: 0;
+  padding: 0.1rem 0;
 }
 
 .md-footer-meta .md-social__link svg {
-  width: 0.65rem;
-  height: 0.65rem;
+  width: 0.75rem;
+  height: 0.75rem;
 }
 
 /* ==========================================================================
