@@ -10,7 +10,7 @@ Model interpolation (checkpoint blending) creates a new model by combining the w
 
 ## Usage
 
-Model interpolation uses the `interpolate_models` helper, which works directly with HuggingFace `transformers`:
+Model interpolation uses the `interpolate_models` helper from [`04-training/utilities/model_interpolation.py`](https://github.com/rrbanda/rhoai/blob/main/04-training/utilities/model_interpolation.py):
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer
@@ -20,29 +20,36 @@ def interpolate_models(
     model_path: str,
     trained_model_path: str,
     trained_model_weight: float = 0.5,
-    output_model_path: str = "./interpolated",
-    torch_dtype: str = "bfloat16",
+    output_model_path: str | None = None,
+    torch_dtype: str | torch.dtype | None = "bfloat16",
 ) -> str:
-    """Blend base and trained model weights."""
-    dtype = getattr(torch, torch_dtype)
+    """Linearly interpolate between two model checkpoints."""
+    if output_model_path is None:
+        output_model_path = f"{trained_model_path}_interp"
 
-    base = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=dtype)
-    trained = AutoModelForCausalLM.from_pretrained(trained_model_path, torch_dtype=dtype)
+    if not 0.0 <= trained_model_weight <= 1.0:
+        raise ValueError(f"trained_model_weight must be in [0, 1], got {trained_model_weight}")
 
-    for name, param in base.named_parameters():
-        trained_param = dict(trained.named_parameters())[name]
-        param.data = (
-            (1 - trained_model_weight) * param.data
-            + trained_model_weight * trained_param.data
-        )
+    # ... dtype handling omitted for brevity ...
 
-    base.save_pretrained(output_model_path)
+    model = AutoModelForCausalLM.from_pretrained(model_path, torch_dtype=dtype)
+    state_dict = model.state_dict()
+    base_weight = 1.0 - trained_model_weight
+    for key in state_dict:
+        state_dict[key] = state_dict[key] * base_weight
+
+    trained_model = AutoModelForCausalLM.from_pretrained(trained_model_path, torch_dtype=dtype)
+    trained_state_dict = trained_model.state_dict()
+    for key in state_dict:
+        state_dict[key] += trained_state_dict[key] * trained_model_weight
+
+    model.save_pretrained(output_model_path, state_dict=state_dict)
     AutoTokenizer.from_pretrained(model_path).save_pretrained(output_model_path)
     return output_model_path
 ```
 
 !!! note
-    This function is provided as a utility script in the repository, not as part of the `training_hub` package. See [`04-training/utilities/model_interpolation.py`](https://github.com/rrbanda/rhoai/blob/main/04-training/utilities/model_interpolation.py).
+    This function is provided as a utility script in the repository, not as part of the `training_hub` package. The upstream version lives at [`training_hub/examples/scripts/interpolator.py`](https://github.com/Red-Hat-AI-Innovation-Team/training_hub/blob/main/examples/scripts/interpolator.py).
 
 ## Parameters
 
@@ -51,8 +58,8 @@ def interpolate_models(
 | `model_path` | str | required | Path to the base (pre-trained) model |
 | `trained_model_path` | str | required | Path to the fine-tuned model |
 | `trained_model_weight` | float | `0.5` | Blend weight for the trained model (0.0-1.0) |
-| `output_model_path` | str | `"./interpolated"` | Where to save the blended model |
-| `torch_dtype` | str | `"bfloat16"` | Data type for loading models |
+| `output_model_path` | str \| None | `None` → `{trained_model_path}_interp` | Where to save the blended model |
+| `torch_dtype` | str \| torch.dtype \| None | `"bfloat16"` | Data type for loading models |
 
 ## The `trained_model_weight` Parameter
 
