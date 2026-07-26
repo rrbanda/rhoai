@@ -15,15 +15,16 @@ Usage:
 
 import argparse
 import os
+import sys
 from pathlib import Path
 
 import nest_asyncio
 import pandas as pd
-from sdg_hub import Flow
+from sdg_hub import Flow, FlowRegistry
 
 nest_asyncio.apply()
 
-FLOW_PATH = "src/sdg_hub/flows/red_team/prompt_generation/flow.yaml"
+FLOW_NAME = "Red Teaming Prompt Generation Flow"
 
 
 def parse_args() -> argparse.Namespace:
@@ -63,7 +64,13 @@ def main() -> None:
     dataset = pd.read_json(args.input_data, lines=True)
     print(f"Loaded {len(dataset)} seed rows from {args.input_data}")
 
-    flow = Flow.from_yaml(FLOW_PATH)
+    FlowRegistry.discover_flows()
+    flow_path = FlowRegistry.get_flow_path(FLOW_NAME)
+    if flow_path is None:
+        print(f"ERROR: Flow '{FLOW_NAME}' not found in registry.")
+        print("Ensure sdg_hub is installed: pip install sdg-hub[examples]")
+        sys.exit(1)
+    flow = Flow.from_yaml(flow_path)
 
     api_key = args.api_key or os.environ.get("OPENAI_API_KEY", "")
     flow.set_model_config(model=args.model, api_key=api_key)

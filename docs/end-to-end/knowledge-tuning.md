@@ -48,7 +48,12 @@ for doc in documents:
 
 dataset = Dataset.from_dict({
     "document": chunks,
+    "document_outline": [""] * len(chunks),
     "domain": ["your-domain"] * len(chunks),
+    "icl_document": [""] * len(chunks),
+    "icl_query_1": [""] * len(chunks),
+    "icl_query_2": [""] * len(chunks),
+    "icl_query_3": [""] * len(chunks),
 })
 
 print(f"Created {len(dataset)} document chunks")
@@ -72,12 +77,17 @@ FLOW_VARIANTS = {
 
 generated_data = {}
 for variant_name, flow_display_name in FLOW_VARIANTS.items():
-    flow = Flow.from_yaml(FlowRegistry.get_flow_path(flow_display_name))
+    flow_path = FlowRegistry.get_flow_path(flow_display_name)
+    if flow_path is None:
+        print(f"WARNING: {flow_display_name} not found, skipping")
+        continue
+    flow = Flow.from_yaml(flow_path)
     flow.set_model_config(model="gpt-4o-mini")
     result = flow.generate(dataset)
-    result.to_json(f"{variant_name}.jsonl", orient="records", lines=True)
-    generated_data[variant_name] = result
-    print(f"{variant_name}: {len(result)} examples")
+    result_df = result.to_pandas() if hasattr(result, "to_pandas") else result
+    result_df.to_json(f"{variant_name}.jsonl", orient="records", lines=True)
+    generated_data[variant_name] = result_df
+    print(f"{variant_name}: {len(result_df)} examples")
 ```
 
 ## Step 3: Mix and Validate
@@ -190,15 +200,27 @@ apiVersion: serving.kserve.io/v1beta1
 kind: InferenceService
 metadata:
   name: knowledge-model
+  annotations:
+    serving.kserve.io/deploymentMode: RawDeployment
 spec:
   predictor:
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
     model:
       modelFormat:
         name: vLLM
       runtime: vllm-runtime
       storageUri: s3://models/knowledge-model
       resources:
+        requests:
+          cpu: "2"
+          memory: "8Gi"
+          nvidia.com/gpu: "1"
         limits:
+          cpu: "4"
+          memory: "16Gi"
           nvidia.com/gpu: "1"
 ```
 

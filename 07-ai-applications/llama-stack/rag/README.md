@@ -19,4 +19,4 @@ Retrieval-Augmented Generation (RAG) workflows using Llama Stack. Covers the ful
 
 ## What's in examples/
 
-Step-by-step examples for building RAG pipelines with Llama Stack, including document ingestion, vector store setup, retrieval queries, and grounded generation using the Responses API.
+Examples coming soon.

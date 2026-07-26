@@ -147,7 +147,7 @@ def main() -> None:
     if not text_flows:
         raise SystemExit(
             f"No flow found with tag '{FLOW_TAG}'. "
-            "Ensure sdg_hub is installed with: pip install sdg_hub"
+            "Ensure sdg-hub is installed with: pip install sdg-hub"
         )
     flow_id = text_flows[0]["id"]
     flow_path = FlowRegistry.get_flow_path(flow_id)

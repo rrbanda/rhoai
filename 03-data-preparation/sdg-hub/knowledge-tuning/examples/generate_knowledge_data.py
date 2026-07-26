@@ -13,31 +13,20 @@ Usage:
 
 import argparse
 import os
+import sys
 from pathlib import Path
 
 import nest_asyncio
 import pandas as pd
-from sdg_hub import Flow
+from sdg_hub import Flow, FlowRegistry
 
 nest_asyncio.apply()
 
 FLOW_VARIANTS = {
-    "extractive_summary": (
-        "src/sdg_hub/flows/knowledge_infusion/"
-        "enhanced_multi_summary_qa/extractive_summary/flow.yaml"
-    ),
-    "detailed_summary": (
-        "src/sdg_hub/flows/knowledge_infusion/"
-        "enhanced_multi_summary_qa/detailed_summary/flow.yaml"
-    ),
-    "key_facts": (
-        "src/sdg_hub/flows/knowledge_infusion/"
-        "enhanced_multi_summary_qa/key_facts/flow.yaml"
-    ),
-    "document_based": (
-        "src/sdg_hub/flows/knowledge_infusion/"
-        "enhanced_multi_summary_qa/document_based/flow.yaml"
-    ),
+    "extractive_summary": "Extractive Summary Knowledge Tuning Dataset Generation Flow",
+    "detailed_summary": "Detailed Summary Knowledge Tuning Dataset Generation Flow",
+    "key_facts": "Key Facts Knowledge Tuning Dataset Generation Flow",
+    "document_based": "Document Based Knowledge Tuning Dataset Generation Flow",
 }
 
 
@@ -84,7 +73,13 @@ def main() -> None:
     dataset = pd.read_json(args.input_data, lines=True)
     print(f"Loaded {len(dataset)} seed documents from {args.input_data}")
 
-    flow_path = FLOW_VARIANTS[args.flow_variant]
+    FlowRegistry.discover_flows()
+    flow_name = FLOW_VARIANTS[args.flow_variant]
+    flow_path = FlowRegistry.get_flow_path(flow_name)
+    if flow_path is None:
+        print(f"ERROR: Flow '{flow_name}' not found in registry.")
+        print("Ensure sdg_hub is installed: pip install sdg-hub[examples]")
+        sys.exit(1)
     flow = Flow.from_yaml(flow_path)
 
     api_key = args.api_key or os.environ.get("OPENAI_API_KEY", "")

@@ -174,7 +174,7 @@ def main() -> None:
     flow_variants = resolve_flow_variants()
     if not flow_variants:
         print("ERROR: No knowledge flows found in the SDG Hub registry.")
-        print("Ensure sdg_hub is installed: pip install sdg_hub[examples]")
+        print("Ensure sdg-hub is installed: pip install sdg-hub[examples]")
         sys.exit(1)
 
     print(f"\nTeacher model : {teacher_model}")

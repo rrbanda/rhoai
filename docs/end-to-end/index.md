@@ -35,13 +35,13 @@ graph TD
     subgraph knowledge [Knowledge Track]
         K1["Prepare Documents<br/>(Docling)"] --> K2["Generate Q&A<br/>(SDG Hub)"]
         K2 --> K3["Train<br/>(SFT / OSFT / LoRA)"]
-        K3 --> K4["Evaluate<br/>(LM-Eval)"]
+        K3 --> K4["Evaluate<br/>(Loss + LLM-as-Judge)"]
         K4 --> K5["Deploy<br/>(KServe)"]
     end
-    subgraph agent [Tool-Calling Track]
+    subgraph tool_calling [Tool-Calling Track]
         A1["MCP Server<br/>(FastMCP)"] --> A2["Generate Traces<br/>(MCP Distillation)"]
         A2 --> A3["Train<br/>(LoRA SFT)"]
-        A3 --> A4["Evaluate<br/>(Agent Eval)"]
+        A3 --> A4["Evaluate<br/>(Tool-Use Metrics)"]
         A4 --> A5["Deploy + Guardrails<br/>(KServe + NeMo)"]
     end
 ```

@@ -11,7 +11,7 @@ Fine-tune a small language model (Qwen3-4B) to make accurate tool calls for fina
 | LoRA KFP Pipeline | 3.4+ | GA | End-to-end training pipeline (data → train → eval → registry) |
 | KServe RawDeployment | 3.4+ | GA | Deploy fine-tuned model with vLLM runtime |
 | NeMo Guardrails | 3.4+ | GA | Financial compliance rails, PII detection, disclaimers |
-| Agent Evaluation | 3.4+ | GA | Tool-calling quality metrics + LLM-as-judge |
+| Tool-Use Evaluation | 3.4+ | GA | Tool-calling quality metrics + LLM-as-judge |
 | NeMo + MCP Gateway | 3.5 EA2 | **TP** | Auto-enforce guardrails on all agent tool calls |
 | Validated Tool-Calling Config | 3.5 EA2 | **TP** | Pre-validated vLLM args for tool-calling models |
 
@@ -74,7 +74,7 @@ financial-agent/
     ├── 03_train_lora_sft.py               LoRA SFT training (local, for dev)
     ├── 03b_train_kfp_pipeline.py          LoRA KFP pipeline (RHOAI production)
     ├── 04_deploy_model.py                  KServe RawDeployment + vLLM
-    ├── 05_evaluate_agent.py                Agent tool-calling evaluation
+    ├── 05_evaluate_agent.py                Tool-calling model evaluation
     ├── 06_configure_guardrails.py          NeMo Guardrails + MCP Gateway
     ├── 07_deep_agent.py                    Deep Agent harness (LangGraph)
     ├── financial_tools.py                  15 @tool wrappers for MCP server
@@ -134,10 +134,10 @@ Converts raw tool traces into chat-format JSONL for supervised fine-tuning:
 {"messages": [
   {"role": "system", "content": "<tool declarations>"},
   {"role": "user", "content": "What's the risk-adjusted return on my tech portfolio?"},
-  {"role": "assistant", "content": "", "function_call": {"name": "get_portfolio_positions", "arguments": "..."}},
-  {"role": "function", "content": "{...}", "name": "get_portfolio_positions"},
-  {"role": "assistant", "content": "", "function_call": {"name": "calculate_portfolio_risk", "arguments": "..."}},
-  {"role": "function", "content": "{...}", "name": "calculate_portfolio_risk"},
+  {"role": "assistant", "content": null, "tool_calls": [{"type": "function", "function": {"name": "get_portfolio_positions", "arguments": "{\"portfolio_id\": \"PORT-0001\"}"}}]},
+  {"role": "tool", "content": "{...}", "name": "get_portfolio_positions"},
+  {"role": "assistant", "content": null, "tool_calls": [{"type": "function", "function": {"name": "calculate_portfolio_risk", "arguments": "{\"portfolio_id\": \"PORT-0001\"}"}}]},
+  {"role": "tool", "content": "{...}", "name": "calculate_portfolio_risk"},
   {"role": "assistant", "content": "Your tech portfolio has a Sharpe ratio of..."}
 ]}
 ```
@@ -561,7 +561,7 @@ oc apply -f serving/05-route.yaml -n financial-agent
 
 ### Step 5: Evaluate
 
-**RHOAI Feature:** Agent Evaluation (GA)
+**RHOAI Feature:** Tool-Use Evaluation (GA)
 
 ```bash
 python 05_evaluate_agent.py \
@@ -640,7 +640,7 @@ This pipeline has been validated end-to-end on the following environment:
 
 - MCP server: 15 tools callable via FastMCP
 - SDG Hub: Flow loads, teacher model configured, input dataset builds correctly
-- Data formatting: Parquet → chat-format JSONL with proper function_call structure
+- Data formatting: Parquet → chat-format JSONL with proper tool_calls structure
 - Training: LoRA SFT via Kubeflow Trainer, loss 1.817→1.511, 38s for 50 examples
 - KFP pipeline: Compiles to 2,367-line YAML, uploads to pipeline server
 - Model deployment: KServe manifest generates correctly (dry-run validated)
@@ -658,7 +658,7 @@ This pipeline has been validated end-to-end on the following environment:
 
 | Symptom | Resolution |
 |---------|------------|
-| "MCP Server Distillation flow not found" | Ensure `sdg_hub` is installed: `pip install sdg_hub[dev]` |
+| "MCP Server Distillation flow not found" | Ensure sdg-hub is installed: `pip install sdg-hub[examples]` |
 | "CUDA out of memory during training" | Enable QLoRA: `--load-in-4bit` (default), or reduce `--max-seq-len` |
 | "Tool call parser error" during inference | Verify `--tool-call-parser` matches model (use `hermes` for Qwen3) |
 | "Guardrails CR not ready" | Check TrustyAI operator is installed |
@@ -675,7 +675,7 @@ This pipeline has been validated end-to-end on the following environment:
 **Works fully on RHOAI 3.4 (GA features only):**
 - Steps 0-3: MCP server, data generation, formatting, LoRA SFT training
 - Step 4: Model deployment with KServe RawDeployment + vLLM
-- Step 5: Agent tool-calling evaluation (tool metrics + LLM-as-judge)
+- Step 5: Tool-calling evaluation (tool metrics + LLM-as-judge)
 - Step 6 Tier 1: NeMo Guardrails for financial compliance
 
 **RHOAI 3.5 EA2 adds (Technology Preview):**

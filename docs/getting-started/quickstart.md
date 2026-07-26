@@ -76,19 +76,26 @@ See [GPU Requirements](../reference/gpu-requirements.md) for per-model and per-a
 
 ## Step 1: Prepare Seed Data
 
-Training data generation starts with a dataset containing your domain documents. Each row needs a `document` column with the text content:
+Training data generation starts with a dataset containing your domain documents. Each row needs a `document` column with the text content, plus additional columns required by the knowledge flow (`document_outline`, and optionally `icl_document`, `icl_query_1/2/3` for in-context learning examples):
 
 ```python
 from datasets import Dataset
 
+document_text = (
+    "RHOAI 3.4 brings Models-as-a-Service (MaaS) to GA, allowing users "
+    "to access hosted LLMs directly from the dashboard without deploying "
+    "model servers. Supported providers include OpenAI, Anthropic, and "
+    "IBM watsonx. MaaS endpoints are rate-limited and metered per-token."
+)
+
 seed_data = Dataset.from_dict({
-    "document": [
-        "RHOAI 3.4 brings Models-as-a-Service (MaaS) to GA, allowing users "
-        "to access hosted LLMs directly from the dashboard without deploying "
-        "model servers. Supported providers include OpenAI, Anthropic, and "
-        "IBM watsonx. MaaS endpoints are rate-limited and metered per-token."
-    ],
+    "document": [document_text],
+    "document_outline": ["Overview of RHOAI 3.4 Models-as-a-Service feature"],
     "domain": ["rhoai"],
+    "icl_document": [""],
+    "icl_query_1": [""],
+    "icl_query_2": [""],
+    "icl_query_3": [""],
 })
 ```
 
@@ -103,16 +110,19 @@ from sdg_hub import Flow, FlowRegistry
 
 FlowRegistry.discover_flows()
 
-flow = Flow.from_yaml(
-    FlowRegistry.get_flow_path(
-        "Document Based Knowledge Tuning Dataset Generation Flow"
-    )
+flow_path = FlowRegistry.get_flow_path(
+    "Document Based Knowledge Tuning Dataset Generation Flow"
 )
+if flow_path is None:
+    raise RuntimeError("Flow not found. Install: pip install sdg-hub[examples]")
+
+flow = Flow.from_yaml(flow_path)
 flow.set_model_config(model="gpt-4o-mini")
 
 result = flow.generate(seed_data)
-result.to_json("training_data.jsonl", orient="records", lines=True)
-print(f"Generated {len(result)} training examples")
+result_df = result.to_pandas() if hasattr(result, "to_pandas") else result
+result_df.to_json("training_data.jsonl", orient="records", lines=True)
+print(f"Generated {len(result_df)} training examples")
 ```
 
 !!! tip "Dry run first"

@@ -6,8 +6,8 @@ After training, deploy your model on RHOAI for inference using KServe with the v
 
 | Mode | Use Case | Min GPU | Scale-to-Zero |
 |------|----------|---------|---------------|
-| **KServe RawDeployment** | Production serving with predictable load | 1x A100 40GB+ | No |
-| **KServe Serverless (Knative)** | Burst workloads, cost optimization | 1x A100 40GB+ | Yes |
+| **KServe RawDeployment** | Production serving with predictable load | 1x L4 24GB+ (model-dependent) | No |
+| **KServe Serverless (Knative)** | Burst workloads, cost optimization | 1x L4 24GB+ (model-dependent) | Yes |
 | **Distributed Inference (llm-d)** | Large models across multiple GPUs/nodes | 4x+ GPUs | No |
 | **Models-as-a-Service** | Managed model endpoints | N/A | N/A |
 

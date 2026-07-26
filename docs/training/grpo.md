@@ -7,7 +7,7 @@ GRPO is a reinforcement learning algorithm that trains models to use tools effec
 - You're training a model to **call tools** (MCP servers, REST APIs, function calls)
 - You have **tool-use traces** with verifiable success/failure signals
 - You want the model to learn **which tool to use** and **how to construct arguments**
-- You're building an **agent** that interacts with external systems
+- You're building a **tool-calling model** that interacts with external systems
 
 !!! note "Install the GRPO extra"
     GRPO requires additional dependencies not included in the base package:
@@ -109,4 +109,4 @@ GRPO expects tool-use traces in messages format with tool calls and results:
 
 - [MCP Distillation Pipeline](../end-to-end/mcp-distillation.md) — Generate tool-use training data, then train with GRPO
 - [LoRA](lora.md) — GRPO uses LoRA adapters internally
-- [Agent Evaluation](../evaluation/agent-evaluation.md) — Evaluate tool-use model quality
+- [Tool-Use Evaluation](../evaluation/agent-evaluation.md) — Evaluate tool-calling model quality

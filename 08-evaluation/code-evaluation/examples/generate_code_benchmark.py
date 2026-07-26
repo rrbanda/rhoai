@@ -248,7 +248,13 @@ def main() -> None:
     # Step 2: Load the domain-code-eval flow
     print("\n--- Step 2: Loading domain-code-eval flow ---")
     FlowRegistry.discover_flows()
-    flow = Flow.from_yaml(FlowRegistry.get_flow_path("domain-code-eval"))
+    flow_name = "domain-code-eval"
+    flow_path = FlowRegistry.get_flow_path(flow_name)
+    if flow_path is None:
+        print(f"ERROR: Flow '{flow_name}' not found in registry.", file=sys.stderr)
+        print("Ensure sdg_hub is installed: pip install sdg-hub[examples]", file=sys.stderr)
+        sys.exit(1)
+    flow = Flow.from_yaml(flow_path)
     print("Flow loaded: domain-code-eval")
 
     # Step 3: Configure the model

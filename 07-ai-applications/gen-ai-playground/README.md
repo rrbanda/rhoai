@@ -18,4 +18,4 @@ Interactive model experimentation environment accessible from the RHOAI dashboar
 
 ## What's in examples/
 
-Examples covering prompt engineering patterns, model comparison workflows, parameter tuning strategies, and guardrail configuration for the Gen AI Playground.
+Examples coming soon.

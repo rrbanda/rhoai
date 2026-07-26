@@ -1,8 +1,8 @@
-# Agent Evaluation
+# Tool-Use Model Evaluation
 
-Evaluate tool-use models using LLM-as-judge scoring. An evaluator model assesses whether the agent correctly selects tools, constructs arguments, and uses results to answer user queries. Use this after [GRPO training](../training/grpo.md) or [MCP distillation](../end-to-end/mcp-distillation.md) to measure tool-use quality before deployment.
+Evaluate tool-calling models using LLM-as-judge scoring. An evaluator model assesses whether the model correctly selects tools, constructs arguments, and uses results to answer user queries. Use this after [GRPO training](../training/grpo.md) or [MCP distillation](../end-to-end/mcp-distillation.md) to measure tool-use quality before deployment.
 
-## When to Use Agent Evaluation
+## When to Use Tool-Use Evaluation
 
 - You've trained a model with [GRPO](../training/grpo.md) for tool use
 - You've completed an [MCP distillation](../end-to-end/mcp-distillation.md) pipeline
@@ -17,32 +17,42 @@ Evaluate tool-use models using LLM-as-judge scoring. An evaluator model assesses
 | **Judge model API key** | GPT-4o or Claude recommended for reliable scoring |
 | **MCP server** | The tools your model was trained to use |
 
-## Generate Agent Benchmark
+## Generate Evaluation Benchmark
 
-Create evaluation scenarios for your MCP tools:
+Use the MCP Server Distillation flow to create evaluation scenarios from your MCP server's tool schemas. The benchmark generation reuses the same flow that generates training data, producing diverse tool-use scenarios for evaluation:
 
 ```python
-from datasets import Dataset
+import pandas as pd
 from sdg_hub import Flow, FlowRegistry
 
 FlowRegistry.discover_flows()
 
-seed_data = Dataset.from_dict({
-    "tool_descriptions": [
-        "search_products(query, max_price) - Search products by name or category",
-        "get_order(order_id) - Get order details and status",
-        "create_return(order_id, reason) - Initiate a product return",
-    ],
-    "complexity": ["single-tool", "multi-tool", "multi-tool"],
+flow_path = FlowRegistry.get_flow_path("MCP Server Distillation")
+if flow_path is None:
+    raise RuntimeError("Flow not found. Install: pip install sdg-hub[examples]")
+
+flow = Flow.from_yaml(flow_path)
+flow.set_model_config(model="gpt-4o", api_key="...")
+flow.set_agent_config(
+    agent_framework="langflow",
+    agent_url="http://localhost:7860/api/v1/run/your-flow-id",
+)
+
+seed_data = pd.DataFrame({
+    "tool_list": [[
+        {"name": "search_products", "description": "Search products by name or category",
+         "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}},
+        {"name": "get_order", "description": "Get order details and status",
+         "inputSchema": {"type": "object", "properties": {"order_id": {"type": "string"}}, "required": ["order_id"]}},
+    ]],
+    "mcp_server_name": ["E-Commerce API"],
+    "mcp_server_description": ["Product catalog and order management"],
 })
 
-agent_flows = FlowRegistry.search_flows(tag="agent-evaluation")
-flow = Flow.from_yaml(FlowRegistry.get_flow_path(agent_flows[0]["name"]))
-flow.set_model_config(model="gpt-4o")
-
 benchmark = flow.generate(seed_data)
-benchmark.to_json("agent_benchmark.jsonl", orient="records", lines=True)
-print(f"Generated {len(benchmark)} evaluation scenarios")
+benchmark_df = benchmark.to_pandas() if hasattr(benchmark, "to_pandas") else benchmark
+benchmark_df.to_json("agent_benchmark.jsonl", orient="records", lines=True)
+print(f"Generated {len(benchmark_df)} evaluation scenarios")
 ```
 
 !!! tip "Cover All Complexity Levels"

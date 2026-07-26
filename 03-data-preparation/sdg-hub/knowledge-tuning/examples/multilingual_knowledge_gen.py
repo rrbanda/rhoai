@@ -19,7 +19,7 @@ Adapted from:
 Prerequisites:
   - Raw PDF documents in a local directory
   - A qna.yaml file with ICL examples (see SDG Hub docs for format)
-  - pip install sdg_hub[examples] docling
+  - pip install sdg-hub[examples] docling
 
 Usage:
     # Step 1 + 2: preprocess documents then generate knowledge data

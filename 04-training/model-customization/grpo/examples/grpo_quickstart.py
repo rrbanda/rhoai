@@ -125,14 +125,14 @@ def main() -> None:
             model_path=args.model,
             data_path=args.data,
             ckpt_output_dir=args.output_dir,
-            backend=args.backend,
+            backend="art",
             lora_r=args.lora_r,
             lora_alpha=args.lora_alpha,
             num_iterations=args.iterations,
             group_size=args.group_size,
             prompt_batch_size=args.prompt_batch,
             learning_rate=args.lr,
-            nproc_per_node=args.n_gpus,
+            n_gpus=args.n_gpus,
         )
     except Exception as exc:
         print(f"\nTraining failed: {exc}", file=sys.stderr)

@@ -18,4 +18,4 @@ AutoRAG automates the configuration and optimization of RAG pipelines. It evalua
 
 ## What's in examples/
 
-Examples demonstrating AutoRAG setup, pipeline optimization runs, and comparison of auto-selected configurations against manually tuned baselines.
+Examples coming soon.

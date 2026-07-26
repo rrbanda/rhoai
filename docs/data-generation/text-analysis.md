@@ -27,7 +27,7 @@ from sdg_hub import Flow, FlowRegistry
 FlowRegistry.discover_flows()
 
 dataset = Dataset.from_dict({
-    "document": [
+    "text": [
         "The new GPU instances on RHOAI reduced our training time by 60%. "
         "The setup was straightforward, though documentation could be clearer.",
         "Customer support was unresponsive for 3 days. The billing system "
@@ -44,9 +44,10 @@ flow_info = text_flows[0]
 flow = Flow.from_yaml(FlowRegistry.get_flow_path(flow_info["name"]))
 flow.set_model_config(model="gpt-4o-mini")
 result = flow.generate(dataset)
+result_df = result.to_pandas() if hasattr(result, "to_pandas") else result
 
-result.to_json("text_analysis.jsonl", orient="records", lines=True)
-print(f"Generated {len(result)} analyzed documents")
+result_df.to_json("text_analysis.jsonl", orient="records", lines=True)
+print(f"Generated {len(result_df)} analyzed documents")
 ```
 
 ## Output Structure
@@ -171,7 +172,8 @@ for i in range(0, len(documents), batch_size):
     batch = documents.iloc[i:i+batch_size]
     dataset = Dataset.from_pandas(batch)
     result = flow.generate(dataset)
-    all_results.append(result)
+    result_df = result.to_pandas() if hasattr(result, "to_pandas") else result
+    all_results.append(result_df)
     print(f"Processed {min(i+batch_size, len(documents))}/{len(documents)}")
 
 combined = pd.concat(all_results, ignore_index=True)

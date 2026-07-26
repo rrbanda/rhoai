@@ -36,7 +36,7 @@ Benchmark (problem_description, test_code)
 ## Prerequisites
 
 - Python 3.10+
-- SDG Hub with code interpreter: `pip install sdg_hub[code]`
+- SDG Hub with code interpreter: `pip install sdg-hub[code]`
 - An LLM endpoint (OpenAI, vLLM, or any LiteLLM-compatible provider)
 
 ## Environment Variables

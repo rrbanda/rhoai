@@ -8,7 +8,7 @@ geography, language styles, exploit stages, etc.) to produce realistic and
 varied attack scenarios for testing LLM guardrails.
 
 Prerequisites:
-    - sdg_hub installed: pip install sdg_hub
+    - sdg-hub installed: pip install sdg-hub
     - LLM API key set via environment variable or .env file
 
 Example usage:
@@ -374,6 +374,11 @@ def main() -> None:
     else:
         flow_path = FlowRegistry.get_flow_path("Red Teaming Prompt Generation Flow")
 
+    if flow_path is None:
+        print("ERROR: Flow not found in registry.", file=sys.stderr)
+        print("Ensure sdg_hub is installed: pip install sdg-hub[examples]", file=sys.stderr)
+        sys.exit(1)
+
     flow = Flow.from_yaml(flow_path)
     print(f"  Flow loaded from: {flow_path}")
     print()
@@ -397,7 +402,12 @@ def main() -> None:
     if args.dry_run:
         print("Dry run — validating pipeline...")
         result = flow.dry_run(base_dataset)
-        print(f"  Validation passed. Expected output: {result.shape[0]} rows")
+        if isinstance(result, dict):
+            final = result.get("final_dataset", {})
+            row_count = len(final.get("rows", [])) if isinstance(final, dict) else len(result)
+        else:
+            row_count = result.shape[0] if hasattr(result, "shape") else len(result)
+        print(f"  Validation passed. Expected output: {row_count} rows")
         return
 
     print(f"Generating adversarial prompts ({args.samples_per_concept} per category)...")

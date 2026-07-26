@@ -28,7 +28,15 @@ dataset = Dataset.from_dict({
         "RHOAI 3.4 brings Models-as-a-Service (MaaS) to GA...",
         "The Kubeflow Training Operator manages distributed...",
     ],
+    "document_outline": [
+        "Overview of RHOAI 3.4 MaaS feature",
+        "Kubeflow Training Operator architecture",
+    ],
     "domain": ["rhoai", "rhoai"],
+    "icl_document": ["", ""],
+    "icl_query_1": ["", ""],
+    "icl_query_2": ["", ""],
+    "icl_query_3": ["", ""],
 })
 
 # Pick a flow variant
@@ -41,11 +49,16 @@ FLOW_VARIANTS = {
 
 # Generate with each variant
 for name, flow_name in FLOW_VARIANTS.items():
-    flow = Flow.from_yaml(FlowRegistry.get_flow_path(flow_name))
+    flow_path = FlowRegistry.get_flow_path(flow_name)
+    if flow_path is None:
+        print(f"WARNING: {flow_name} not found, skipping")
+        continue
+    flow = Flow.from_yaml(flow_path)
     flow.set_model_config(model="gpt-4o-mini")
     result = flow.generate(dataset)
-    result.to_json(f"{name}_data.jsonl", orient="records", lines=True)
-    print(f"{name}: {len(result)} examples")
+    result_df = result.to_pandas() if hasattr(result, "to_pandas") else result
+    result_df.to_json(f"{name}_data.jsonl", orient="records", lines=True)
+    print(f"{name}: {len(result_df)} examples")
 ```
 
 ## Mixing Variants

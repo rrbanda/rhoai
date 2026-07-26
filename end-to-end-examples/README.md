@@ -6,6 +6,7 @@ Complete end-to-end workflows that combine multiple RHOAI capabilities into prod
 
 ## What's Covered
 
+- **Tool-Calling Model (Financial)** — MCP distillation + LoRA SFT + KServe/vLLM serving + NeMo Guardrails (validated on RHOAI 3.4.2). See [financial-agent/](financial-agent/).
 - Knowledge tuning: full pipeline from documents to deployed model
 - MCP distillation: teaching small models to use tools
 - RAG applications: retrieval-augmented generation with Llama Stack

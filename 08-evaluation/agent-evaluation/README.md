@@ -35,7 +35,7 @@ The key idea: the **same agent** used for generation is used for evaluation — 
 ## Prerequisites
 
 - Python 3.10+
-- SDG Hub installed: `pip install sdg_hub[examples]`
+- SDG Hub installed: `pip install sdg-hub[examples]`
 - MCP servers running (for benchmark generation)
 - LangGraph agents running (connected to MCP servers)
 - An LLM endpoint for the teacher model and judge

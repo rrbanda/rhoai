@@ -74,7 +74,7 @@ for flow in FlowRegistry.list_flows():
 | Flow | Use Case | Guide |
 |------|----------|-------|
 | Knowledge Tuning (4 variants) | Domain Q&A from documents | [Knowledge Tuning](knowledge-tuning.md) |
-| Skills Tuning | Instruction-following data | [Skills Tuning](skills-tuning.md) |
+| Skills Tuning | Instruction-following data | [Skills Tuning](skills-tuning.md) (planned — no built-in flows yet) |
 | Text Analysis | Structured insights extraction | [Text Analysis](text-analysis.md) |
 | MCP Distillation | Tool-use training data | [MCP Distillation](../end-to-end/mcp-distillation.md) |
 | RAG Evaluation | Retrieval quality benchmarks | [RAG Evaluation](../evaluation/rag-evaluation.md) |
@@ -91,22 +91,27 @@ FlowRegistry.discover_flows()
 
 dataset = Dataset.from_dict({
     "document": ["Your domain document text here..."],
+    "document_outline": ["Brief outline of the document content"],
     "domain": ["your-domain"],
+    "icl_document": [""],
+    "icl_query_1": [""],
+    "icl_query_2": [""],
+    "icl_query_3": [""],
 })
 
-flow = Flow.from_yaml(
-    FlowRegistry.get_flow_path(
-        "Document Based Knowledge Tuning Dataset Generation Flow"
-    )
+flow_path = FlowRegistry.get_flow_path(
+    "Document Based Knowledge Tuning Dataset Generation Flow"
 )
+flow = Flow.from_yaml(flow_path)
 flow.set_model_config(model="gpt-4o-mini")
 result = flow.generate(dataset)
+result_df = result.to_pandas() if hasattr(result, "to_pandas") else result
 
-result.to_json("training_data.jsonl", orient="records", lines=True)
+result_df.to_json("training_data.jsonl", orient="records", lines=True)
 ```
 
 !!! tip "Output type matches input type"
-    `flow.generate()` returns the **same type** you pass in: `pd.DataFrame` in produces `pd.DataFrame` out; `datasets.Dataset` in produces `datasets.Dataset` out. The `.to_json(orient="records", lines=True)` call above is a pandas method. If you pass a HuggingFace `Dataset`, convert first: `result.to_pandas().to_json(...)`.
+    `flow.generate()` returns the **same type** you pass in: `pd.DataFrame` in produces `pd.DataFrame` out; `datasets.Dataset` in produces `datasets.Dataset` out. The `.to_json(orient="records", lines=True)` call above is a pandas method, so we convert to pandas first if needed.
 
 ## Supported LLM Providers
 

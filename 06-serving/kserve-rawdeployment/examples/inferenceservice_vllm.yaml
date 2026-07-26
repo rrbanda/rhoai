@@ -39,14 +39,10 @@ spec:
           cpu: "8"
           memory: 48Gi
           nvidia.com/gpu: "4"
-      env:
-        - name: VLLM_MAX_MODEL_LEN
-          value: "8192"
-        - name: VLLM_TENSOR_PARALLEL_SIZE
-          value: "4"
-        - name: VLLM_DTYPE
-          value: "bfloat16"
-        - name: VLLM_GPU_MEMORY_UTILIZATION
-          value: "0.90"
+    containers:
+      - name: kserve-container
+        env:
+          - name: EXTRA_ARGS
+            value: "--max-model-len 8192 --tensor-parallel-size 4 --dtype float16 --gpu-memory-utilization 0.9"
     minReplicas: 1
     maxReplicas: 3

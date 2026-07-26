@@ -224,6 +224,10 @@ def main() -> None:
     print("\n--- Step 2: Loading RAG Evaluation Dataset Flow ---")
     flow_name = "RAG Evaluation Dataset Flow"
     flow_path = FlowRegistry.get_flow_path(flow_name)
+    if flow_path is None:
+        print(f"ERROR: Flow '{flow_name}' not found in registry.", file=sys.stderr)
+        print("Ensure sdg_hub is installed: pip install sdg-hub[examples]", file=sys.stderr)
+        sys.exit(1)
     flow = Flow.from_yaml(flow_path)
     print(f"Flow loaded: {flow_name}")
 

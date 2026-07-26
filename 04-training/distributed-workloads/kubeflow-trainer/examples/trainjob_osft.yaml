@@ -11,13 +11,15 @@
 #
 # Prerequisites:
 #   - Kubeflow Training Operator installed on the RHOAI 3.4 cluster
+#   - training-hub ClusterTrainingRuntime exists:
+#       oc get clustertrainingruntimes training-hub
 #   - PVC "training-storage" provisioned with model weights and data
 #   - GPU quota available in the target namespace
 #
 # Apply:
 #   oc apply -f trainjob_osft.yaml -n distributed-training
 
-apiVersion: kubeflow.org/v2alpha1
+apiVersion: trainer.kubeflow.org/v1alpha1
 kind: TrainJob
 metadata:
   name: osft-distributed
@@ -29,8 +31,11 @@ metadata:
     training-hub.rhoai.io/algorithm: osft
 spec:
   suspend: false
+  runtimeRef:
+    name: training-hub
+    apiGroup: trainer.kubeflow.org
+    kind: ClusterTrainingRuntime
   trainer:
-    image: quay.io/modh/training-hub:latest
     command:
       - torchrun
     args:
@@ -78,21 +83,26 @@ spec:
         cpu: "32"
         memory: 256Gi
         nvidia.com/gpu: "4"
-    volumeMounts:
-      - name: training-storage
-        mountPath: /mnt/storage
-      - name: dshm
-        mountPath: /dev/shm
-  podSpecOverrides:
-    volumes:
-      - name: training-storage
-        persistentVolumeClaim:
-          claimName: training-storage
-      - name: dshm
-        emptyDir:
-          medium: Memory
-          sizeLimit: 64Gi
-    tolerations:
-      - key: nvidia.com/gpu
-        operator: Exists
-        effect: NoSchedule
+  podTemplateOverrides:
+    - targetJobs:
+        - name: node
+      spec:
+        tolerations:
+          - key: nvidia.com/gpu
+            operator: Exists
+            effect: NoSchedule
+        volumes:
+          - name: training-storage
+            persistentVolumeClaim:
+              claimName: training-storage
+          - name: dshm
+            emptyDir:
+              medium: Memory
+              sizeLimit: 64Gi
+        containers:
+          - name: node
+            volumeMounts:
+              - name: training-storage
+                mountPath: /mnt/storage
+              - name: dshm
+                mountPath: /dev/shm

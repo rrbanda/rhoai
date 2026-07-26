@@ -11,7 +11,8 @@ metadata:
     app.kubernetes.io/managed-by: rhoai-examples
 spec:
   # MCP server that provides financial tools (portfolio lookup, trade execution, etc.)
-  mcpServerUrl: "http://finance-insights-mcp.financial-agent.svc:8080"
+  # Must match the deployed MCP server Service (default FastMCP port is 8009)
+  mcpServerUrl: "http://finance-insights-mcp.financial-agent.svc:8009"
   # NemoGuardrails instance that protects tool calls through this gateway
   guardrailsRef:
     name: financial-agent-guardrails

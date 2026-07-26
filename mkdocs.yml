@@ -117,7 +117,7 @@ nav:
       - Overview: evaluation/index.md
       - RAG Evaluation: evaluation/rag-evaluation.md
       - Code Evaluation: evaluation/code-evaluation.md
-      - Agent Evaluation: evaluation/agent-evaluation.md
+      - Tool-Use Evaluation: evaluation/agent-evaluation.md
     - Utilities:
       - Memory Estimator: utilities/memory-estimator.md
       - Plot Loss: utilities/plot-loss.md

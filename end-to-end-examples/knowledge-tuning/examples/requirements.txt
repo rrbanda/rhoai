@@ -1,7 +1,8 @@
-sdg_hub[examples]
-training_hub
+sdg-hub[examples]
+training-hub
 datasets
 transformers
+torch
 pandas
 python-dotenv
 nest-asyncio

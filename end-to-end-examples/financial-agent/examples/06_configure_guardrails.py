@@ -32,7 +32,7 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 
-_DEFAULT_NAMESPACE = "rhoai-guardrails"
+_DEFAULT_NAMESPACE = "financial-agent"
 _READY_TIMEOUT = 300
 _POLL_INTERVAL = 10
 

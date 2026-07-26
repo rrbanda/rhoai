@@ -29,7 +29,7 @@ spec:
       autoSelect: true
   containers:
     - name: kserve-container
-      image: quay.io/modh/vllm:rhoai-2.20-cuda
+      image: quay.io/modh/vllm:rhoai-3.4-cuda
       command:
         - python
         - -m

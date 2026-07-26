@@ -6,7 +6,7 @@ Training Hub provides four algorithms, each optimized for different constraints.
 
 ```mermaid
 graph LR
-    A([Start]) --> B{Tool-use<br/>agent?}
+    A([Start]) --> B{Tool-calling<br/>model?}
     B -->|Yes| T{Have expert<br/>traces?}
     T -->|"Yes (MCP distillation)"| LORA_SFT["LoRA SFT"]
     T -->|"No (learn from rewards)"| GRPO[GRPO]
@@ -85,7 +85,7 @@ graph LR
     |----------|-------|
     | Parameters trained | ~1% (low-rank adapters) |
     | GPU requirement | 1x A100 or L40 (L4 with QLoRA) |
-    | Best for | Single-GPU training, tool-calling agents, multi-adapter serving |
+    | Best for | Single-GPU training, tool-calling models, multi-adapter serving |
     | Key parameters | `lora_r` (rank), `lora_alpha` (scaling) |
 
     ```python

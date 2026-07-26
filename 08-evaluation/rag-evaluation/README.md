@@ -31,7 +31,7 @@ Each generated record contains:
 ## Prerequisites
 
 - Python 3.10+
-- SDG Hub installed: `pip install sdg_hub[examples]`
+- SDG Hub installed: `pip install sdg-hub[examples]`
 - An LLM endpoint (OpenAI, vLLM, or any LiteLLM-compatible provider)
 
 ## Environment Variables

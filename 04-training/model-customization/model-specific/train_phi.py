@@ -50,7 +50,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--num-epochs", type=int, default=3, help="Epochs (default: 3)")
     parser.add_argument("--max-tokens-per-gpu", type=int, default=25000, help="Tokens/GPU (default: 25000)")
-    parser.add_argument("--nproc-per-node", type=int, default=8, help="GPUs (default: 8)")
+    parser.add_argument("--nproc-per-node", type=int, default=1, help="GPUs (default: 1)")
     parser.add_argument("--learning-rate", type=float, default=5e-6, help="LR (default: 5e-6)")
 
     # OSFT-specific

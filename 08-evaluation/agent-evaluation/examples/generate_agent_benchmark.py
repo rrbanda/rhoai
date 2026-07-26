@@ -135,9 +135,12 @@ def generate_tasks_for_server(
     langgraph_api_key: str | None = None,
 ) -> pd.DataFrame:
     """Run the MCP Server Distillation flow for one server."""
-    flow_instance = Flow.from_yaml(
-        FlowRegistry.get_flow_path("MCP Server Distillation")
-    )
+    flow_path = FlowRegistry.get_flow_path("MCP Server Distillation")
+    if flow_path is None:
+        print("ERROR: Flow 'MCP Server Distillation' not found in registry.", file=sys.stderr)
+        print("Ensure sdg_hub is installed: pip install sdg-hub[examples]", file=sys.stderr)
+        sys.exit(1)
+    flow_instance = Flow.from_yaml(flow_path)
     flow_instance.set_model_config(model=teacher_model, api_key=api_key)
 
     agent_kwargs: dict = {"agent_framework": "langgraph", "agent_url": agent_url}

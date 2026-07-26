@@ -67,7 +67,6 @@ graph LR
 
 Ready to try it? Continue to [Setup & First Pipeline](quickstart.md) for environment setup and your first training run.
 
-- [Setup & First Pipeline](quickstart.md) — Environment setup and your first training run
 - [Choosing an Algorithm](choosing-an-algorithm.md) — Decide between SFT, OSFT, LoRA, and GRPO
 - [Knowledge Tuning Pipeline](../end-to-end/knowledge-tuning.md) — Full end-to-end walkthrough
 - [Tool-Calling Model Pipeline](../end-to-end/tool-calling-financial.md) — Fine-tune a model for tool-calling with MCP distillation + LoRA SFT (validated on RHOAI 3.4.2, financial services example)

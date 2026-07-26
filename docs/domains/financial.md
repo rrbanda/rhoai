@@ -1,6 +1,6 @@
 # Financial Domain Fine-Tuning
 
-This guide covers fine-tuning models for financial services — from knowledge-based Q&A (investment research, regulatory compliance) to tool-calling agents (portfolio management, trade execution). Financial fine-tuning adds two challenges beyond general domain adaptation: **regulatory compliance** and **tool-use accuracy**.
+This guide covers fine-tuning models for financial services — from knowledge-based Q&A (investment research, regulatory compliance) to tool-calling models (portfolio management, trade execution). Financial fine-tuning adds two challenges beyond general domain adaptation: **regulatory compliance** and **tool-use accuracy**.
 
 ## Two Paths for Financial Models
 
@@ -43,7 +43,12 @@ FlowRegistry.discover_flows()
 
 financial_docs = Dataset.from_dict({
     "document": documents,
+    "document_outline": [""] * len(documents),
     "domain": ["financial"] * len(documents),
+    "icl_document": [""] * len(documents),
+    "icl_query_1": [""] * len(documents),
+    "icl_query_2": [""] * len(documents),
+    "icl_query_3": [""] * len(documents),
 })
 
 flow = Flow.from_yaml(FlowRegistry.get_flow_path(
@@ -51,7 +56,8 @@ flow = Flow.from_yaml(FlowRegistry.get_flow_path(
 ))
 flow.set_model_config(model="gpt-4o-mini")
 result = flow.generate(financial_docs)
-result.to_json("financial_training_data.jsonl", orient="records", lines=True)
+result_df = result.to_pandas() if hasattr(result, "to_pandas") else result
+result_df.to_json("financial_training_data.jsonl", orient="records", lines=True)
 ```
 
 ### Train with OSFT (Recommended)
@@ -80,9 +86,9 @@ After OSFT training completes, deploy the model on RHOAI with KServe + vLLM. Upl
 
 For the full knowledge tuning lifecycle (document preparation, data generation, training, evaluation, deployment), see the [Knowledge Tuning Pipeline](../end-to-end/knowledge-tuning.md).
 
-## Path 2: Financial Tool-Calling Agent
+## Path 2: Financial Tool-Calling Model
 
-Train a model to call financial APIs using MCP distillation + LoRA SFT. This path produces an agent that can manage portfolios, execute trades, and perform risk analysis.
+Train a model to call financial APIs using MCP distillation + LoRA SFT. This path produces a tool-calling model that can manage portfolios, execute trades, and perform risk analysis.
 
 ### Set Up a Financial MCP Server
 
@@ -96,7 +102,8 @@ Use SDG Hub's MCP distillation flow to generate expert tool-use traces:
 from sdg_hub import Flow, FlowRegistry
 
 FlowRegistry.discover_flows()
-flow = Flow.from_yaml(FlowRegistry.get_flow_path("MCP Server Distillation"))
+flow_path = FlowRegistry.get_flow_path("MCP Server Distillation")
+flow = Flow.from_yaml(flow_path)
 flow.set_model_config(model="gemini/gemini-3.6-flash", api_key="...")
 
 flow.set_agent_config(
@@ -140,7 +147,7 @@ Full YAML manifests and step-by-step deployment instructions are in the [Tool-Ca
 
 ### Add Financial Guardrails
 
-Financial agents require compliance rails. See [Guardrails](../guardrails/index.md) for full details. Key rails for financial services:
+Financial tool-calling models require compliance rails. See [Guardrails](../guardrails/index.md) for full details. Key rails for financial services:
 
 - **PII detection** — Mask account numbers, SSNs, routing numbers
 - **Pre-trade compliance** — Block trades that violate concentration limits or restricted lists

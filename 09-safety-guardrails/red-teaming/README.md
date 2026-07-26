@@ -34,7 +34,7 @@ The default taxonomy includes:
 ## Prerequisites
 
 - Python 3.10+
-- `sdg_hub` installed (`pip install sdg_hub`)
+- `sdg_hub` installed (`pip install sdg-hub`)
 - An LLM API key (OpenAI, Anthropic, or any LiteLLM-compatible provider)
 
 ## What's in examples/

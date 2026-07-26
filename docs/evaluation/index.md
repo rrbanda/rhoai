@@ -8,7 +8,7 @@ Evaluation is critical to knowing whether your fine-tuned model actually improve
 |----------|-----------------|-------------|
 | [RAG Evaluation](rag-evaluation.md) | Retrieval-augmented generation quality | Models used in RAG pipelines |
 | [Code Evaluation](code-evaluation.md) | Code generation correctness (pass@1) | Models generating code |
-| [Agent Evaluation](agent-evaluation.md) | Tool-use accuracy with LLM-as-judge | Models calling tools / APIs |
+| [Tool-Use Evaluation](agent-evaluation.md) | Tool-calling accuracy with LLM-as-judge | Models calling tools / APIs |
 
 ## General Evaluation Workflow
 
@@ -48,5 +48,5 @@ See [Plot Loss](../utilities/plot-loss.md) for more details.
 
 - [RAG Evaluation](rag-evaluation.md) — Generate RAG evaluation datasets
 - [Code Evaluation](code-evaluation.md) — Benchmark code generation
-- [Agent Evaluation](agent-evaluation.md) — Evaluate tool-use quality
+- [Tool-Use Evaluation](agent-evaluation.md) — Evaluate tool-calling quality
 - [Plot Loss](../utilities/plot-loss.md) — Visualize training progress

@@ -52,7 +52,7 @@ spec:
           - name: EXTRA_ARGS
             value: >-
               --enable-lora
-              --lora-modules financial-agent=/mnt/lora-adapter
+              --lora-modules financial-agent=/mnt/lora-adapter/output
               --max-lora-rank 16
               --enable-auto-tool-choice
               --tool-call-parser hermes
@@ -65,6 +65,6 @@ spec:
       - name: lora-adapter
         persistentVolumeClaim:
           # Same PVC created during training (Step 3)
-          # Adapter files are in the root — training writes to /workspace/output
-          # which maps to the PVC root
+          # Training writes adapter files to /workspace/output on the PVC,
+          # which is mounted at /mnt/lora-adapter (adapter is at /mnt/lora-adapter/output)
           claimName: training-workspace

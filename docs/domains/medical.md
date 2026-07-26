@@ -26,7 +26,12 @@ medical_docs = Dataset.from_dict({
         "modifications and pharmacotherapy. First-line treatment is metformin, "
         "initiated at 500mg daily with gradual titration to 2000mg...",
     ],
+    "document_outline": ["T2DM treatment guidelines and pharmacotherapy"],
     "domain": ["medical"],
+    "icl_document": [""],
+    "icl_query_1": [""],
+    "icl_query_2": [""],
+    "icl_query_3": [""],
 })
 
 flow = Flow.from_yaml(FlowRegistry.get_flow_path(
@@ -34,7 +39,8 @@ flow = Flow.from_yaml(FlowRegistry.get_flow_path(
 ))
 flow.set_model_config(model="gpt-4o-mini")
 result = flow.generate(medical_docs)
-result.to_json("medical_training_data.jsonl", orient="records", lines=True)
+result_df = result.to_pandas() if hasattr(result, "to_pandas") else result
+result_df.to_json("medical_training_data.jsonl", orient="records", lines=True)
 ```
 
 ## SFT Approach

@@ -45,8 +45,9 @@ flow = Flow.from_yaml(FlowRegistry.get_flow_path(code_flows[0]["name"]))
 flow.set_model_config(model="gpt-4o")
 
 benchmark = flow.generate(seed_data)
-benchmark.to_json("code_benchmark.jsonl", orient="records", lines=True)
-print(f"Generated {len(benchmark)} coding challenges")
+benchmark_df = benchmark.to_pandas() if hasattr(benchmark, "to_pandas") else benchmark
+benchmark_df.to_json("code_benchmark.jsonl", orient="records", lines=True)
+print(f"Generated {len(benchmark_df)} coding challenges")
 ```
 
 !!! tip "Use GPT-4o for Benchmark Generation"
@@ -183,7 +184,7 @@ print(f"\nImprovement: {improvement:+.2%}")
 ## Related
 
 - [Evaluation Overview](index.md) — All evaluation approaches
-- [Agent Evaluation](agent-evaluation.md) — Evaluate tool-use instead
+- [Tool-Use Evaluation](agent-evaluation.md) — Evaluate tool-calling instead
 - [RAG Evaluation](rag-evaluation.md) — Evaluate RAG quality
 - [SFT](../training/sft.md) — Training for code generation
 - [LoRA](../training/lora.md) — Memory-efficient fine-tuning for code models

@@ -14,7 +14,7 @@ Fine-tune a model to make accurate tool calls by training on domain-specific dem
 | LoRA KFP Pipeline | 3.4+ | GA |
 | KServe RawDeployment + vLLM | 3.4+ | GA |
 | NeMo Guardrails | 3.4+ | GA |
-| Agent Evaluation | 3.4+ | GA |
+| Tool-Use Evaluation | 3.4+ | GA |
 | NeMo + MCP Gateway | 3.5 EA2 | **TP** |
 | Validated Tool-Calling Config | 3.5 EA2 | **TP** |
 
@@ -90,8 +90,8 @@ Output format:
 {"messages": [
   {"role": "system", "content": "<tool declarations>"},
   {"role": "user", "content": "What's the risk-adjusted return on my tech portfolio?"},
-  {"role": "assistant", "content": "", "function_call": {"name": "get_portfolio_positions", "arguments": "..."}},
-  {"role": "function", "content": "{...}", "name": "get_portfolio_positions"},
+  {"role": "assistant", "content": null, "tool_calls": [{"type": "function", "function": {"name": "get_portfolio_positions", "arguments": "{\"portfolio_id\": \"PORT-0001\"}"}}]},
+  {"role": "tool", "content": "{...}", "name": "get_portfolio_positions"},
   {"role": "assistant", "content": "Your tech portfolio has a Sharpe ratio of..."}
 ]}
 ```
@@ -553,7 +553,7 @@ oc apply -f serving/05-route.yaml -n financial-agent
 
 ## Step 5: Evaluate
 
-**RHOAI Feature:** Agent Evaluation (GA)
+**RHOAI Feature:** Tool-Use Evaluation (GA)
 
 ```bash
 python 05_evaluate_agent.py \
@@ -621,8 +621,8 @@ The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestrat
 
 ## Validated on RHOAI
 
-!!! success "End-to-End Validated"
-    This pipeline has been validated on **RHOAI 3.4.2** with **OpenShift 4.18.21** on a **g6.xlarge** instance (1x NVIDIA L4 24GB GPU).
+!!! success "Validated on RHOAI 3.4.2"
+    Steps 0-3 (MCP server, data generation, formatting, training) have been **runtime-validated** on RHOAI 3.4.2. Steps 4-6 (deployment, evaluation, guardrails) have been **manifest-validated** (YAML generates correctly and passes dry-run). Full environment: OpenShift 4.18.21 on g6.xlarge (1x NVIDIA L4 24GB GPU).
 
 | Component | What Was Tested | Result |
 |-----------|----------------|--------|

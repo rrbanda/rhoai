@@ -18,4 +18,4 @@ Model Context Protocol (MCP) server discovery and integration in OpenShift AI. T
 
 ## What's in examples/
 
-Examples demonstrating MCP server registration, discovery via the AI Available Assets page, and integration with tool-calling agents and agentic workflows.
+Examples coming soon.

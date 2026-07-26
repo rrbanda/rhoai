@@ -10,7 +10,7 @@ Not sure which to pick? Use the [decision flowchart](../getting-started/choosing
 |-----------|-------------------|---------|----------|--------|
 | [SFT](sft.md) | All (100%) | 2x A100 80GB | Maximum learning from abundant data | Full model |
 | [OSFT](osft.md) | All (constrained) | 2x A100 80GB | Adding knowledge without forgetting | Full model |
-| [LoRA](lora.md) | ~1% (adapters) | 1x L4 24GB (QLoRA) | Single-GPU, tool-calling agents, multi-adapter serving | Adapter |
+| [LoRA](lora.md) | ~1% (adapters) | 1x L4 24GB (QLoRA) | Single-GPU, tool-calling models, multi-adapter serving | Adapter |
 | [GRPO](grpo.md) | ~1% (LoRA) | 1-4x A100 | Reward-based tool-use learning | Adapter |
 
 ## Which Algorithm for Which Track?

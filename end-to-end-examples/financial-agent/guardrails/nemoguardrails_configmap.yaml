@@ -3,9 +3,8 @@
 # Ref: https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails/deploying-nemo-guardrails_nemo-guardrails
 #
 # Usage:
-#   1. Replace <model-predictor-svc>, <namespace>, and <served-model-name>
-#   2. oc apply -f nemoguardrails_configmap.yaml
-#   3. oc apply -f nemoguardrails_cr.yaml
+#   1. oc apply -f nemoguardrails_configmap.yaml
+#   2. oc apply -f nemoguardrails_cr.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -17,8 +16,8 @@ data:
       - type: main
         engine: openai
         parameters:
-          openai_api_base: "http://<model-predictor-svc>.<namespace>.svc.cluster.local:8080/v1"
-          model_name: "<served-model-name>"
+          openai_api_base: "http://financial-agent-lora-predictor.financial-agent.svc.cluster.local:8080/v1"
+          model_name: "financial-agent"
     rails:
       config:
         sensitive_data_detection:
@@ -34,12 +33,12 @@ data:
         regex_detection:
           input:
             patterns:
-              - "\\\\d{3}-\\\\d{2}-\\\\d{4}"
+              - "\\d{3}-\\d{2}-\\d{4}"
               - "ACCT-[0-9]{4,12}"
             case_insensitive: true
           output:
             patterns:
-              - "\\\\d{3}-\\\\d{2}-\\\\d{4}"
+              - "\\d{3}-\\d{2}-\\d{4}"
               - "ACCT-[0-9]{4,12}"
             case_insensitive: true
       input:

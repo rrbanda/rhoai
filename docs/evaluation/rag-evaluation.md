@@ -30,11 +30,14 @@ FlowRegistry.discover_flows()
 corpus = Dataset.from_dict({
     "document": [
         "RHOAI 3.4 supports KServe for model serving with vLLM runtime. "
-        "KServe provides autoscaling, canary rollouts, and GPU sharing...",
+        "KServe provides RawDeployment mode for production workloads...",
         "AutoRAG automatically builds and tunes RAG pipelines. It evaluates "
         "different retrieval strategies and selects the best configuration...",
     ],
-    "domain": ["rhoai", "rhoai"],
+    "document_outline": [
+        "RHOAI 3.4 model serving with KServe and vLLM",
+        "AutoRAG pipeline configuration and tuning",
+    ],
 })
 
 rag_flows = FlowRegistry.search_flows(tag="rag-evaluation")
@@ -42,9 +45,10 @@ rag_flows = FlowRegistry.search_flows(tag="rag-evaluation")
 flow = Flow.from_yaml(FlowRegistry.get_flow_path(rag_flows[0]["name"]))
 flow.set_model_config(model="gpt-4o-mini")
 eval_dataset = flow.generate(corpus)
+eval_df = eval_dataset.to_pandas() if hasattr(eval_dataset, "to_pandas") else eval_dataset
 
-eval_dataset.to_json("rag_eval.jsonl", orient="records", lines=True)
-print(f"Generated {len(eval_dataset)} evaluation examples")
+eval_df.to_json("rag_eval.jsonl", orient="records", lines=True)
+print(f"Generated {len(eval_df)} evaluation examples")
 ```
 
 !!! tip "Use a Separate Eval Set"
@@ -191,5 +195,5 @@ Evaluate multiple models on the same benchmark to find the best configuration:
 - [Evaluation Overview](index.md) — All evaluation approaches
 - [Knowledge Tuning](../data-generation/knowledge-tuning.md) — Generate training data from the same documents
 - [Code Evaluation](code-evaluation.md) — Evaluate code generation
-- [Agent Evaluation](agent-evaluation.md) — Evaluate tool-use quality
+- [Tool-Use Evaluation](agent-evaluation.md) — Evaluate tool-calling quality
 - [Plot Loss](../utilities/plot-loss.md) — Verify training convergence before evaluating

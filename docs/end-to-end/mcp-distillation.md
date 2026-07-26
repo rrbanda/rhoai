@@ -51,25 +51,37 @@ def get_product(product_id: int) -> dict | None:
 Use SDG Hub's MCP distillation flow. The teacher LLM explores your MCP server, discovering tools and generating realistic usage scenarios:
 
 ```python
+import pandas as pd
 from sdg_hub import Flow, FlowRegistry
 
 FlowRegistry.discover_flows()
+flow_path = FlowRegistry.get_flow_path("MCP Server Distillation")
+if flow_path is None:
+    raise RuntimeError("MCP Server Distillation flow not found. Install: pip install sdg-hub[examples]")
 
-flow = Flow.from_yaml(FlowRegistry.get_flow_path("MCP Server Distillation"))
+flow = Flow.from_yaml(flow_path)
 
-flow.set_model_config(model="gpt-4o")  # Teacher model
+flow.set_model_config(model="gpt-4o", api_key="...")  # Teacher model
 
-result = flow.generate(
-    seed_data,
-    runtime_params={
-        "mcp_server": {
-            "command": "python",
-            "args": ["server.py"],
-        }
-    }
+flow.set_agent_config(
+    agent_framework="langflow",
+    agent_url="http://localhost:7860/api/v1/run/your-flow-id",
 )
 
-result.to_json("tool_traces.jsonl", orient="records", lines=True)
+seed_data = pd.DataFrame({
+    "tool_list": [[
+        {"name": "search_products", "description": "Search products by name or category",
+         "inputSchema": {"type": "object", "properties": {"query": {"type": "string"}}, "required": ["query"]}},
+        {"name": "get_product", "description": "Get product details by ID",
+         "inputSchema": {"type": "object", "properties": {"product_id": {"type": "integer"}}, "required": ["product_id"]}},
+    ]],
+    "mcp_server_name": ["E-Commerce API"],
+    "mcp_server_description": ["Product catalog with search and detail views"],
+})
+
+result = flow.generate(seed_data)
+result_df = result.to_pandas() if hasattr(result, "to_pandas") else result
+result_df.to_json("tool_traces.jsonl", orient="records", lines=True)
 ```
 
 The teacher model:
@@ -121,7 +133,7 @@ lora_grpo(
     ckpt_output_dir="./tool-use-model",
     num_iterations=15,
     lora_r=16,
-    lora_alpha=8,
+    lora_alpha=32,
     backend="art",
 )
 ```
@@ -143,9 +155,12 @@ eval_flow = Flow.from_yaml(FlowRegistry.get_flow_path("MCP Server Distillation")
 eval_flow.set_model_config(model="gpt-4o")
 eval_data = eval_flow.generate(eval_seed_data)
 
-# Evaluate using LLM-as-judge
-judge_flow = Flow.from_yaml(FlowRegistry.get_flow_path("Agent Tool-Use Evaluation"))
-judge_flow.set_model_config(model="gpt-4o")
+# Score the model's traces using LLM-as-judge
+judge_path = FlowRegistry.get_flow_path("Agent Tool-Use Evaluation")
+if judge_path is None:
+    raise RuntimeError("Eval flow not found. Install: pip install sdg-hub[examples]")
+judge_flow = Flow.from_yaml(judge_path)
+judge_flow.set_model_config(model="gpt-4o", api_key="...")
 scores = judge_flow.generate(eval_data)
 ```
 
@@ -172,5 +187,5 @@ After training, deploy the GRPO-tuned model on RHOAI with KServe + vLLM. The dep
 
 - [Tool-Calling Model Pipeline](tool-calling-financial.md) — Full end-to-end example using MCP distillation + LoRA SFT for financial services (validated on RHOAI 3.4.2)
 - [GRPO](../training/grpo.md) — Training algorithm details
-- [Agent Evaluation](../evaluation/agent-evaluation.md) — Evaluate tool-use models
+- [Tool-Use Evaluation](../evaluation/agent-evaluation.md) — Evaluate tool-calling models
 - [Knowledge Tuning Pipeline](knowledge-tuning.md) — Alternative pipeline for knowledge injection

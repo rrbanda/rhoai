@@ -1,2 +1,2 @@
-training_hub>=0.1.0
+training-hub>=0.1.0
 mlflow>=2.12.0

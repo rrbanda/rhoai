@@ -274,7 +274,13 @@ def main() -> None:
 
     # Load the judge flow
     FlowRegistry.discover_flows()
-    eval_flow = Flow.from_yaml(FlowRegistry.get_flow_path("Agent Tool-Use Evaluation"))
+    flow_name = "Agent Tool-Use Evaluation"
+    flow_path = FlowRegistry.get_flow_path(flow_name)
+    if flow_path is None:
+        print(f"ERROR: Flow '{flow_name}' not found in registry.", file=sys.stderr)
+        print("Ensure sdg_hub is installed: pip install sdg-hub[examples]", file=sys.stderr)
+        sys.exit(1)
+    eval_flow = Flow.from_yaml(flow_path)
     eval_flow.set_model_config(model=judge_model, api_key=api_key)
     print(f"Judge model: {judge_model}")
     print(f"Models to evaluate: {args.models}")

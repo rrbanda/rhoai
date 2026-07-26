@@ -1,6 +1,6 @@
 # Guardrails & Safety
 
-Production deployments of fine-tuned models — especially tool-calling agents — require safety rails to prevent misuse, protect sensitive data, and enforce compliance policies. RHOAI provides NeMo Guardrails (GA in 3.4+) with MCP Gateway integration (Technology Preview in 3.5 EA2).
+Production deployments of fine-tuned models — especially tool-calling models — require safety rails to prevent misuse, protect sensitive data, and enforce compliance policies. RHOAI provides NeMo Guardrails (GA in 3.4+) with MCP Gateway integration (Technology Preview in 3.5 EA2).
 
 ## Why Guardrails Matter for Model Customization
 
@@ -104,16 +104,17 @@ apiVersion: trustyai.opendatahub.io/v1alpha1
 kind: NemoGuardrails
 metadata:
   name: my-guardrails
-  namespace: rhoai-guardrails
+  namespace: my-namespace
+  labels:
+    app.kubernetes.io/part-of: my-app
 spec:
-  replicas: 2
-  modelEndpoint:
-    url: "https://my-model.apps.cluster.example.com/v1"
-  configSecretRef:
-    name: my-guardrails-config
-  openTelemetry:
-    enabled: true
-    endpoint: "http://otel-collector.observability.svc:4317"
+  nemoConfigs:
+    - name: my-app
+      configMaps:
+        - my-guardrails-config
+  env:
+    - name: "OPENAI_API_KEY"
+      value: "not-needed"
 ```
 
 The TrustyAI operator creates the guardrails service and exposes the `/v1/guardrails/checks` endpoint for direct policy evaluation.
@@ -134,7 +135,7 @@ curl -X POST "$GUARDRAILS_ENDPOINT/v1/guardrails/checks" \
 !!! warning "Technology Preview"
     MCP Gateway integration is a Technology Preview feature in RHOAI 3.5 EA2. APIs and behavior may change.
 
-For tool-calling agents, NeMo Guardrails can protect not just model inputs/outputs but also **tool calls** routed through the MCP Gateway:
+For tool-calling models, NeMo Guardrails can protect not just model inputs/outputs but also **tool calls** routed through the MCP Gateway:
 
 ```mermaid
 graph LR
@@ -190,5 +191,5 @@ This ensures every tool call from the agent passes through guardrail checks befo
 
 - [Financial Guardrails Example](../end-to-end/tool-calling-financial.md#step-6-configure-guardrails) — Worked example with financial compliance rails
 - [Serving](../serving/index.md) — Deploy models before adding guardrails
-- [Agent Evaluation](../evaluation/agent-evaluation.md) — Evaluate tool-use quality before deploying
-- [NeMo Guardrails on RHOAI (Official Docs)](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/ensuring_ai_safety_with_guardrails)
+- [Tool-Use Evaluation](../evaluation/agent-evaluation.md) — Evaluate tool-calling quality before deploying
+- [NeMo Guardrails on RHOAI (Official Docs)](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails/index)

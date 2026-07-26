@@ -1,5 +1,8 @@
 # Skills Tuning Data Generation
 
+!!! warning "No built-in skills-tuning flows in SDG Hub yet"
+    SDG Hub does not currently ship built-in flows for skills-tuning data generation. The API patterns below show the **intended usage** once these flows are available. For now, generate skills data manually or use [knowledge tuning flows](knowledge-tuning.md) for domain Q&A data instead.
+
 Skills tuning flows generate instruction-following training data. Unlike knowledge tuning (which teaches the model *what to know*), skills tuning teaches the model *how to behave* — formatting, reasoning, summarization, and other capabilities.
 
 ## When to Use Skills Tuning
@@ -47,8 +50,9 @@ flow = Flow.from_yaml(FlowRegistry.get_flow_path(skills_flows[0]["name"]))
 flow.set_model_config(model="gpt-4o-mini")
 result = flow.generate(dataset)
 
-result.to_json("skills_data.jsonl", orient="records", lines=True)
-print(f"Generated {len(result)} skills training examples")
+result_df = result.to_pandas() if hasattr(result, "to_pandas") else result
+result_df.to_json("skills_data.jsonl", orient="records", lines=True)
+print(f"Generated {len(result_df)} skills training examples")
 ```
 
 ## Seed Data Design

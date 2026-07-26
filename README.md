@@ -8,7 +8,7 @@ A hands-on reference repository organized by RHOAI 3.4 features and capabilities
 |----------|----------|---------------|
 | **Customize a model with your own data** | [model_customization_e2e.ipynb](end-to-end-examples/knowledge-tuning/model_customization_e2e.ipynb) | Document prep -> SDG Hub data generation -> Training Hub (SFT/OSFT) -> Evaluation -> Serving |
 | **Teach a model to use your tools** | [mcp_distillation_e2e.ipynb](end-to-end-examples/mcp-distillation/mcp_distillation_e2e.ipynb) | MCP server exploration -> Synthetic tool-use data -> LoRA GRPO training -> Evaluation |
-| **Build a financial tool-calling agent** | [financial-agent/](end-to-end-examples/financial-agent/) | 15-tool MCP server -> MCP distillation -> LoRA GRPO -> KServe + vLLM -> NeMo Guardrails |
+| **Build a financial tool-calling model** | [financial-agent/](end-to-end-examples/financial-agent/) | MCP distillation -> LoRA SFT -> KServe + vLLM -> NeMo Guardrails |
 
 ## Feature Maturity Matrix
 

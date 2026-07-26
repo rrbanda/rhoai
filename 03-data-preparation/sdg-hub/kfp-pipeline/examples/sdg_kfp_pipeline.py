@@ -30,6 +30,7 @@ def generate_data(
     flow_variant: str,
     document_jsonl: dsl.Input[dsl.Dataset],
     generated_data: dsl.Output[dsl.Dataset],
+    model_name: str = "",
     checkpoint_dir: str = "/tmp/sdg_checkpoints",
 ) -> None:
     """Run an SDG Hub knowledge flow to produce JSONL training data.
@@ -72,8 +73,12 @@ def generate_data(
     if not api_base.endswith("/v1"):
         api_base += "/v1"
 
+    resolved_model = model_name if model_name else model_endpoint.split("/")[-1]
+    if not resolved_model.startswith(("openai/", "ollama/")):
+        resolved_model = f"openai/{resolved_model}"
+
     flow.set_model_config(
-        model=f"openai/{model_endpoint.split('/')[-1]}",
+        model=resolved_model,
         api_key=model_api_key,
         api_base=api_base,
     )
@@ -200,6 +205,7 @@ def upload_data(
 def sdg_knowledge_pipeline(
     model_endpoint: str = "https://your-model-endpoint.example.com",
     model_api_key: str = "your-api-key",
+    model_name: str = "",
     flow_variant: str = "extractive_summary",
     document_jsonl: str = "s3://my-bucket/documents/input.jsonl",
     output_path: str = "/data/sdg-output/generated_data.jsonl",
@@ -219,6 +225,7 @@ def sdg_knowledge_pipeline(
     generate_task = generate_data(
         model_endpoint=model_endpoint,
         model_api_key=model_api_key,
+        model_name=model_name,
         flow_variant=flow_variant,
         document_jsonl=doc_artifact.output,
     )

@@ -234,7 +234,7 @@ def generate_benchmark(
     flow_yaml = FlowRegistry.get_flow_path("MCP Server Distillation")
     if flow_yaml is None:
         print("ERROR: MCP Server Distillation flow not found in registry.")
-        print("Ensure sdg_hub is installed: pip install sdg_hub[examples]")
+        print("Ensure sdg-hub is installed: pip install sdg-hub[examples]")
         sys.exit(1)
 
     flow = Flow.from_yaml(flow_yaml)
