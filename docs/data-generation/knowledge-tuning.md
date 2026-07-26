@@ -107,21 +107,21 @@ print(f"Combined: {len(combined)} unique examples")
 
 ## Multilingual Knowledge Generation
 
-Generate knowledge data in multiple languages by specifying the target language:
+SDG Hub includes pre-translated flow variants for some languages (e.g., Spanish `_es` flows). For other languages, use the `translate_flow()` utility to create a translated variant of any flow:
 
 ```python
-flow = Flow.from_yaml(FlowRegistry.get_flow_path(
-    "Document Based Knowledge Tuning Dataset Generation Flow"
-))
-flow.set_model_config(model="gpt-4o-mini")
+from sdg_hub.core.utils.translation import translate_flow
 
-result = flow.generate(
-    dataset,
-    runtime_params={
-        "gen_questions": {"language": "Spanish"},
-        "gen_answers": {"language": "Spanish"},
-    }
+# Create a Spanish variant of the Document Based flow
+translated_path = translate_flow(
+    flow_path=FlowRegistry.get_flow_path(
+        "Document Based Knowledge Tuning Dataset Generation Flow"
+    ),
+    target_language="Spanish",
 )
+flow = Flow.from_yaml(translated_path)
+flow.set_model_config(model="gpt-4o-mini")
+result = flow.generate(dataset)
 ```
 
 ## Document Preparation

@@ -23,10 +23,13 @@ graph LR
 
 Blocks are individual processing units. Each block takes a dataset, transforms it, and returns a new dataset:
 
-- **LLMBlock** — Calls an LLM with a prompt template
-- **FilterBlock** — Filters rows based on criteria
-- **ReplicateRowsBlock** — Duplicates rows for multiple generations
-- **FlattenColumnsBlock** — Restructures nested data
+- **PromptBuilderBlock** — Formats prompts into structured chat messages from templates
+- **LLMChatBlock** — Calls an LLM via LiteLLM (100+ providers)
+- **LLMResponseExtractorBlock** — Extracts fields from LLM response objects
+- **TagParserBlock** — Parses structured output from tagged LLM responses
+- **ColumnValueFilterBlock** — Filters rows based on column value criteria
+- **RowMultiplierBlock** — Duplicates rows for multiple generations
+- **MeltColumnsBlock** — Transforms wide format into long format by melting columns
 
 ### Flows
 
@@ -34,20 +37,24 @@ Flows chain blocks into pipelines, defined in YAML:
 
 ```yaml
 blocks:
-  - name: generate_questions
-    type: LLMBlock
-    config:
-      prompt_template: |
-        Given this document: {document}
-        Generate 3 questions that can be answered from the text.
+  - block_type: PromptBuilderBlock
+    block_config:
+      block_name: build_question_prompt
+      input_cols: [document, document_outline]
+      output_cols: prompt
+      prompt_config_path: prompts/generate_questions.yaml
 
-  - name: generate_answers
-    type: LLMBlock
-    config:
-      prompt_template: |
-        Document: {document}
-        Question: {question}
-        Provide a detailed answer based on the document.
+  - block_type: LLMChatBlock
+    block_config:
+      block_name: generate_questions
+      input_col: prompt
+      output_col: response
+
+  - block_type: LLMResponseExtractorBlock
+    block_config:
+      block_name: extract_response
+      input_col: response
+      output_col: response_text
 ```
 
 ### Flow Registry
@@ -121,7 +128,7 @@ SDG Hub uses LiteLLM under the hood, supporting 100+ providers:
 | OpenAI | `gpt-*`, `o1-*` | `gpt-4o-mini` |
 | Anthropic | `claude-*` | `claude-sonnet-4-20250514` |
 | IBM watsonx | `watsonx/*` | `watsonx/ibm/granite-3-8b-instruct` |
-| vLLM (self-hosted) | `openai/*` | `openai/meta-llama/Llama-3.1-8B-Instruct` |
+| vLLM (self-hosted) | `hosted_vllm/*` | `hosted_vllm/meta-llama/Llama-3.1-8B-Instruct` |
 | Ollama | `ollama/*` | `ollama/llama3.1` |
 
 Set the corresponding environment variable (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY`, etc.) and LiteLLM handles the rest.

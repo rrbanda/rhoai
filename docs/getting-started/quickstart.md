@@ -126,7 +126,7 @@ print(f"Generated {len(result_df)} training examples")
 ```
 
 !!! tip "Dry run first"
-    Use `flow.dry_run(seed_data)` to validate the pipeline end-to-end without making LLM calls.
+    Use `flow.dry_run(seed_data)` to execute the pipeline on a small subset and catch configuration errors before processing the full dataset.
 
 !!! warning "SDG Hub output needs conversion"
     Knowledge tuning flows output `question` and `response` columns — **not** `messages` format. The code above saves the raw output. Before training, you must convert to `messages` format:

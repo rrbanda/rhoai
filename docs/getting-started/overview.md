@@ -17,7 +17,7 @@ The RHOAI model customization workflow uses two open-source Python libraries, bo
 
 ### SDG Hub — Synthetic Data Generation
 
-SDG Hub generates high-quality training data from your raw documents. A teacher LLM (like GPT-4 or Claude) reads your documents and generates question-answer pairs, summaries, and other training examples in the JSONL messages format.
+SDG Hub generates high-quality training data from your raw documents. A teacher LLM (like GPT-4 or Claude) reads your documents and generates question-answer pairs, summaries, and other training examples. Knowledge tuning flows output `question`/`response` columns which must be converted to `messages` format before training (see [Data Formats](../reference/data-formats.md)).
 
 ```python
 from sdg_hub import Flow, FlowRegistry
