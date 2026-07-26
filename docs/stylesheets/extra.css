@@ -63,9 +63,21 @@
   margin-bottom: 0.5rem;
 }
 
-/* --------------- Content Width --------------- */
+/* --------------- Content Width & Spacing --------------- */
 .md-grid {
   max-width: 1400px;
+}
+
+.md-main__inner {
+  margin-top: 0;
+}
+
+.md-content__inner {
+  padding-top: 0.4rem;
+}
+
+.md-typeset h1:first-child {
+  margin-top: 0;
 }
 
 /* --------------- Code Blocks --------------- */
