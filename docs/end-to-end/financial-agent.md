@@ -116,6 +116,20 @@ This approach creates a Kubeflow `TrainJob` custom resource that uses the `train
 oc get clustertrainingruntimes training-hub
 ```
 
+!!! note "Validation example vs production data"
+    The ConfigMap below uses a small public HuggingFace dataset (`LipengCS/Table-GPT`) to validate the training infrastructure end-to-end. This is intentional — it lets you verify that the TrainJob, GPU scheduling, and LoRA SFT all work correctly before investing time in data generation.
+
+    **For production**, replace the dataset download with your own financial tool-calling JSONL from Steps 1-2. Upload your `training_data.jsonl` to the PVC first:
+
+    ```bash
+    # Copy your Step 2 output to the training PVC
+    oc cp generated_data/training_data.jsonl \
+      $(oc get pod -l job-name=copy-data -o name -n financial-agent):/workspace/data/training_data.jsonl \
+      -n financial-agent
+    ```
+
+    Then modify the ConfigMap script to skip the HuggingFace download and read directly from `/workspace/data/training_data.jsonl`.
+
 #### Step 3B.1: Create the workspace PVC and training script
 
 ```bash
@@ -138,7 +152,12 @@ metadata:
   name: training-data-script
 data:
   prepare_and_train.py: |
-    """Download dataset and run LoRA SFT via Training Hub."""
+    """Download dataset and run LoRA SFT via Training Hub.
+
+    This script uses a public HuggingFace dataset for infrastructure
+    validation. For production, replace the download section with your
+    own financial tool-calling JSONL from Steps 1-2.
+    """
     import os, json
 
     WORKSPACE = os.environ.get("WORKSPACE_PATH", "/workspace")
@@ -147,19 +166,28 @@ data:
     os.makedirs(DATA_DIR, exist_ok=True)
     os.makedirs(OUTPUT_DIR, exist_ok=True)
 
-    print("=" * 60)
-    print("Step 1: Downloading dataset from HuggingFace...")
-    print("=" * 60)
-    from datasets import load_dataset
-    ds = load_dataset("LipengCS/Table-GPT", "All", split="train[:50]")
-
     jsonl_path = os.path.join(DATA_DIR, "training_data.jsonl")
-    with open(jsonl_path, "w") as f:
-        for row in ds:
-            f.write(json.dumps({
-                "messages": row.get("messages", row.get("conversations", []))
-            }) + "\n")
-    print(f"  Saved {len(ds)} examples to {jsonl_path}")
+
+    if os.path.exists(jsonl_path):
+        print("=" * 60)
+        print("Using existing training data from PVC...")
+        with open(jsonl_path) as f:
+            count = sum(1 for _ in f)
+        print(f"  Found {count} examples at {jsonl_path}")
+        print("=" * 60)
+    else:
+        print("=" * 60)
+        print("Step 1: Downloading validation dataset from HuggingFace...")
+        print("  (Replace this with your Step 2 JSONL for production)")
+        print("=" * 60)
+        from datasets import load_dataset
+        ds = load_dataset("LipengCS/Table-GPT", "All", split="train[:50]")
+        with open(jsonl_path, "w") as f:
+            for row in ds:
+                f.write(json.dumps({
+                    "messages": row.get("messages", row.get("conversations", []))
+                }) + "\n")
+        print(f"  Saved {len(ds)} examples to {jsonl_path}")
 
     print("=" * 60)
     print("Step 2: Running LoRA SFT training...")
@@ -527,7 +555,10 @@ python 06_configure_guardrails.py \
 - **Tier 1 (GA):** PII detection, jailbreak protection, financial disclaimers
 - **Tier 2 (3.5 TP):** MCP Gateway auto-enforcement on all tool calls
 
-## Step 7: Run the Deep Agent Harness
+## Step 7: Run the Deep Agent Harness (Optional)
+
+!!! warning "Not yet validated on RHOAI"
+    This step is optional and has not been validated on-cluster. The `deepagents` library has known compatibility issues with vLLM-served Qwen models (specifically `tool_call_id` handling). The model customization pipeline is complete at Step 6 — Steps 1-6 produce a fine-tuned, served, and guarded model ready for integration into any agent framework.
 
 ```bash
 pip install deepagents langchain-openai langgraph-cli[inmem]
@@ -540,7 +571,7 @@ langgraph dev
 python 07_deep_agent.py "What is the risk-adjusted performance of portfolio PORT-0001?"
 ```
 
-The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestration, and long-term memory via the `deepagents` library.
+The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestration, and long-term memory via the `deepagents` library. Alternatively, use any OpenAI-compatible agent framework (LangChain, CrewAI, etc.) since the model exposes a standard `/v1/chat/completions` endpoint with tool-calling support.
 
 ## Resource Estimates
 

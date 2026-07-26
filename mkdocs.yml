@@ -93,6 +93,7 @@ nav:
       - Skills Tuning: data-generation/skills-tuning.md
       - Text Analysis: data-generation/text-analysis.md
     - Training:
+      - Overview: training/index.md
       - SFT: training/sft.md
       - OSFT: training/osft.md
       - LoRA: training/lora.md
@@ -109,6 +110,7 @@ nav:
       - Financial: domains/financial.md
       - Model-Specific Configs: domains/model-specific.md
     - End-to-End:
+      - Overview: end-to-end/index.md
       - Knowledge Tuning: end-to-end/knowledge-tuning.md
       - MCP Distillation: end-to-end/mcp-distillation.md
       - Financial Agent: end-to-end/financial-agent.md
@@ -124,3 +126,4 @@ nav:
     - Reference:
       - Data Formats: reference/data-formats.md
       - GPU Requirements: reference/gpu-requirements.md
+      - Platform Reference: reference/platform-reference.md

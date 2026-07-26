@@ -30,8 +30,15 @@ Fine-tune LLMs with smaller, efficient architectures on RHOAI. This track covers
 
 <div class="track-section-item" markdown>
 
-**Data Generation** — Generate Q&A pairs, tool-use traces, and structured data from documents using SDG Hub flows.
-[Browse flows →](data-generation/index.md)
+**Knowledge Track** — Teach a model your domain knowledge (financial regulations, medical literature, product docs). Generate Q&A pairs from documents with SDG Hub, then train with SFT or OSFT.
+[Knowledge tuning pipeline →](end-to-end/knowledge-tuning.md)
+
+</div>
+
+<div class="track-section-item" markdown>
+
+**Agent Track** — Build a tool-calling agent that can use MCP servers, APIs, and databases. Generate expert tool-use traces with MCP distillation, then train with LoRA SFT. Validated end-to-end on RHOAI 3.4.2.
+[Financial agent pipeline →](end-to-end/financial-agent.md)
 
 </div>
 
@@ -39,13 +46,6 @@ Fine-tune LLMs with smaller, efficient architectures on RHOAI. This track covers
 
 **Training Algorithms** — Compare SFT, OSFT, LoRA, and GRPO side by side and pick the right one for your constraints.
 [Choose an algorithm →](getting-started/choosing-an-algorithm.md)
-
-</div>
-
-<div class="track-section-item" markdown>
-
-**End-to-End Pipelines** — Full walkthroughs from raw data to deployed model with guardrails.
-[Knowledge tuning →](end-to-end/knowledge-tuning.md) · [MCP distillation →](end-to-end/mcp-distillation.md) · [Financial agent →](end-to-end/financial-agent.md)
 
 </div>
 

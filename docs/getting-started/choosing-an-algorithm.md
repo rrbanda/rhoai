@@ -6,14 +6,19 @@ Training Hub provides four algorithms, each optimized for different constraints.
 
 ```mermaid
 graph LR
-    A([Start]) --> B{Tool-use?}
-    B -->|Yes| GRPO[GRPO]
+    A([Start]) --> B{Tool-use<br/>agent?}
+    B -->|Yes| T{Have expert<br/>traces?}
+    T -->|"Yes (MCP distillation)"| LORA_SFT["LoRA SFT"]
+    T -->|"No (learn from rewards)"| GRPO[GRPO]
     B -->|No| C{Preserve base<br/>knowledge?}
     C -->|Yes| OSFT[OSFT]
     C -->|No| D{Memory<br/>constrained?}
     D -->|Yes| LORA[LoRA / QLoRA]
     D -->|No| SFT[SFT]
 ```
+
+!!! info "LoRA SFT vs GRPO for tool-use"
+    Both train tool-calling agents, but from different data. **LoRA SFT** learns from expert demonstrations (MCP distillation traces where a frontier model shows the correct tool calls). **GRPO** learns from rewards (the model explores tool calls and is rewarded when they succeed). LoRA SFT is faster to train and has a validated end-to-end pipeline on RHOAI — see the [Financial Agent Pipeline](../end-to-end/financial-agent.md). GRPO can generalize better to unseen tool combinations but requires more compute.
 
 ## Side-by-Side Comparison
 
@@ -74,13 +79,13 @@ graph LR
 
 === "LoRA"
 
-    **Low-Rank Adaptation** — Memory-efficient fine-tuning.
+    **Low-Rank Adaptation** — Memory-efficient fine-tuning for knowledge and tool-use.
 
     | Property | Value |
     |----------|-------|
     | Parameters trained | ~1% (low-rank adapters) |
-    | GPU requirement | 1x A100 or L40 |
-    | Best for | Limited GPU memory, quick experiments |
+    | GPU requirement | 1x A100 or L40 (L4 with QLoRA) |
+    | Best for | Single-GPU training, tool-calling agents, multi-adapter serving |
     | Key parameters | `lora_r` (rank), `lora_alpha` (scaling) |
 
     ```python
@@ -96,17 +101,17 @@ graph LR
     )
     ```
 
-    **When to use:** You have limited GPU resources (single GPU), want fast iteration, or need to maintain multiple task-specific adapters for the same base model.
+    **When to use:** You have limited GPU resources (single GPU), want fast iteration, or need to maintain multiple task-specific adapters for the same base model. Also the recommended algorithm for **tool-calling agents** trained on MCP distillation traces — see the [Financial Agent Pipeline](../end-to-end/financial-agent.md).
 
 === "GRPO"
 
-    **Group Relative Policy Optimization** — RL for tool-use.
+    **Group Relative Policy Optimization** — Reward-based learning for tool-use.
 
     | Property | Value |
     |----------|-------|
     | Parameters trained | ~1% (LoRA) |
     | GPU requirement | 1-4x A100 |
-    | Best for | Teaching models to use tools and APIs |
+    | Best for | Learning tool-use from rewards without expert demonstrations |
     | Key feature | Learns from verifiable rewards (tool calls succeed/fail) |
 
     ```python
@@ -120,7 +125,7 @@ graph LR
     )
     ```
 
-    **When to use:** You're building an agent that needs to call tools (MCP servers, APIs) and you want it to learn which tool to call and how to construct arguments.
+    **When to use:** You want the model to learn tool-use through exploration and reward signals rather than expert demonstrations. GRPO can generalize better to unseen tool combinations but is slower to train. If you have expert traces from MCP distillation, use **LoRA SFT** instead — it's faster and has a [validated pipeline on RHOAI](../end-to-end/financial-agent.md).
 
 ## Detailed Comparison Table
 
@@ -141,3 +146,21 @@ graph LR
 - [OSFT](../training/osft.md) — Orthogonal subspace fine-tuning guide
 - [LoRA](../training/lora.md) — Low-rank adaptation guide
 - [GRPO](../training/grpo.md) — Group relative policy optimization guide
+
+## What to Read Next
+
+Now that you've chosen an algorithm, pick a track:
+
+=== "Knowledge Track"
+
+    Teach a model domain knowledge from documents (financial regulations, medical literature, product docs):
+
+    1. [Knowledge Tuning Pipeline](../end-to-end/knowledge-tuning.md) — Full end-to-end walkthrough (data generation → training → evaluation → serving)
+    2. [GPU Requirements](../reference/gpu-requirements.md) — VRAM estimates for your chosen algorithm and model
+
+=== "Agent Track"
+
+    Build a tool-calling agent that uses MCP servers, APIs, or databases:
+
+    1. [Financial Agent Pipeline](../end-to-end/financial-agent.md) — Validated end-to-end on RHOAI 3.4.2 (MCP distillation → LoRA SFT → vLLM serving → guardrails)
+    2. [MCP Distillation](../end-to-end/mcp-distillation.md) — Generic pipeline for any MCP server

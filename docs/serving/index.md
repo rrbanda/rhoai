@@ -139,16 +139,20 @@ curl -X POST "$ENDPOINT/v1/chat/completions" \
 
 ## Tool-Calling Configuration
 
-If your model was trained for tool use (via [GRPO](../training/grpo.md) or [MCP distillation](../end-to-end/mcp-distillation.md)), enable tool-calling in vLLM:
+If your model was trained for tool use (via [LoRA SFT](../training/lora.md) on MCP distillation traces, or [GRPO](../training/grpo.md)), enable tool-calling in vLLM:
 
 ```yaml
 spec:
   predictor:
-    model:
-      env:
-        - name: VLLM_ARGS
-          value: "--enable-auto-tool-choice --tool-call-parser hermes"
+    containers:
+      - name: kserve-container
+        env:
+          - name: EXTRA_ARGS
+            value: "--enable-auto-tool-choice --tool-call-parser hermes"
 ```
+
+!!! warning "RHOAI-specific env var"
+    The RHOAI vLLM ServingRuntime uses `EXTRA_ARGS` (not `VLLM_ARGS`) to pass additional CLI flags to vLLM. The container name must be `kserve-container` to override the default container in the ServingRuntime.
 
 | vLLM Argument | Purpose | Values |
 |---------------|---------|--------|
@@ -214,9 +218,11 @@ spec:
           nvidia.com/gpu: "4"
         limits:
           nvidia.com/gpu: "4"
-      env:
-        - name: VLLM_TENSOR_PARALLEL_SIZE
-          value: "4"
+    containers:
+      - name: kserve-container
+        env:
+          - name: EXTRA_ARGS
+            value: "--tensor-parallel-size 4"
 ```
 
 For cluster-scale distributed inference, see the [llm-d documentation](https://llm-d.ai).

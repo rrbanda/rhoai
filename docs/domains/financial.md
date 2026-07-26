@@ -132,31 +132,14 @@ lora_sft(
 
 For production on RHOAI, use the [LoRA KFP Pipeline](https://github.com/red-hat-data-services/pipelines-components/tree/main/pipelines/training/finetuning/lora) which wraps the same algorithm in a four-stage pipeline (data download, training, evaluation, model registry).
 
-### Deploy with Tool-Calling Support
+### Deploy and Serve
 
-Deploy via KServe with vLLM tool-calling arguments:
+After training, deploy the model with tool-calling support via KServe + vLLM. Two options:
 
-```yaml
-apiVersion: serving.kserve.io/v1beta1
-kind: InferenceService
-metadata:
-  name: financial-agent
-  annotations:
-    serving.kserve.io/deploymentMode: RawDeployment
-spec:
-  predictor:
-    model:
-      modelFormat:
-        name: vLLM
-      runtime: vllm-runtime
-      storageUri: s3://models/financial-agent
-      resources:
-        limits:
-          nvidia.com/gpu: "1"
-      env:
-        - name: VLLM_ARGS
-          value: "--enable-auto-tool-choice --tool-call-parser hermes"
-```
+- **LoRA adapter serving** (recommended) — Serve the adapter directly from the training PVC without merging
+- **Merged model** — Merge adapter into base model and deploy from S3
+
+Full YAML manifests and step-by-step deployment instructions are in the [Financial Agent Pipeline Step 4](../end-to-end/financial-agent.md#step-4-deploy-the-fine-tuned-model-on-rhoai) and the [`serving/` directory](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent/serving).
 
 ### Add Financial Guardrails
 

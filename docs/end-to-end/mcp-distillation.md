@@ -1,6 +1,9 @@
 # End-to-End MCP Distillation Pipeline
 
-MCP (Model Context Protocol) distillation teaches a smaller model to use tools by learning from a frontier model's tool-use behavior. A teacher model explores your MCP servers, generating high-quality tool-use traces that train the student model via GRPO.
+MCP (Model Context Protocol) distillation teaches a smaller model to use tools by learning from a frontier model's tool-use behavior. A teacher model explores your MCP servers, generating high-quality tool-use traces that train the student model.
+
+!!! tip "Looking for a validated, production-ready example?"
+    The [Financial Agent Pipeline](financial-agent.md) uses MCP distillation + **LoRA SFT** (not GRPO) and has been validated end-to-end on RHOAI 3.4.2. This page documents the generic GRPO-based pipeline for reference.
 
 ## Pipeline Overview
 
@@ -118,8 +121,8 @@ lora_grpo(
 )
 ```
 
-!!! info "Why GRPO instead of SFT?"
-    GRPO learns from verifiable rewards (did the tool call succeed?) rather than just imitating examples. This produces models that generalize better to new tool-use scenarios they haven't seen in training.
+!!! info "GRPO vs LoRA SFT for tool-use"
+    GRPO learns from verifiable rewards (did the tool call succeed?) rather than just imitating examples. This can produce models that generalize better to unseen tool combinations. However, LoRA SFT on expert traces is faster to train, simpler to set up, and has a [validated pipeline on RHOAI](financial-agent.md). Use GRPO when you want reward-based exploration; use LoRA SFT when you have high-quality expert demonstrations from MCP distillation.
 
 ## Step 5: Evaluate
 

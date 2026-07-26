@@ -193,9 +193,22 @@ A healthy training run shows loss decreasing and flattening. If loss plateaus ea
 
 ## What to Read Next
 
-Follow these in order for the full depth:
+[Choosing an Algorithm](choosing-an-algorithm.md) — Decision flowchart and side-by-side comparison of SFT, OSFT, LoRA, and GRPO
 
-1. [Choosing an Algorithm](choosing-an-algorithm.md) — Decision flowchart and side-by-side comparison
-2. [Knowledge Tuning Pipeline](../end-to-end/knowledge-tuning.md) — Full end-to-end walkthrough with multi-flow data generation, data mixing, evaluation, and serving
-3. [MCP Distillation Pipeline](../end-to-end/mcp-distillation.md) — Teach a model to use tools via GRPO
-4. [GPU Requirements](../reference/gpu-requirements.md) — Per-model VRAM estimates and hardware guidance
+Then pick a track:
+
+=== "Knowledge Track"
+
+    Teach a model your domain knowledge (financial regulations, medical literature, product docs):
+
+    1. [Knowledge Tuning Pipeline](../end-to-end/knowledge-tuning.md) — Full end-to-end walkthrough
+    2. [Deploy & Serve](../serving/index.md) — KServe + vLLM deployment
+
+=== "Agent Track"
+
+    Build a tool-calling agent that uses MCP servers and APIs:
+
+    1. [Financial Agent Pipeline](../end-to-end/financial-agent.md) — Validated end-to-end on RHOAI 3.4.2 (MCP distillation + LoRA SFT + vLLM serving + guardrails)
+    2. [MCP Distillation](../end-to-end/mcp-distillation.md) — Generic MCP distillation pipeline
+
+[GPU Requirements](../reference/gpu-requirements.md) — Per-model VRAM estimates and hardware guidance

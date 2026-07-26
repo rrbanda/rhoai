@@ -1,0 +1,48 @@
+%%{init: {'theme': 'base', 'flowchart': {'padding': 30, 'nodeSpacing': 30, 'rankSpacing': 40, 'useMaxWidth': false}, 'themeVariables': {'primaryColor': '#e8f4fd', 'primaryBorderColor': '#1a73e8', 'secondaryColor': '#e8f5e9', 'secondaryBorderColor': '#34a853', 'tertiaryColor': '#fff3e0', 'tertiaryBorderColor': '#f9ab00', 'fontSize': '14px'}}}%%
+
+graph TB
+    subgraph training ["Training Pipeline — build-time"]
+        direction LR
+        subgraph datagen ["1 · Data Generation"]
+            MCP1["Financial MCP Server\n(15 tools)"]
+            SDG["SDG Hub\nMCP Distillation"]
+            TRACES["Raw Trajectories\n(Parquet)"]
+            MCP1 --> SDG --> TRACES
+        end
+        subgraph customize ["2 · Model Customization"]
+            FMT["Format JSONL"]
+            TRAIN_LOCAL["Training Hub\nLoRA SFT (local)"]
+            TRAIN_KFP["LoRA KFP Pipeline\n(RHOAI)"]
+            MODEL["Fine-tuned\nQwen3-4B Adapter"]
+            FMT --> TRAIN_LOCAL --> MODEL
+            FMT --> TRAIN_KFP --> MODEL
+        end
+        subgraph deploy ["3 · Deploy"]
+            KSERVE["KServe + vLLM\nRawDeployment"]
+            GUARD["NeMo Guardrails"]
+            KSERVE --- GUARD
+        end
+        TRACES --> FMT
+        MODEL --> KSERVE
+    end
+
+    subgraph runtime ["Runtime Architecture — inference-time"]
+        direction LR
+        USER(["User Query"])
+        AGENT["Agent Framework\n(LangChain / LangGraph)"]
+        GUARDED["Guarded Model Endpoint\n(vLLM + NeMo)"]
+        MCP2["Financial MCP Server\n(15 tools — same server)"]
+        RESP(["Response"])
+
+        USER -->|"1. query"| AGENT
+        AGENT -->|"2. prompt"| GUARDED
+        GUARDED -->|"3. tool_calls"| AGENT
+        AGENT -->|"4. execute"| MCP2
+        MCP2 -->|"5. tool_results"| AGENT
+        AGENT -->|"6. results + context"| GUARDED
+        GUARDED -->|"7. final answer"| AGENT
+        AGENT -->|"8. response"| RESP
+    end
+
+    KSERVE -.->|"deployed model\nserves here"| GUARDED
+    MCP1 -.->|"same server\nused at runtime"| MCP2
