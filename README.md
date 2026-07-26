@@ -2,6 +2,8 @@
 
 A hands-on reference repository organized by RHOAI 3.4 features and capabilities. Each folder maps to a lifecycle phase of the AI/ML workflow, with documentation and runnable examples.
 
+> **Scope note:** The `docs/` site and [GitHub Pages](https://rrbanda.github.io/rhoai/) focus on the **Model Customization** track (data generation, training, evaluation, serving). Other numbered folders below provide reference configurations for additional RHOAI capabilities.
+
 ## Start Here
 
 | Use case | Notebook | What it covers |
@@ -16,7 +18,7 @@ A hands-on reference repository organized by RHOAI 3.4 features and capabilities
 |---|------|-----------|--------|
 | 01 | Getting Started | Platform Setup, First Project, Fraud Detection Tutorial | GA |
 | 02 | Workbenches | IDE Images, Custom Images, Data Connections | GA |
-| 03 | Data Preparation | SDG Hub (Knowledge/Skills Tuning, KFP Pipeline) | GA |
+| 03 | Data Preparation | SDG Hub (Knowledge Tuning, MCP Distillation, KFP Pipeline) | GA |
 | 03 | Data Preparation | Data Processing (Docling) | GA |
 | 03 | Data Preparation | Feature Store | **TP** |
 | 04 | Training | Model Customization (SFT, OSFT, LoRA, GRPO) | GA |

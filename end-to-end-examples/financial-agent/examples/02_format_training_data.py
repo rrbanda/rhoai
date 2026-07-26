@@ -122,28 +122,31 @@ def format_tool_trace(
         role = step.get("role", "")
 
         if role == "assistant" and step.get("tool_calls"):
-            # Tool call -> function_call message
+            tool_calls = []
             for tc in step["tool_calls"]:
                 func = tc.get("function", {})
                 arguments = func.get("arguments", {})
                 if isinstance(arguments, dict):
                     arguments = json.dumps(arguments)
-                messages.append({
-                    "role": "assistant",
-                    "content": "",
-                    "function_call": {
+                tool_calls.append({
+                    "type": "function",
+                    "function": {
                         "name": func.get("name", ""),
                         "arguments": arguments,
                     },
                 })
+            messages.append({
+                "role": "assistant",
+                "content": None,
+                "tool_calls": tool_calls,
+            })
 
         elif role == "tool":
-            # Tool response -> function message
             content = step.get("content", "")
             if isinstance(content, dict):
                 content = json.dumps(content)
             messages.append({
-                "role": "function",
+                "role": "tool",
                 "content": content,
                 "name": step.get("name", ""),
             })
@@ -157,9 +160,9 @@ def format_tool_trace(
                     "content": content,
                 })
 
-    # Validate: must have at least system + user + one assistant response
     roles = [m["role"] for m in messages]
-    if "function_call" not in str(messages) and roles.count("assistant") < 2:
+    has_tool_calls = any(m.get("tool_calls") for m in messages)
+    if not has_tool_calls and roles.count("assistant") < 2:
         return None
 
     return {"messages": messages}

@@ -61,9 +61,12 @@ for name, flow_name in FLOW_VARIANTS.items():
     print(f"{name}: {len(result_df)} examples")
 ```
 
-## Mixing Variants
+## Convert and Mix Variants
 
-Combine outputs from multiple variants into a balanced training set:
+!!! info "SDG Hub output format"
+    Knowledge flows output rows with `question` and `response` columns — **not** `messages`. You must convert to Training Hub's `messages` format before training. For knowledge tuning, set `"unmask": true` so the loss covers all message roles.
+
+Convert and combine outputs from multiple variants:
 
 ```python
 import pandas as pd
@@ -75,10 +78,27 @@ variants = [
     "doc_direct_qa_data.jsonl",
 ]
 
-dfs = [pd.read_json(f, lines=True) for f in variants]
+def convert_to_messages(df):
+    records = []
+    for _, row in df.iterrows():
+        if "question" not in row or "response" not in row:
+            continue
+        records.append({
+            "messages": [
+                {"role": "user", "content": str(row["question"])},
+                {"role": "assistant", "content": str(row["response"])},
+            ],
+            "unmask": True,
+        })
+    return pd.DataFrame(records)
+
+dfs = []
+for f in variants:
+    raw = pd.read_json(f, lines=True)
+    dfs.append(convert_to_messages(raw))
+
 combined = pd.concat(dfs, ignore_index=True)
 combined = combined.drop_duplicates(subset=["messages"])
-
 combined = combined.sample(frac=1, random_state=42).reset_index(drop=True)
 
 combined.to_json("knowledge_mixed.jsonl", orient="records", lines=True)
@@ -146,6 +166,5 @@ Knowledge tuning flows produce JSONL with the messages format expected by Traini
 ## Related
 
 - [SDG Hub Overview](index.md) — Core concepts and architecture
-- [Skills Tuning](skills-tuning.md) — Generate instruction-following data
 - [Knowledge Tuning Pipeline](../end-to-end/knowledge-tuning.md) — Full E2E pipeline including training
 - [Data Formats](../reference/data-formats.md) — Detailed format specification

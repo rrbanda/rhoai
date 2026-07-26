@@ -32,7 +32,19 @@ Not sure which to pick? Use the [decision flowchart](../getting-started/choosing
 
 ## After Training: Next Steps
 
-All training algorithms produce model artifacts in your `ckpt_output_dir`. To deploy your model on RHOAI, you need to make those artifacts accessible to KServe:
+All training algorithms produce model artifacts in your `ckpt_output_dir`. The final model is written to a subdirectory:
+
+```
+{ckpt_output_dir}/
+└── hf_format/
+    └── samples_0/       # <-- This is the loadable model directory
+        ├── config.json
+        ├── model-*.safetensors
+        ├── tokenizer.json
+        └── ...
+```
+
+Use `{ckpt_output_dir}/hf_format/samples_0/` as the model path for evaluation, serving, or further training. To deploy on RHOAI, make these artifacts accessible to KServe:
 
 === "Upload to S3"
 

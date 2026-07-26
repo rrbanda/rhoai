@@ -307,7 +307,7 @@ def main() -> None:
     load_dotenv()
     args = parse_args()
 
-    teacher_model = os.environ.get("TEACHER_MODEL", "openai/gpt-5.2")
+    teacher_model = os.environ.get("TEACHER_MODEL", "gemini/gemini-3.6-flash")
     teacher_api_key = os.environ.get("TEACHER_API_KEY")
     langflow_url = os.environ.get("LANGFLOW_URL")
     langflow_api_key = os.environ.get("LANGFLOW_API_KEY")

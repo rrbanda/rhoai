@@ -89,7 +89,6 @@ nav:
     - Data Generation:
       - SDG Hub Overview: data-generation/index.md
       - Knowledge Tuning Data: data-generation/knowledge-tuning.md
-      - Skills Tuning: data-generation/skills-tuning.md
       - Text Analysis: data-generation/text-analysis.md
     - Training:
       - Overview: training/index.md

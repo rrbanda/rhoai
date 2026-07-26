@@ -92,13 +92,43 @@ By default, Training Hub computes loss only on **assistant** tokens (the model l
 
 ## SDG Hub Output
 
-SDG Hub flows produce pandas DataFrames (or HuggingFace Datasets, matching the input type) that can be saved as JSONL:
+SDG Hub flows produce pandas DataFrames (or HuggingFace Datasets, matching the input type). The output columns depend on the flow type:
+
+| Flow Type | Output Columns | Needs Conversion? |
+|-----------|---------------|-------------------|
+| Knowledge Tuning | `question`, `response`, `domain`, ... | **Yes** — convert to `messages` format |
+| MCP Distillation | `tool_trace`, `question`, `mcp_server_name`, ... | **Yes** — convert to `messages` with `tool_calls` |
+| Text Analysis | `text`, `sentiment`, `key_themes`, ... | No — used for analysis, not training |
+
+### Converting Knowledge Tuning Output to Training Format
+
+Knowledge flows output `question`/`response` columns. Training Hub expects `messages` format. For knowledge tuning, set `"unmask": true` so the loss covers all message roles:
+
+```python
+import pandas as pd
+
+raw = pd.read_json("sdg_output.jsonl", lines=True)
+
+records = []
+for _, row in raw.iterrows():
+    records.append({
+        "messages": [
+            {"role": "user", "content": str(row["question"])},
+            {"role": "assistant", "content": str(row["response"])},
+        ],
+        "unmask": True,
+    })
+
+training_df = pd.DataFrame(records)
+training_df.to_json("training_data.jsonl", orient="records", lines=True)
+```
+
+### Saving Raw SDG Output
 
 ```python
 result = flow.generate(dataset)
-
-# Save as JSONL (one JSON object per line)
-result.to_json("output.jsonl", orient="records", lines=True)
+result_df = result.to_pandas() if hasattr(result, "to_pandas") else result
+result_df.to_json("output.jsonl", orient="records", lines=True)
 ```
 
 ## Validating Data

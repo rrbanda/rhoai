@@ -50,7 +50,7 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 
-_DEFAULT_NAMESPACE = "rhoai-serving"
+_DEFAULT_NAMESPACE = "financial-agent"
 _DEFAULT_RUNTIME = "vllm-runtime"
 _READY_TIMEOUT = 600
 _POLL_INTERVAL = 10

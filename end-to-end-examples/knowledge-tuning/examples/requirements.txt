@@ -1,5 +1,5 @@
-sdg-hub[examples]
-training-hub
+sdg-hub[examples]>=0.1
+training-hub>=0.1
 datasets
 transformers
 torch

@@ -25,7 +25,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--algorithm",
-        choices=["sft", "osft"],
+        choices=["sft", "osft", "lora"],
         default="osft",
         help="Training algorithm (default: osft)",
     )
@@ -47,8 +47,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--num-epochs",
         type=int,
-        default=3,
-        help="Number of training epochs (default: 3)",
+        default=4,
+        help="Number of training epochs (default: 4)",
     )
     parser.add_argument(
         "--nproc-per-node",
@@ -59,14 +59,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--learning-rate",
         type=float,
-        default=5e-6,
-        help="Learning rate (default: 5e-6)",
+        default=2e-5,
+        help="Learning rate (default: 2e-5)",
     )
     parser.add_argument(
         "--effective-batch-size",
         type=int,
-        default=128,
-        help="Effective batch size across all GPUs (default: 128)",
+        default=32,
+        help="Effective batch size across all GPUs (default: 32)",
     )
     parser.add_argument(
         "--max-seq-len",
@@ -120,7 +120,7 @@ def run_osft(
         model_path=model_path,
         data_path=data_path,
         ckpt_output_dir=ckpt_output_dir,
-        unfreeze_rank_ratio=0.3,
+        unfreeze_rank_ratio=0.01,  # 0.01 preserves general capability; increase to 0.05-0.1 for aggressive domain specialization
         num_epochs=num_epochs,
         effective_batch_size=effective_batch_size,
         learning_rate=learning_rate,
@@ -129,6 +129,32 @@ def run_osft(
         unmask_messages=True,
         use_liger=True,
         nproc_per_node=nproc_per_node,
+    )
+
+
+def train_lora(
+    model_path: str,
+    data_path: str,
+    ckpt_output_dir: str,
+    num_epochs: int,
+    effective_batch_size: int,
+    learning_rate: float,
+    max_seq_len: int,
+    nproc_per_node: int,
+) -> None:
+    """Run LoRA SFT (single-GPU friendly, produces adapter weights only)."""
+    from training_hub import lora_sft
+
+    lora_sft(
+        model_path=model_path,
+        data_path=data_path,
+        ckpt_output_dir=ckpt_output_dir,
+        lora_r=16,
+        lora_alpha=32,
+        num_epochs=num_epochs,
+        learning_rate=learning_rate,
+        load_in_4bit=True,
+        max_seq_len=max_seq_len,
     )
 
 
@@ -168,7 +194,12 @@ def main() -> None:
     print(f"  GPUs per node      : {args.nproc_per_node}")
     print()
 
-    train_fn = run_sft if args.algorithm == "sft" else run_osft
+    if args.algorithm == "sft":
+        train_fn = run_sft
+    elif args.algorithm == "lora":
+        train_fn = train_lora
+    else:
+        train_fn = run_osft
 
     try:
         train_fn(

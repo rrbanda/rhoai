@@ -90,14 +90,39 @@ for variant_name, flow_display_name in FLOW_VARIANTS.items():
     print(f"{variant_name}: {len(result_df)} examples")
 ```
 
-## Step 3: Mix and Validate
+## Step 3: Convert, Mix, and Validate
 
-Combine all variants into a single, deduplicated training set:
+!!! warning "SDG Hub outputs `question`/`response` columns — not `messages`"
+    Knowledge tuning flows produce rows with `question` and `response` columns. Training Hub expects the `messages` chat format. You **must** convert before training. For knowledge tuning, also set `"unmask": true` so the loss is computed on all message roles (not just assistant).
+
+Convert SDG Hub output to Training Hub format, then combine all variants:
 
 ```python
 import pandas as pd
+import json
 
-dfs = [pd.read_json(f"{name}.jsonl", lines=True) for name in FLOW_VARIANTS]
+def convert_to_messages(df):
+    """Convert question/response rows to messages format for Training Hub."""
+    records = []
+    for _, row in df.iterrows():
+        if "question" not in row or "response" not in row:
+            continue
+        records.append({
+            "messages": [
+                {"role": "user", "content": str(row["question"])},
+                {"role": "assistant", "content": str(row["response"])},
+            ],
+            "unmask": True,
+        })
+    return pd.DataFrame(records)
+
+dfs = []
+for name in FLOW_VARIANTS:
+    raw = pd.read_json(f"{name}.jsonl", lines=True)
+    converted = convert_to_messages(raw)
+    dfs.append(converted)
+    print(f"{name}: {len(raw)} raw → {len(converted)} converted")
+
 combined = pd.concat(dfs, ignore_index=True)
 combined = combined.drop_duplicates(subset=["messages"])
 combined = combined.sample(frac=1, random_state=42).reset_index(drop=True)
@@ -122,6 +147,7 @@ Choose your algorithm based on the [decision guide](../getting-started/choosing-
         data_path="training_data.jsonl",
         ckpt_output_dir="./knowledge-model",
         unfreeze_rank_ratio=0.01,
+        unmask_messages=True,
         effective_batch_size=32,
         max_tokens_per_gpu=16384,
         max_seq_len=4096,
@@ -163,6 +189,9 @@ Choose your algorithm based on the [decision guide](../getting-started/choosing-
         lora_alpha=32,
     )
     ```
+
+!!! tip "Where is my trained model?"
+    Training Hub writes the final model to `{ckpt_output_dir}/hf_format/samples_0/`. Use this path for evaluation, serving, and further training.
 
 ## Step 5: Evaluate
 

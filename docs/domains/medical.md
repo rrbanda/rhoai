@@ -2,6 +2,9 @@
 
 This guide shows how to fine-tune a model on medical knowledge using three different algorithms. Medical fine-tuning is a representative example of domain adaptation — the same approach works for legal, financial, or any other specialized domain.
 
+!!! info "RHOAI Compatibility"
+    All training algorithms on this page (SFT, OSFT, LoRA) are **GA in RHOAI 3.4+**.
+
 ## Algorithm Comparison for Medical Data
 
 | Approach | Preserves general knowledge | GPU requirement | Best when |

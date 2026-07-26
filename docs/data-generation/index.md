@@ -74,7 +74,6 @@ for flow in FlowRegistry.list_flows():
 | Flow | Use Case | Guide |
 |------|----------|-------|
 | Knowledge Tuning (4 variants) | Domain Q&A from documents | [Knowledge Tuning](knowledge-tuning.md) |
-| Skills Tuning | Instruction-following data | [Skills Tuning](skills-tuning.md) (planned — no built-in flows yet) |
 | Text Analysis | Structured insights extraction | [Text Analysis](text-analysis.md) |
 | MCP Distillation | Tool-use training data | [MCP Distillation](../end-to-end/mcp-distillation.md) |
 | RAG Evaluation | Retrieval quality benchmarks | [RAG Evaluation](../evaluation/rag-evaluation.md) |
@@ -130,5 +129,4 @@ Set the corresponding environment variable (`OPENAI_API_KEY`, `ANTHROPIC_API_KEY
 ## Next Steps
 
 - [Knowledge Tuning](knowledge-tuning.md) — Generate Q&A pairs from your documents
-- [Skills Tuning](skills-tuning.md) — Generate instruction-following data
 - [Text Analysis](text-analysis.md) — Extract structured insights

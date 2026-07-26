@@ -31,7 +31,7 @@ For conceptual background on model customization, see the [Overview](overview.md
 === "Local / Custom Environment"
 
     ```bash
-    pip install sdg-hub training-hub
+    pip install sdg-hub[examples] training-hub datasets
     ```
 
     For QLoRA (4-bit quantized training):

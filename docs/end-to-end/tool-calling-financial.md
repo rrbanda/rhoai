@@ -104,6 +104,8 @@ Three training paths are available. **Option B (TrainJob)** is the recommended a
 
 ### Option A: Local Training (for development)
 
+The local script defaults to `lora_r=16, lora_alpha=32` (the general recommendation). The TrainJob in Option B uses `lora_r=8, lora_alpha=16` — these smaller values were validated on L4 GPUs with small datasets and train faster.
+
 ```bash
 # Single L4 24GB with QLoRA (default settings)
 python 03_train_lora_sft.py
@@ -554,6 +556,18 @@ oc apply -f serving/05-route.yaml -n financial-agent
 ## Step 5: Evaluate
 
 **RHOAI Feature:** Tool-Use Evaluation (GA)
+
+!!! info "Evaluation prerequisites"
+    Without `--benchmark-file`, the evaluation script generates benchmark tasks dynamically, which requires **Langflow running** (from Step 1) and `TEACHER_API_KEY` set. To skip this, use a pre-generated benchmark file:
+
+    ```bash
+    python 05_evaluate_agent.py \
+      --model-endpoint http://financial-agent-lora-predictor.financial-agent.svc.cluster.local:8080 \
+      --benchmark-file benchmark_tasks.jsonl \
+      --output evaluation_results.json
+    ```
+
+Full evaluation (generates benchmarks + evaluates):
 
 ```bash
 python 05_evaluate_agent.py \

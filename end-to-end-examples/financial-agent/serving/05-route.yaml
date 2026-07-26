@@ -23,7 +23,7 @@ spec:
     kind: Service
     name: financial-agent-lora-predictor
   port:
-    targetPort: http
+    targetPort: 8080
   tls:
     termination: edge
     insecureEdgeTerminationPolicy: Redirect

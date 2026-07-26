@@ -75,9 +75,31 @@ Use a frontier model to judge tool-use quality across all dimensions:
 ```python
 import pandas as pd
 import json
+import requests
 from litellm import completion
 
 benchmark = pd.read_json("agent_benchmark.jsonl", lines=True)
+
+MODEL_ENDPOINT = "http://my-model-predictor.my-namespace.svc.cluster.local:8080"
+
+def run_agent(prompt, available_tools, model_path=None):
+    """Send a tool-calling request to a vLLM endpoint and return the response.
+
+    Replace MODEL_ENDPOINT with your deployed model's URL.
+    For a full implementation, see 05_evaluate_agent.py in the financial example.
+    """
+    endpoint = model_path or MODEL_ENDPOINT
+    openai_tools = [{"type": "function", "function": t} for t in available_tools]
+    payload = {
+        "model": "default",
+        "messages": [{"role": "user", "content": prompt}],
+        "tools": openai_tools,
+        "tool_choice": "auto",
+        "max_tokens": 1024,
+        "temperature": 0.1,
+    }
+    resp = requests.post(f"{endpoint}/v1/chat/completions", json=payload, timeout=120)
+    return resp.json()["choices"][0]["message"]
 
 def judge_tool_use(prompt, tools, expected, model_response):
     """Score a model's tool-use response using LLM-as-judge."""

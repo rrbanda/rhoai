@@ -58,7 +58,7 @@ sft(
 | Base model | Pre-trained model | Phase 1 output |
 
 !!! tip "Data Separation"
-    Use SDG Hub's knowledge tuning flows for Phase 1 data and skills tuning flows for Phase 2 data. The [Data Generation](../data-generation/index.md) section covers both.
+    Use SDG Hub's knowledge tuning flows for Phase 1 data. For Phase 2 (skills/alignment), prepare instruction-following data manually or from your existing instruction datasets. The [Data Generation](../data-generation/index.md) section covers available flows.
 
 ## With OSFT
 
@@ -97,4 +97,3 @@ osft(
 - [SFT](sft.md) — The training algorithm used in each phase
 - [OSFT](osft.md) — Alternative algorithm for multi-phase with knowledge preservation
 - [Knowledge Tuning](../data-generation/knowledge-tuning.md) — Generate Phase 1 data
-- [Skills Tuning](../data-generation/skills-tuning.md) — Generate Phase 2 data

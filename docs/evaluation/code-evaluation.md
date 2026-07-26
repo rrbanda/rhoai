@@ -70,6 +70,9 @@ Each benchmark example contains a prompt and executable test cases:
 
 Run the benchmark against your fine-tuned model and measure pass@1:
 
+!!! danger "Security Warning"
+    The code below executes model-generated Python directly. **Never run untrusted code outside a sandboxed container.** In production, use a containerized execution environment (e.g., a Kubernetes Job with restricted permissions) instead of bare `subprocess.run`.
+
 ```python
 import pandas as pd
 import subprocess

@@ -146,19 +146,26 @@ lora_grpo(
 Generate an evaluation benchmark and test the model's tool-use quality:
 
 ```python
+import pandas as pd
 from sdg_hub import Flow, FlowRegistry
 
 FlowRegistry.discover_flows()
 
-# Generate evaluation scenarios
+# Reuse the same seed data from Step 2 to generate evaluation scenarios
+eval_seed_data = seed_data  # same tool_list / mcp_server_name DataFrame
+
 eval_flow = Flow.from_yaml(FlowRegistry.get_flow_path("MCP Server Distillation"))
-eval_flow.set_model_config(model="gpt-4o")
+eval_flow.set_model_config(model="gpt-4o", api_key="...")
+eval_flow.set_agent_config(
+    agent_framework="langflow",
+    agent_url="http://localhost:7860/api/v1/run/your-flow-id",
+)
 eval_data = eval_flow.generate(eval_seed_data)
 
 # Score the model's traces using LLM-as-judge
 judge_path = FlowRegistry.get_flow_path("Agent Tool-Use Evaluation")
 if judge_path is None:
-    raise RuntimeError("Eval flow not found. Install: pip install sdg-hub[examples]")
+    raise RuntimeError("Eval flow not found. Ensure sdg-hub is installed.")
 judge_flow = Flow.from_yaml(judge_path)
 judge_flow.set_model_config(model="gpt-4o", api_key="...")
 scores = judge_flow.generate(eval_data)

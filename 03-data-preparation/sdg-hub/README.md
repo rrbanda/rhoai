@@ -8,7 +8,7 @@ SDG Hub is a Python framework for building synthetic data generation pipelines u
 
 - Installing and configuring SDG Hub
 - Understanding blocks (processing units) and flows (YAML pipelines)
-- Generating synthetic data for knowledge tuning and skills tuning
+- Generating synthetic data for knowledge tuning
 - Running SDG pipelines as Kubeflow Pipeline (KFP) components on OpenShift AI
 - Using `dry_run()` to validate pipelines before making LLM calls
 - Configuring LLM providers and API keys via LiteLLM
@@ -23,7 +23,6 @@ SDG Hub is a Python framework for building synthetic data generation pipelines u
 | Directory | Description |
 |-----------|-------------|
 | [knowledge-tuning/](knowledge-tuning/) | Synthetic Q&A and document augmentation for domain knowledge |
-| [skills-tuning/](skills-tuning/) | Synthetic data for instruction following, reasoning, and tool use |
 | [kfp-pipeline/](kfp-pipeline/) | Running SDG flows as Kubeflow Pipeline components |
 
 ## What's in examples/
