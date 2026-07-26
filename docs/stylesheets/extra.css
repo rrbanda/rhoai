@@ -155,13 +155,7 @@
   left: 0;
   right: 0;
   z-index: 100;
-  border-top: 1px solid var(--md-default-fg-color--lightest);
-  background: var(--md-default-bg-color);
   font-size: 0.72rem;
-}
-
-[data-md-color-scheme="slate"] .md-footer {
-  background: var(--md-default-bg-color);
 }
 
 .md-footer__inner {
@@ -206,7 +200,6 @@
   display: flex;
   align-items: center;
   min-height: 18px;
-  border-top: 1px solid var(--md-default-fg-color--lightest);
 }
 
 .md-footer-meta .md-copyright {
