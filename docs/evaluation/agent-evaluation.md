@@ -13,7 +13,7 @@ Evaluate tool-use models using LLM-as-judge scoring. An evaluator model assesses
 
 | Requirement | Details |
 |-------------|---------|
-| **SDG Hub** | `pip install sdg_hub` |
+| **SDG Hub** | `pip install sdg-hub` |
 | **Judge model API key** | GPT-4o or Claude recommended for reliable scoring |
 | **MCP server** | The tools your model was trained to use |
 

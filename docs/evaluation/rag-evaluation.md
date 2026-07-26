@@ -13,7 +13,7 @@ Evaluate retrieval-augmented generation quality by generating a benchmark datase
 
 | Requirement | Details |
 |-------------|---------|
-| **SDG Hub** | `pip install sdg_hub` |
+| **SDG Hub** | `pip install sdg-hub` |
 | **LLM API key** | OpenAI, Anthropic, or any LiteLLM-supported provider |
 | **Document corpus** | The same documents used in your RAG pipeline |
 

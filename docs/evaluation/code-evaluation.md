@@ -13,7 +13,7 @@ Evaluate code generation models using pass@1 benchmarks. SDG Hub generates codin
 
 | Requirement | Details |
 |-------------|---------|
-| **SDG Hub** | `pip install sdg_hub` |
+| **SDG Hub** | `pip install sdg-hub` |
 | **LLM API key** | For benchmark generation (GPT-4o recommended for high-quality test cases) |
 | **Python runtime** | For executing and validating generated code |
 

@@ -31,7 +31,7 @@ For conceptual background on model customization, see the [Overview](overview.md
 === "Local / Custom Environment"
 
     ```bash
-    pip install sdg_hub training_hub
+    pip install sdg-hub training-hub
     ```
 
     For QLoRA (4-bit quantized training):
@@ -63,11 +63,13 @@ Before training, verify you have enough VRAM:
 ```python
 from training_hub import estimate
 
-train_mem, grad_mem, total_mem = estimate(
+lower, expected, upper = estimate(
+    training_method="lora",
     model_path="meta-llama/Llama-3.1-8B-Instruct",
+    num_gpus=1,
     max_seq_len=4096,
 )
-print(f"Estimated VRAM: {total_mem / 1e9:.1f} GB")
+print(f"Estimated VRAM: {expected / 1e9:.1f} GB (range: {lower / 1e9:.1f}–{upper / 1e9:.1f} GB)")
 ```
 
 See [GPU Requirements](../reference/gpu-requirements.md) for per-model and per-algorithm breakdowns.

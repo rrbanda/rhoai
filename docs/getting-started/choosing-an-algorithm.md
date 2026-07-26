@@ -122,6 +122,7 @@ graph LR
         data_path="tool_traces.jsonl",
         ckpt_output_dir="./output",
         num_iterations=15,
+        backend="art",
     )
     ```
 

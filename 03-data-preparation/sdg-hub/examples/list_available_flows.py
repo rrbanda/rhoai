@@ -29,8 +29,8 @@ def parse_args() -> argparse.Namespace:
 def main() -> None:
     args = parse_args()
 
-    registry = FlowRegistry()
-    flows = registry.list_flows()
+    FlowRegistry.discover_flows()
+    flows = FlowRegistry.list_flows()
 
     print(f"Found {len(flows)} registered flows:\n")
 

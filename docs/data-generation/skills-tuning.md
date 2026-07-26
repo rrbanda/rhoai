@@ -16,7 +16,7 @@ Skills tuning flows generate instruction-following training data. Unlike knowled
 
 | Requirement | Details |
 |-------------|---------|
-| **SDG Hub** | `pip install sdg_hub` |
+| **SDG Hub** | `pip install sdg-hub` |
 | **LLM API key** | OpenAI, Anthropic, or any LiteLLM-supported provider |
 | **Task descriptions** | Clear descriptions of the skills you want to teach |
 

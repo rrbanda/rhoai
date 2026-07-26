@@ -9,6 +9,12 @@ GRPO is a reinforcement learning algorithm that trains models to use tools effec
 - You want the model to learn **which tool to use** and **how to construct arguments**
 - You're building an **agent** that interacts with external systems
 
+!!! note "Install the GRPO extra"
+    GRPO requires additional dependencies not included in the base package:
+    ```bash
+    pip install training-hub[grpo]
+    ```
+
 ## Quick Start
 
 ```python
@@ -19,6 +25,7 @@ lora_grpo(
     data_path="tool_traces.jsonl",
     ckpt_output_dir="./grpo-output",
     num_iterations=15,
+    backend="art",
 )
 ```
 

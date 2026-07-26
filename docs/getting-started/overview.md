@@ -23,7 +23,7 @@ SDG Hub generates high-quality training data from your raw documents. A teacher 
 from sdg_hub import Flow, FlowRegistry
 
 FlowRegistry.discover_flows()
-flow = Flow.from_yaml(FlowRegistry.get_flow_path("Knowledge Tuning Flow"))
+flow = Flow.from_yaml(FlowRegistry.get_flow_path("Document Based Knowledge Tuning Dataset Generation Flow"))
 flow.set_model_config(model="gpt-4o-mini", api_key="...")
 result = flow.generate(dataset)
 ```

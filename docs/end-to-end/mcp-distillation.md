@@ -108,6 +108,10 @@ pd.DataFrame(training_records).to_json(
 
 Use GRPO (Group Relative Policy Optimization) to train the student model:
 
+```bash
+pip install training-hub[grpo]
+```
+
 ```python
 from training_hub import lora_grpo
 
@@ -118,6 +122,7 @@ lora_grpo(
     num_iterations=15,
     lora_r=16,
     lora_alpha=8,
+    backend="art",
 )
 ```
 
@@ -139,7 +144,7 @@ eval_flow.set_model_config(model="gpt-4o")
 eval_data = eval_flow.generate(eval_seed_data)
 
 # Evaluate using LLM-as-judge
-judge_flow = Flow.from_yaml(FlowRegistry.get_flow_path("Agent Evaluation"))
+judge_flow = Flow.from_yaml(FlowRegistry.get_flow_path("Agent Tool-Use Evaluation"))
 judge_flow.set_model_config(model="gpt-4o")
 scores = judge_flow.generate(eval_data)
 ```

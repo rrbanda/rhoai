@@ -1,5 +1,5 @@
 # Data generation (Steps 01-02)
-sdg_hub[dev]
+sdg-hub[dev]
 pandas>=2.0
 pyarrow>=14.0
 numpy>=1.26
@@ -7,7 +7,7 @@ python-dotenv>=1.0
 nest-asyncio>=1.6
 
 # Training — local (Step 03)
-training_hub[lora]
+training-hub[lora]
 
 # Training — KFP pipeline (Step 03b)
 kfp==2.15.2

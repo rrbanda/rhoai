@@ -14,7 +14,7 @@ SDG Hub's text analysis flows extract structured insights from documents — sen
 
 | Requirement | Details |
 |-------------|---------|
-| **SDG Hub** | `pip install sdg_hub` |
+| **SDG Hub** | `pip install sdg-hub` |
 | **LLM API key** | OpenAI, Anthropic, or any LiteLLM-supported provider |
 | **Source documents** | Raw text documents to analyze |
 

@@ -613,7 +613,7 @@ The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestrat
 
 | Symptom | Resolution |
 |---------|------------|
-| "MCP Server Distillation flow not found" | `pip install sdg_hub[dev]` |
+| "MCP Server Distillation flow not found" | `pip install sdg-hub[dev]` |
 | "CUDA out of memory during training" | Enable QLoRA: `--load-in-4bit` (default), or reduce `--max-seq-len` |
 | "Tool call parser error" during inference | Verify `--tool-call-parser` matches model (`hermes` for Qwen3) |
 | KFP pipeline: "storageclass not found" | Set `--storage-class` to your cluster's RWX class |

@@ -105,6 +105,9 @@ result = flow.generate(dataset)
 result.to_json("training_data.jsonl", orient="records", lines=True)
 ```
 
+!!! tip "Output type matches input type"
+    `flow.generate()` returns the **same type** you pass in: `pd.DataFrame` in produces `pd.DataFrame` out; `datasets.Dataset` in produces `datasets.Dataset` out. The `.to_json(orient="records", lines=True)` call above is a pandas method. If you pass a HuggingFace `Dataset`, convert first: `result.to_pandas().to_json(...)`.
+
 ## Supported LLM Providers
 
 SDG Hub uses LiteLLM under the hood, supporting 100+ providers:
