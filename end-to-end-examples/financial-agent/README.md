@@ -370,13 +370,50 @@ oc create secret generic kubernetes-credentials \
 
 **RHOAI Feature:** KServe RawDeployment (GA)
 
-```bash
-python 04_deploy_model.py
+After training, the LoRA adapter is on the PVC at `/workspace/output`. Two deployment options:
+
+#### Option A: Serve the LoRA adapter directly (recommended)
+
+vLLM natively supports LoRA adapters without merging. The base model stays frozen and the adapter (~50MB) loads on top. This is the fastest path from training to inference.
+
+```yaml
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: financial-agent-lora
+  annotations:
+    serving.kserve.io/deploymentMode: RawDeployment
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: vLLM
+      runtime: vllm-runtime
+      storageUri: hf://Qwen/Qwen3-4B
+      resources:
+        limits:
+          nvidia.com/gpu: "1"
+          cpu: "4"
+          memory: "24Gi"
+      env:
+        - name: VLLM_ARGS
+          value: >-
+            --enable-lora
+            --lora-modules financial-agent=/mnt/lora-adapter
+            --max-lora-rank 16
+            --enable-auto-tool-choice
+            --tool-call-parser hermes
+      volumeMounts:
+        - name: lora-adapter
+          mountPath: /mnt/lora-adapter
+    volumes:
+      - name: lora-adapter
+        persistentVolumeClaim:
+          claimName: training-workspace
+          subPath: output
 ```
 
-Creates a KServe InferenceService with vLLM serving the fine-tuned model. Tool-calling is enabled via `--enable-auto-tool-choice` and `--tool-call-parser hermes` (validated for Qwen3).
-
-Verify with:
+Use the adapter name as the `model` in API requests:
 
 ```bash
 curl -X POST "$MODEL_ENDPOINT/v1/chat/completions" \
@@ -384,8 +421,34 @@ curl -X POST "$MODEL_ENDPOINT/v1/chat/completions" \
   -d '{
     "model": "financial-agent",
     "messages": [{"role": "user", "content": "Show me my portfolio performance this quarter"}],
-    "tools": [{"type": "function", "function": {"name": "get_portfolio_performance", "parameters": {}}}]
+    "tools": [{"type": "function", "function": {"name": "get_portfolio_performance", "parameters": {"type": "object", "properties": {"portfolio_id": {"type": "string"}}, "required": ["portfolio_id"]}}}]
   }'
+```
+
+> **Why serve directly?** No merge step, base model weights stay frozen (adapter is ~50MB vs 8GB+ merged), and you can serve multiple adapters from the same base model with per-request switching.
+
+#### Option B: Merge and deploy as a standalone model
+
+Merge the adapter into the base model, upload to S3, and deploy:
+
+```python
+from peft import PeftModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen3-4B")
+model = PeftModel.from_pretrained(base, "/workspace/output")
+merged = model.merge_and_unload()
+merged.save_pretrained("/workspace/merged-model")
+AutoTokenizer.from_pretrained("Qwen/Qwen3-4B").save_pretrained("/workspace/merged-model")
+```
+
+```bash
+aws s3 sync /workspace/merged-model s3://your-bucket/models/financial-agent-merged/
+
+python 04_deploy_model.py \
+  --model-path s3://your-bucket/models/financial-agent-merged \
+  --namespace financial-agent \
+  --tool-call-parser hermes
 ```
 
 ### Step 5: Evaluate

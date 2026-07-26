@@ -338,11 +338,100 @@ oc create secret generic kubernetes-credentials \
 
 **RHOAI Feature:** KServe RawDeployment (GA)
 
-```bash
-python 04_deploy_model.py
+After training completes, the LoRA adapter weights are on the PVC at `/workspace/output`. There are two ways to serve them on RHOAI.
+
+### Option A: Serve the LoRA adapter directly (recommended)
+
+vLLM natively supports serving LoRA adapters alongside the base model without merging. This is the fastest path from training to inference — no additional compute or storage needed.
+
+Create an InferenceService that loads Qwen3-4B as the base model and mounts the LoRA adapter from the training PVC:
+
+```yaml
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: financial-agent-lora
+  annotations:
+    serving.kserve.io/deploymentMode: RawDeployment
+spec:
+  predictor:
+    model:
+      modelFormat:
+        name: vLLM
+      runtime: vllm-runtime
+      storageUri: hf://Qwen/Qwen3-4B
+      resources:
+        limits:
+          nvidia.com/gpu: "1"
+          cpu: "4"
+          memory: "24Gi"
+      env:
+        - name: VLLM_ARGS
+          value: >-
+            --enable-lora
+            --lora-modules financial-agent=/mnt/lora-adapter
+            --max-lora-rank 16
+            --enable-auto-tool-choice
+            --tool-call-parser hermes
+      volumeMounts:
+        - name: lora-adapter
+          mountPath: /mnt/lora-adapter
+    volumes:
+      - name: lora-adapter
+        persistentVolumeClaim:
+          claimName: training-workspace
+          subPath: output
 ```
 
-Creates a KServe InferenceService with vLLM serving the fine-tuned model. Tool-calling is enabled via `--enable-auto-tool-choice` and `--tool-call-parser hermes` (validated for Qwen3).
+Once deployed, use the adapter name as the `model` in API requests:
+
+```bash
+curl -X POST "https://financial-agent-lora.apps.your-cluster.com/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "financial-agent",
+    "messages": [{"role": "user", "content": "Show me my portfolio performance this quarter"}],
+    "tools": [{"type": "function", "function": {"name": "get_portfolio_performance", "parameters": {"type": "object", "properties": {"portfolio_id": {"type": "string"}}, "required": ["portfolio_id"]}}}]
+  }'
+```
+
+!!! tip "Why serve the adapter directly?"
+    - No merge step required — deploy immediately after training
+    - Base model weights stay frozen — adapter adds only ~50MB vs 8GB+ for a merged model
+    - Multi-adapter support — serve multiple fine-tuned variants (e.g., financial, medical) from the same base model
+    - Per-request adapter selection — switch adapters at inference time via the `model` field
+
+### Option B: Merge the adapter and deploy as a standalone model
+
+If you prefer a single merged model (simpler to manage, slightly lower inference latency), merge the LoRA weights into the base model, upload to S3, and deploy:
+
+```python
+# Run this in a notebook or workbench with GPU access
+from peft import PeftModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
+
+base = AutoModelForCausalLM.from_pretrained("Qwen/Qwen3-4B")
+model = PeftModel.from_pretrained(base, "/workspace/output")
+merged = model.merge_and_unload()
+
+merged.save_pretrained("/workspace/merged-model")
+AutoTokenizer.from_pretrained("Qwen/Qwen3-4B").save_pretrained("/workspace/merged-model")
+```
+
+Then upload to S3 and deploy:
+
+```bash
+# Upload to S3
+aws s3 sync /workspace/merged-model s3://your-bucket/models/financial-agent-merged/
+
+# Deploy via the provided script
+python 04_deploy_model.py \
+  --model-path s3://your-bucket/models/financial-agent-merged \
+  --namespace financial-agent \
+  --tool-call-parser hermes
+```
+
+The `04_deploy_model.py` script creates a KServe InferenceService with vLLM and tool-calling support (`--enable-auto-tool-choice --tool-call-parser hermes`).
 
 ## Step 5: Evaluate
 
