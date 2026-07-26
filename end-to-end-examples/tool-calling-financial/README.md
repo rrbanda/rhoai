@@ -134,9 +134,9 @@ Converts raw tool traces into chat-format JSONL for supervised fine-tuning:
 {"messages": [
   {"role": "system", "content": "<tool declarations>"},
   {"role": "user", "content": "What's the risk-adjusted return on my tech portfolio?"},
-  {"role": "assistant", "content": null, "tool_calls": [{"type": "function", "function": {"name": "get_portfolio_positions", "arguments": "{\"portfolio_id\": \"PORT-0001\"}"}}]},
+  {"role": "assistant", "content": "", "tool_calls": [{"type": "function", "function": {"name": "get_portfolio_positions", "arguments": "{\"portfolio_id\": \"PORT-0001\"}"}}]},
   {"role": "tool", "content": "{...}", "name": "get_portfolio_positions"},
-  {"role": "assistant", "content": null, "tool_calls": [{"type": "function", "function": {"name": "calculate_portfolio_risk", "arguments": "{\"portfolio_id\": \"PORT-0001\"}"}}]},
+  {"role": "assistant", "content": "", "tool_calls": [{"type": "function", "function": {"name": "calculate_portfolio_risk", "arguments": "{\"portfolio_id\": \"PORT-0001\"}"}}]},
   {"role": "tool", "content": "{...}", "name": "calculate_portfolio_risk"},
   {"role": "assistant", "content": "Your tech portfolio has a Sharpe ratio of..."}
 ]}

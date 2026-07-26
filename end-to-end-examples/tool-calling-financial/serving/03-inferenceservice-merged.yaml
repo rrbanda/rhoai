@@ -4,6 +4,11 @@
 # from S3-compatible storage. Use this if you prefer a simpler deployment
 # without dynamic adapter loading.
 #
+# IMPORTANT: Tool-calling args (--enable-auto-tool-choice, --tool-call-parser)
+# must be configured in the ServingRuntime, NOT here. KServe rejects
+# InferenceServices that combine both "model" and "containers" in the
+# predictor spec. Use 01-serving-runtime.yaml which includes these args.
+#
 # Before applying:
 #   1. Merge the LoRA adapter into the base model (see README Step 4B.1)
 #   2. Upload the merged model to S3 (see README Step 4B.2)
@@ -33,27 +38,16 @@ spec:
     model:
       modelFormat:
         name: vLLM
-      runtime: vllm-runtime
+      runtime: vllm-lora-runtime
       storage:
-        # Name of the Secret containing S3 credentials
-        # Create with 04-s3-data-connection.yaml or via RHOAI Dashboard
         key: aws-connection-models
-        # Path within the S3 bucket to the merged model directory
         path: models/tool-calling-financial-merged/
       resources:
         requests:
           cpu: "2"
-          memory: "16Gi"
+          memory: "10Gi"
           nvidia.com/gpu: "1"
         limits:
           cpu: "4"
-          memory: "24Gi"
+          memory: "10Gi"
           nvidia.com/gpu: "1"
-    containers:
-      - name: kserve-container
-        env:
-          - name: EXTRA_ARGS
-            value: >-
-              --enable-auto-tool-choice
-              --tool-call-parser hermes
-              --max-model-len 4096

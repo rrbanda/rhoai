@@ -207,6 +207,9 @@ api.create_namespaced_custom_object(
           storageUri: pvc://model-storage/my-model
     ```
 
+    !!! warning "For LoRA adapters, mount the PVC in the ServingRuntime instead"
+        Using `storageUri: pvc://` together with a PVC volume mount in the ServingRuntime can cause pods to hang in `ContainerCreating`. For LoRA serving, set the model path directly in the ServingRuntime `--model` arg and omit `storageUri`. See the [Tool-Calling Model Pipeline](../end-to-end/tool-calling-financial.md) and [MCP Distillation Pipeline](../end-to-end/mcp-distillation.md) for validated examples.
+
 ### Verify Deployment
 
 ```bash
