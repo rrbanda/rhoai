@@ -3,14 +3,14 @@
 Teach a model your domain knowledge — financial regulations, product documentation, medical literature — by generating synthetic Q&A training data from your documents, then fine-tuning with OSFT, SFT, or LoRA. This pipeline uses SDG Hub for data generation and Training Hub for training, then deploys the model on RHOAI with KServe + vLLM.
 
 !!! success "Validated on RHOAI 3.4.2"
-    This pipeline's training configuration has been validated on RHOAI 3.4.2 (OCP 4.18, NVIDIA L4 24GB). Key validated results:
+    This pipeline has been validated on RHOAI 3.4.2 (OCP 4.18, NVIDIA L4 24GB). Key validated results:
 
     - **SDG Hub** outputs `question`/`response` columns (not `messages`)
     - **Data mixing** correctly converts to `messages` format with `unmask: true`
     - **OSFT** uses `unfreeze_rank_ratio=0.25` (preserves general capability)
     - **LoRA SFT** option available alongside SFT and OSFT
     - **Hyperparameters** aligned: `num_epochs=4`, `learning_rate=2e-5`, `effective_batch_size=32`
-    - **Deployment** YAML follows the PVC-based pattern runtime-validated on the [MCP Distillation Pipeline](mcp-distillation.md), but has not been independently runtime-tested for knowledge tuning
+    - **Deployment** runtime-validated: base model download Job + PVC-based ServingRuntime + InferenceService with LoRA adapter loaded successfully, inference confirmed
 
 ## Pipeline Overview
 
@@ -482,10 +482,10 @@ After training completes, deploy the model on RHOAI. Two options are available:
 - **Option A (recommended):** Serve the LoRA adapter directly from the training PVC — no upload step needed
 - **Option B:** Upload to S3 and serve a fully merged model
 
-### 6.1 Option A: Serve LoRA adapter from PVC (recommended)
+### 6.1 Option A: Serve LoRA adapter from PVC (recommended, validated)
 
-!!! info "Deployment pattern"
-    This deployment uses the same PVC-based pattern that was runtime-validated on the [MCP Distillation Pipeline](mcp-distillation.md#step-6-deploy-on-rhoai). The base model is downloaded to the PVC first, then vLLM loads both the base model and LoRA adapter from the same volume. This has not been independently runtime-validated for knowledge tuning.
+!!! success "Runtime-validated on RHOAI 3.4.2"
+    This deployment pattern has been runtime-validated: base model download Job completed, vLLM loaded both base model and LoRA adapter from PVC, InferenceService reached READY state, and inference returned correct responses. Environment: OCP 4.18, g6.xlarge (1x NVIDIA L4 24GB).
 
 #### Download the base model to the PVC
 

@@ -29,7 +29,7 @@ The core pipeline (Steps 0-7) runs fully on RHOAI 3.4. RHOAI 3.5 features are ad
     - **Gemini 3.6 Flash** validated as teacher model for data generation
     - **KFP pipeline** compiled and uploaded to DSPA pipeline server
 
-    Steps 4-6 (deployment, evaluation, guardrails) have been **manifest-validated** — YAML generates correctly and passes dry-run. The deployment pattern (KServe + vLLM LoRA serving) was independently runtime-validated on the [MCP Distillation Pipeline](mcp-distillation.md).
+    Steps 4 and 5 (deployment, evaluation) have been **manifest-validated** — YAML generates correctly and passes dry-run. The deployment pattern (KServe + vLLM LoRA serving) was independently runtime-validated on the [MCP Distillation Pipeline](mcp-distillation.md) and [Knowledge Tuning Pipeline](knowledge-tuning.md). Step 6 (guardrails) has been **runtime-validated** — PII detection correctly blocked sensitive input.
 
 ## Pipeline Overview
 
@@ -708,7 +708,7 @@ The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestrat
 | KFP Pipeline | Compile → upload to DSPA pipeline server | 2,367-line YAML, pipeline visible in dashboard | Compile + upload only |
 | Model Deployment | KServe RawDeployment + vLLM | Manifest generates correctly; same pattern runtime-validated via MCP Distillation | Manifest |
 | Evaluation | Tool-use evaluation script | Manifest-validated; requires Langflow + API key | Manifest |
-| Guardrails | NemoGuardrails CR + PII regex rails | CR generates correctly | Manifest |
+| Guardrails | NemoGuardrails CR + PII regex rails | PII detection blocked SSN input; clean requests passed through | Runtime |
 
 ### Important Cluster Notes
 

@@ -26,8 +26,8 @@ graph LR
     GR --> User
 ```
 
-!!! info "Documentation source"
-    The YAML examples and CRD schemas on this page follow the [official RHOAI 3.4 guardrails documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails/index). They have not been independently runtime-validated on this project's test cluster. The [Tool-Calling Model Pipeline](../end-to-end/tool-calling-financial.md#step-6-configure-guardrails) includes manifest-validated example CRs.
+!!! success "Runtime-validated on RHOAI 3.4.2"
+    NeMo Guardrails has been runtime-validated on RHOAI 3.4.2. The NemoGuardrails CR deployed successfully, PII detection (Presidio) correctly blocked SSN-containing input ("I'm sorry, I can't respond to that"), and clean requests were passed through to the model endpoint. CRD schema follows the [official RHOAI 3.4 documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails/index).
 
 ### Core Capabilities
 
