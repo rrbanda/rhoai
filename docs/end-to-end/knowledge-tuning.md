@@ -306,7 +306,7 @@ plot_loss("./knowledge-model")
 
 ### Domain Accuracy
 
-Generate a held-out evaluation set and test the model:
+Generate a held-out evaluation set by reserving some document chunks from Step 1, then test the model:
 
 ```python
 from sdg_hub import Flow, FlowRegistry
@@ -316,6 +316,9 @@ flow = Flow.from_yaml(FlowRegistry.get_flow_path(
     "Document Based Knowledge Tuning Dataset Generation Flow"
 ))
 flow.set_model_config(model="gpt-4o-mini")
+
+# Use document chunks NOT included in training (e.g., last 20%)
+held_out_dataset = dataset.select(range(int(len(dataset) * 0.8), len(dataset)))
 eval_data = flow.generate(held_out_dataset)
 ```
 

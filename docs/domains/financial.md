@@ -99,6 +99,7 @@ Create or use a financial MCP server with tools covering portfolio management, m
 Use SDG Hub's MCP distillation flow to generate expert tool-use traces:
 
 ```python
+import pandas as pd
 from sdg_hub import Flow, FlowRegistry
 
 FlowRegistry.discover_flows()
@@ -110,6 +111,14 @@ flow.set_agent_config(
     agent_framework="langflow",
     agent_url="http://localhost:7860/api/v1/run/your-flow-id",
 )
+
+# Build the input dataset with your MCP server's tool schemas
+# See Step 0 in the Tool-Calling Pipeline for the full tool list
+tool_dataset = pd.DataFrame({
+    "tool_list": [[{"name": "get_stock_quote", "description": "...", "inputSchema": {...}}]],
+    "mcp_server_name": ["FinanceInsights Advisory Platform"],
+    "mcp_server_description": ["Financial advisory platform with 15 tools"],
+})
 
 result = flow.generate(tool_dataset)
 result.to_parquet("distillation_output.parquet")
