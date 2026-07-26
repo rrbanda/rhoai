@@ -5,7 +5,7 @@
 # compared to full-parameter SFT while retaining most quality.
 #
 # Key OSFT parameters configured here:
-#   --unfreeze-rank-ratio 0.3  -- fraction of weight-matrix directions
+#   --unfreeze-rank-ratio 0.25 -- fraction of weight-matrix directions
 #   --unmask-messages          -- compute loss over all message roles
 #   --use-liger                -- enable Liger fused kernels for lower memory
 #
@@ -49,7 +49,7 @@ spec:
       - --model-path=$(MODEL_PATH)
       - --data-path=$(DATA_PATH)
       - --ckpt-output-dir=$(CHECKPOINT_DIR)
-      - --unfreeze-rank-ratio=0.3
+      - --unfreeze-rank-ratio=0.25
       - --num-epochs=3
       - --effective-batch-size=128
       - --learning-rate=5e-6

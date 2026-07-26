@@ -83,7 +83,7 @@ osft(
     model_path="./phase1-knowledge/hf_format/samples_0",
     data_path="skills_data.jsonl",
     ckpt_output_dir="./phase2-skills",
-    unfreeze_rank_ratio=0.2,
+    unfreeze_rank_ratio=0.25,
     effective_batch_size=32,
     max_tokens_per_gpu=16384,
     max_seq_len=4096,

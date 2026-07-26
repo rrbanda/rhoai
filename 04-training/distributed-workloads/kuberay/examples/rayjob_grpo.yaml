@@ -32,8 +32,8 @@ spec:
     --data-path /mnt/storage/data/tool_call_traces.jsonl
     --ckpt-output-dir /mnt/storage/checkpoints/grpo
     --backend verl
-    --lora-r 32
-    --lora-alpha 64
+    --lora-r 16
+    --lora-alpha 8
     --num-iterations 15
     --group-size 8
     --prompt-batch-size 100

@@ -15,7 +15,74 @@ After training, deploy your model on RHOAI for inference using KServe with the v
 
 RawDeployment is the recommended mode for fine-tuned models. It provides stable, always-on endpoints with direct GPU access.
 
-### Minimal Deployment
+### Step 1: Create a ServingRuntime
+
+The ServingRuntime defines the vLLM container image, command-line flags, and volume mounts. For LoRA adapter serving, the runtime includes the PVC mount and `--enable-lora` flag. For tool-calling models, it also includes `--enable-auto-tool-choice` and `--tool-call-parser`.
+
+```yaml
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: vllm-lora-runtime
+  labels:
+    opendatahub.io/dashboard: "true"
+spec:
+  multiModel: false
+  supportedModelFormats:
+    - name: vLLM
+      autoSelect: true
+  containers:
+    - name: kserve-container
+      image: registry.redhat.io/rhaii/vllm-cuda-rhel9@sha256:5800e12b2a465f15961fcf34b645d79ed4f91ec9161eab22b1205d12682183c8
+      command: ["python", "-m", "vllm.entrypoints.openai.api_server"]
+      args:
+        - --port=8080
+        - --model=/mnt/models
+        - --served-model-name={{.Name}}
+        - --max-model-len=4096
+        - --enable-lora
+        - --lora-modules
+        - my-adapter=/mnt/lora-adapter/output
+        - --max-lora-rank=16
+        - --gpu-memory-utilization=0.90
+      env:
+        - name: HF_HUB_CACHE
+          value: /tmp/hf_cache
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+      volumeMounts:
+        - name: lora-adapter
+          mountPath: /mnt/lora-adapter
+          readOnly: true
+        - name: shm
+          mountPath: /dev/shm
+  tolerations:
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
+  volumes:
+    - name: lora-adapter
+      persistentVolumeClaim:
+        claimName: training-workspace
+    - name: shm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 4Gi
+```
+
+!!! info "Customize the runtime for your use case"
+    - Change `my-adapter` in `--lora-modules` to your model name
+    - Change `training-workspace` to your PVC name
+    - Remove `--enable-lora` and related flags if serving a fully merged model
+    - Remove `--enable-auto-tool-choice` and `--tool-call-parser` if not using tool-calling
+
+### Step 2: Create the InferenceService
+
+The InferenceService specifies only the base model, resource requirements, and which runtime to use. LoRA adapter mounts, tool-calling flags, and other vLLM configuration belong in the **ServingRuntime** (Step 1).
+
+!!! warning "Do not mix `model` and `containers` in the predictor spec"
+    KServe rejects InferenceService manifests that have both `model` and `containers` in the predictor. All container configuration (env vars, volume mounts, args) must go in the ServingRuntime.
 
 ```yaml
 apiVersion: serving.kserve.io/v1beta1
@@ -24,17 +91,27 @@ metadata:
   name: my-finetuned-model
   annotations:
     serving.kserve.io/deploymentMode: RawDeployment
+  labels:
+    opendatahub.io/dashboard: "true"
 spec:
   predictor:
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
     model:
       modelFormat:
         name: vLLM
-      runtime: vllm-runtime
-      storageUri: s3://my-bucket/models/my-finetuned-model
+      runtime: vllm-lora-runtime
+      storageUri: hf://Qwen/Qwen3-4B
       resources:
         requests:
+          cpu: "2"
+          memory: "8Gi"
           nvidia.com/gpu: "1"
         limits:
+          cpu: "3"
+          memory: "10Gi"
           nvidia.com/gpu: "1"
 ```
 
@@ -54,16 +131,19 @@ manifest = {
         "annotations": {
             "serving.kserve.io/deploymentMode": "RawDeployment",
         },
+        "labels": {
+            "opendatahub.io/dashboard": "true",
+        },
     },
     "spec": {
         "predictor": {
             "model": {
                 "modelFormat": {"name": "vLLM"},
-                "runtime": "vllm-runtime",
-                "storageUri": "s3://my-bucket/models/my-model",
+                "runtime": "vllm-lora-runtime",
+                "storageUri": "hf://Qwen/Qwen3-4B",
                 "resources": {
-                    "requests": {"nvidia.com/gpu": "1"},
-                    "limits": {"nvidia.com/gpu": "1"},
+                    "requests": {"cpu": "2", "memory": "8Gi", "nvidia.com/gpu": "1"},
+                    "limits": {"cpu": "3", "memory": "10Gi", "nvidia.com/gpu": "1"},
                 },
             },
         },
@@ -109,6 +189,15 @@ api.create_namespaced_custom_object(
       AWS_S3_BUCKET: "my-bucket"
     ```
 
+=== "HuggingFace (base model)"
+
+    ```yaml
+    spec:
+      predictor:
+        model:
+          storageUri: hf://Qwen/Qwen3-4B
+    ```
+
 === "PVC (Persistent Volume)"
 
     ```yaml
@@ -139,20 +228,15 @@ curl -X POST "$ENDPOINT/v1/chat/completions" \
 
 ## Tool-Calling Configuration
 
-If your model was trained for tool use (via [LoRA SFT](../training/lora.md) on MCP distillation traces, or [GRPO](../training/grpo.md)), enable tool-calling in vLLM:
+If your model was trained for tool use (via [LoRA SFT](../training/lora.md) on MCP distillation traces, or [GRPO](../training/grpo.md)), include the tool-calling flags in the **ServingRuntime** `args`:
 
 ```yaml
-spec:
-  predictor:
-    containers:
-      - name: kserve-container
-        env:
-          - name: EXTRA_ARGS
-            value: "--enable-auto-tool-choice --tool-call-parser hermes"
+args:
+  - --enable-auto-tool-choice
+  - --tool-call-parser=hermes
 ```
 
-!!! warning "RHOAI-specific env var"
-    The RHOAI vLLM ServingRuntime uses `EXTRA_ARGS` (not `VLLM_ARGS`) to pass additional CLI flags to vLLM. The container name must be `kserve-container` to override the default container in the ServingRuntime.
+These flags are already included in the `vllm-lora-runtime` example above. The validated configuration for RHOAI 3.4.2 uses the `hermes` parser, which works with Qwen, Granite, and Llama model families.
 
 | vLLM Argument | Purpose | Values |
 |---------------|---------|--------|
@@ -207,7 +291,16 @@ else:
 
 ## Multi-GPU / Distributed Serving
 
-For models too large for a single GPU, use tensor parallelism:
+For models too large for a single GPU, add `--tensor-parallel-size` to the ServingRuntime `args` and increase the GPU resource requests in the InferenceService:
+
+**ServingRuntime** (add to `args`):
+
+```yaml
+args:
+  - --tensor-parallel-size=4
+```
+
+**InferenceService** (increase GPU count):
 
 ```yaml
 spec:
@@ -218,11 +311,6 @@ spec:
           nvidia.com/gpu: "4"
         limits:
           nvidia.com/gpu: "4"
-    containers:
-      - name: kserve-container
-        env:
-          - name: EXTRA_ARGS
-            value: "--tensor-parallel-size 4"
 ```
 
 For cluster-scale distributed inference, see the [llm-d documentation](https://llm-d.ai).
@@ -230,5 +318,5 @@ For cluster-scale distributed inference, see the [llm-d documentation](https://l
 ## Related
 
 - [Guardrails](../guardrails/index.md) — Add safety rails before exposing the endpoint
-- [Tool-Calling Model Deployment](../end-to-end/tool-calling-financial.md#step-4-deploy-the-fine-tuned-model-on-rhoai) — Worked example with financial services
+- [Tool-Calling Model Deployment](../end-to-end/tool-calling-financial.md#step-4-deploy-the-fine-tuned-model-on-rhoai) — Worked example with validated YAML
 - [GPU Requirements](../reference/gpu-requirements.md) — Hardware planning for serving
