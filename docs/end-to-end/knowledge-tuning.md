@@ -3,13 +3,14 @@
 Teach a model your domain knowledge — financial regulations, product documentation, medical literature — by generating synthetic Q&A training data from your documents, then fine-tuning with OSFT, SFT, or LoRA. This pipeline uses SDG Hub for data generation and Training Hub for training, then deploys the model on RHOAI with KServe + vLLM.
 
 !!! success "Validated on RHOAI 3.4.2"
-    This pipeline has been validated on RHOAI 3.4.2 (OCP 4.18, NVIDIA L4 24GB). Key validated results:
+    This pipeline's training configuration has been validated on RHOAI 3.4.2 (OCP 4.18, NVIDIA L4 24GB). Key validated results:
 
     - **SDG Hub** outputs `question`/`response` columns (not `messages`)
     - **Data mixing** correctly converts to `messages` format with `unmask: true`
     - **OSFT** uses `unfreeze_rank_ratio=0.25` (preserves general capability)
     - **LoRA SFT** option available alongside SFT and OSFT
     - **Hyperparameters** aligned: `num_epochs=4`, `learning_rate=2e-5`, `effective_batch_size=32`
+    - **Deployment** YAML follows the PVC-based pattern runtime-validated on the [MCP Distillation Pipeline](mcp-distillation.md), but has not been independently runtime-tested for knowledge tuning
 
 ## Pipeline Overview
 
@@ -481,9 +482,68 @@ After training completes, deploy the model on RHOAI. Two options are available:
 - **Option A (recommended):** Serve the LoRA adapter directly from the training PVC — no upload step needed
 - **Option B:** Upload to S3 and serve a fully merged model
 
-### 6.1 Option A: Serve LoRA adapter from PVC (recommended, validated)
+### 6.1 Option A: Serve LoRA adapter from PVC (recommended)
 
-The LoRA adapter is already on the `knowledge-workspace` PVC at `/output`. Create a ServingRuntime that mounts the PVC and loads the adapter with vLLM:
+!!! info "Deployment pattern"
+    This deployment uses the same PVC-based pattern that was runtime-validated on the [MCP Distillation Pipeline](mcp-distillation.md#step-6-deploy-on-rhoai). The base model is downloaded to the PVC first, then vLLM loads both the base model and LoRA adapter from the same volume. This has not been independently runtime-validated for knowledge tuning.
+
+#### Download the base model to the PVC
+
+The LoRA adapter is already on the `knowledge-workspace` PVC at `/output` from training. vLLM also needs the base model weights. Download them to the same PVC:
+
+```bash
+cat <<'YAML' | oc apply -n knowledge-tuning -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-model
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: download
+          image: registry.redhat.io/rhoai/odh-th06-cuda130-torch210-py312-rhel9@sha256:c18bb50a0082f9258afeb95cf9d8bbc6af7a48e712a7587073f2b281ca2200b8
+          command: ["python3", "-c"]
+          args:
+            - |
+              from huggingface_hub import snapshot_download
+              import os
+              target = "/workspace/base-model"
+              os.makedirs(target, exist_ok=True)
+              snapshot_download(
+                  repo_id="Qwen/Qwen3-4B",
+                  local_dir=target,
+                  ignore_patterns=["*.gguf", "*.bin"],
+              )
+              print("Download complete!")
+          resources:
+            requests:
+              cpu: "2"
+              memory: "8Gi"
+            limits:
+              cpu: "2"
+              memory: "8Gi"
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+      volumes:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: knowledge-workspace
+YAML
+
+# Wait for download to complete (~3-5 min)
+oc wait job/download-model -n knowledge-tuning --for=condition=complete --timeout=600s
+```
+
+#### Deploy ServingRuntime and InferenceService
+
+Create a ServingRuntime that mounts the PVC and loads both the base model and LoRA adapter:
 
 ```bash
 cat <<'YAML' | oc apply -n knowledge-tuning -f -
@@ -491,89 +551,62 @@ apiVersion: serving.kserve.io/v1alpha1
 kind: ServingRuntime
 metadata:
   name: vllm-lora-runtime
-  labels:
-    opendatahub.io/dashboard: "true"
-spec:
   annotations:
-    prometheus.io/port: "8080"
-    prometheus.io/path: "/metrics"
-  multiModel: false
+    openshift.io/display-name: "vLLM LoRA Runtime"
+spec:
   supportedModelFormats:
     - name: vLLM
       autoSelect: true
+  multiModel: false
   containers:
     - name: kserve-container
       image: registry.redhat.io/rhaii/vllm-cuda-rhel9@sha256:5800e12b2a465f15961fcf34b645d79ed4f91ec9161eab22b1205d12682183c8
       command: ["python", "-m", "vllm.entrypoints.openai.api_server"]
       args:
-        - --port=8080
-        - --model=/mnt/models
-        - --served-model-name={{.Name}}
-        - --max-model-len=4096
-        - --enable-lora
-        - --lora-modules
-        - knowledge-model=/mnt/lora-adapter/output
-        - --max-lora-rank=16
-        - --gpu-memory-utilization=0.90
-      env:
-        - name: HF_HUB_CACHE
-          value: /tmp/hf_cache
+        - "--port=8080"
+        - "--model=/workspace/base-model"
+        - "--enable-lora"
+        - "--lora-modules"
+        - "knowledge-model=/workspace/output"
+        - "--max-lora-rank=64"
+        - "--max-model-len=4096"
+        - "--gpu-memory-utilization=0.90"
       ports:
         - containerPort: 8080
           protocol: TCP
       volumeMounts:
-        - name: lora-adapter
-          mountPath: /mnt/lora-adapter
-          readOnly: true
-        - name: shm
-          mountPath: /dev/shm
-  tolerations:
-    - key: nvidia.com/gpu
-      operator: Exists
-      effect: NoSchedule
+        - name: workspace
+          mountPath: /workspace
   volumes:
-    - name: lora-adapter
+    - name: workspace
       persistentVolumeClaim:
         claimName: knowledge-workspace
-    - name: shm
-      emptyDir:
-        medium: Memory
-        sizeLimit: 4Gi
-YAML
-```
-
-Then deploy the InferenceService (the base model is pulled from HuggingFace; the LoRA adapter is loaded by the runtime):
-
-```bash
-cat <<'YAML' | oc apply -n knowledge-tuning -f -
+---
 apiVersion: serving.kserve.io/v1beta1
 kind: InferenceService
 metadata:
   name: knowledge-model
   annotations:
     serving.kserve.io/deploymentMode: RawDeployment
-  labels:
-    opendatahub.io/dashboard: "true"
 spec:
   predictor:
+    model:
+      runtime: vllm-lora-runtime
+      modelFormat:
+        name: vLLM
+      resources:
+        requests:
+          cpu: "2"
+          memory: "10Gi"
+          nvidia.com/gpu: "1"
+        limits:
+          cpu: "2"
+          memory: "10Gi"
+          nvidia.com/gpu: "1"
     tolerations:
       - key: nvidia.com/gpu
         operator: Exists
         effect: NoSchedule
-    model:
-      modelFormat:
-        name: vLLM
-      runtime: vllm-lora-runtime
-      storageUri: hf://Qwen/Qwen3-4B
-      resources:
-        requests:
-          cpu: "2"
-          memory: "8Gi"
-          nvidia.com/gpu: "1"
-        limits:
-          cpu: "3"
-          memory: "10Gi"
-          nvidia.com/gpu: "1"
 YAML
 ```
 

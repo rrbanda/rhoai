@@ -2,6 +2,9 @@
 
 Evaluation is critical to knowing whether your fine-tuned model actually improved. RHOAI supports three evaluation approaches, each targeting a different model capability.
 
+!!! info "Validation status"
+    The evaluation workflows documented here have not been runtime-validated on RHOAI. They describe recommended patterns using SDG Hub and LLM-as-judge scoring. Each approach requires external dependencies (API keys, judge models, MCP servers) — see the prerequisites on each page.
+
 ## Evaluation Approaches
 
 | Approach | What it measures | When to use |

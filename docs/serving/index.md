@@ -43,8 +43,10 @@ spec:
         - --enable-lora
         - --lora-modules
         - my-adapter=/mnt/lora-adapter/output
-        - --max-lora-rank=16
+        - --max-lora-rank=64
         - --gpu-memory-utilization=0.90
+        - --enable-auto-tool-choice
+        - --tool-call-parser=hermes
       env:
         - name: HF_HUB_CACHE
           value: /tmp/hf_cache
@@ -74,6 +76,7 @@ spec:
 !!! info "Customize the runtime for your use case"
     - Change `my-adapter` in `--lora-modules` to your model name
     - Change `training-workspace` to your PVC name
+    - `--max-lora-rank=64` supports adapters up to rank 64. Lower this to match your adapter's rank if memory is tight
     - Remove `--enable-lora` and related flags if serving a fully merged model
     - Remove `--enable-auto-tool-choice` and `--tool-call-parser` if not using tool-calling
 
@@ -103,17 +106,19 @@ spec:
       modelFormat:
         name: vLLM
       runtime: vllm-lora-runtime
-      storageUri: hf://Qwen/Qwen3-4B
       resources:
         requests:
           cpu: "2"
-          memory: "8Gi"
+          memory: "10Gi"
           nvidia.com/gpu: "1"
         limits:
-          cpu: "3"
+          cpu: "2"
           memory: "10Gi"
           nvidia.com/gpu: "1"
 ```
+
+!!! tip "Base model loading"
+    When the base model is already on the PVC (pre-downloaded via a Job), the ServingRuntime's `--model` arg points to the PVC path and no `storageUri` is needed. If you prefer KServe to download the base model at startup, add `storageUri: hf://Qwen/Qwen3-4B` (or `s3://...`) to the `model` spec above.
 
 ### Deploy from Python
 
@@ -140,10 +145,9 @@ manifest = {
             "model": {
                 "modelFormat": {"name": "vLLM"},
                 "runtime": "vllm-lora-runtime",
-                "storageUri": "hf://Qwen/Qwen3-4B",
                 "resources": {
-                    "requests": {"cpu": "2", "memory": "8Gi", "nvidia.com/gpu": "1"},
-                    "limits": {"cpu": "3", "memory": "10Gi", "nvidia.com/gpu": "1"},
+                    "requests": {"cpu": "2", "memory": "10Gi", "nvidia.com/gpu": "1"},
+                    "limits": {"cpu": "2", "memory": "10Gi", "nvidia.com/gpu": "1"},
                 },
             },
         },
@@ -198,6 +202,9 @@ api.create_namespaced_custom_object(
           storageUri: hf://Qwen/Qwen3-4B
     ```
 
+    !!! note "Alternative: pre-download to PVC"
+        `storageUri: hf://` downloads the model at pod startup, which can be slow for large models and adds latency to scaling events. For production deployments, consider downloading the base model to a PVC first (via a Kubernetes Job) and setting `--model=/path/on/pvc` in the ServingRuntime. See the [MCP Distillation Pipeline](../end-to-end/mcp-distillation.md#step-6-deploy-on-rhoai) for a validated example of this pattern.
+
 === "PVC (Persistent Volume)"
 
     ```yaml
@@ -239,7 +246,7 @@ args:
   - --tool-call-parser=hermes
 ```
 
-These flags are already included in the `vllm-lora-runtime` example above. The validated configuration for RHOAI 3.4.2 uses the `hermes` parser, which works with Qwen, Granite, and Llama model families.
+These flags are already included in the `vllm-lora-runtime` example above. The recommended configuration for RHOAI 3.4+ uses the `hermes` parser, which works with Qwen, Granite, and Llama model families. This was runtime-validated on the [MCP Distillation Pipeline](../end-to-end/mcp-distillation.md).
 
 | vLLM Argument | Purpose | Values |
 |---------------|---------|--------|

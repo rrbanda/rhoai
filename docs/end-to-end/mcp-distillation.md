@@ -129,8 +129,8 @@ pd.DataFrame(training_records).to_json(
 
 ### Option A: Train locally with GRPO
 
-!!! warning "GRPO requires local installation"
-    GRPO is **not available** in the RHOAI 3.4.2 ClusterTrainingRuntime. Use this option only when running locally or in a custom container.
+!!! warning "GRPO requires local installation — not runtime-validated"
+    GRPO is **not available** in the RHOAI 3.4.2 ClusterTrainingRuntime. Use this option only when running locally or in a custom container. Local GRPO training has not been runtime-validated. If issues arise, use LoRA SFT (Option B) which has been validated on RHOAI 3.4.2.
 
 ```bash
 pip install training-hub[grpo,lora]
@@ -332,7 +332,10 @@ oc run verify-output --rm -i --restart=Never --image=busybox -n mcp-distillation
 
 Expected output includes: `adapter_config.json`, `adapter_model.safetensors` (~132MB), `tokenizer.json`, `tokenizer_config.json`, `training_metrics.jsonl`.
 
-## Step 5: Evaluate
+## Step 5: Evaluate (Optional)
+
+!!! info "Not runtime-validated"
+    This evaluation step requires Langflow, an MCP server, and a GPT-4o API key. It has not been runtime-validated on RHOAI. You can skip this step and proceed directly to [Step 6: Deploy](#step-6-deploy-on-rhoai). For details on evaluation approaches, see [Tool-Use Evaluation](../evaluation/agent-evaluation.md).
 
 Generate an evaluation benchmark and test the model's tool-use quality:
 
@@ -373,7 +376,7 @@ Evaluation metrics:
 
 ## Step 6: Deploy on RHOAI
 
-After training, deploy the LoRA adapter on RHOAI with KServe + vLLM. This uses the same validated pattern as the [Tool-Calling Model Pipeline](tool-calling-financial.md).
+After training, deploy the LoRA adapter on RHOAI with KServe + vLLM. This deployment pattern has been runtime-validated on RHOAI 3.4.2.
 
 !!! warning "Base model must be on the PVC"
     vLLM needs the base model weights at serving time. Download the base model to the PVC before deploying. Avoid using `storageUri: pvc://` with a separate model path — mount the PVC directly in the ServingRuntime and set `--model` to the PVC path.

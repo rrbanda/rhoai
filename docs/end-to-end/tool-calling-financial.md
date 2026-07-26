@@ -21,14 +21,15 @@ Fine-tune a model to make accurate tool calls by training on domain-specific dem
 The core pipeline (Steps 0-7) runs fully on RHOAI 3.4. RHOAI 3.5 features are additive enhancements.
 
 !!! success "Validated on RHOAI 3.4.2"
-    This pipeline has been validated end-to-end on RHOAI 3.4.2 (OCP 4.18, g6.xlarge / L4 24GB GPU). Key validated results:
+    This pipeline has been validated on RHOAI 3.4.2 (OCP 4.18, g6.xlarge / L4 24GB GPU). Key validated results:
 
-    - **15 MCP server tools** discovered and exercised
+    - **15 MCP server tools** discovered and exercised via FastMCP
     - **`tool_calls` format** output from data formatting (modern OpenAI spec)
-    - **LoRA SFT TrainJob** completed successfully on-cluster
-    - **KServe RawDeployment** serving with single and parallel tool calls
-    - **NeMo Guardrails** proxy operational with `tool-calling-financial` config
-    - **Gemini 3.6 Flash** as teacher model for data generation
+    - **LoRA SFT TrainJob** completed successfully on-cluster (loss 1.817 → 1.511)
+    - **Gemini 3.6 Flash** validated as teacher model for data generation
+    - **KFP pipeline** compiled and uploaded to DSPA pipeline server
+
+    Steps 4-6 (deployment, evaluation, guardrails) have been **manifest-validated** — YAML generates correctly and passes dry-run. The deployment pattern (KServe + vLLM LoRA serving) was independently runtime-validated on the [MCP Distillation Pipeline](mcp-distillation.md).
 
 ## Pipeline Overview
 
@@ -394,6 +395,9 @@ oc get trainjob tool-calling-financial-lora-sft -n tool-calling-financial
 
 The KFP pipeline wraps the same LoRA SFT algorithm in a four-stage automated pipeline. Use this when you need automatic dataset download, evaluation, and model registry as a repeatable workflow.
 
+!!! info "Validation status"
+    The KFP pipeline was successfully compiled and uploaded to the DSPA pipeline server on RHOAI 3.4.2. Pipeline **execution** was not tested due to RWX storage class requirements (the test cluster only has RWO/gp3-csi). The training logic inside the pipeline is the same `training-hub` LoRA SFT that was runtime-validated via direct TrainJob (Option B).
+
 ```bash
 # Compile the pipeline YAML
 python 03b_train_kfp_pipeline.py --compile-only
@@ -645,8 +649,12 @@ python 06_configure_guardrails.py \
   --model-endpoint https://tool-calling-financial.apps.cluster.example.com/v1
 ```
 
-- **Tier 1 (GA):** PII detection, jailbreak protection, financial disclaimers
-- **Tier 2 (3.5 TP):** MCP Gateway auto-enforcement on all tool calls
+- **Included rails (GA):** PII entity detection (SSN, email, phone via Presidio), regex-based financial data masking (account numbers)
+- **Example Colang flows:** Jailbreak detection, financial disclaimer injection — provided as templates in `guardrails/config.co`, must be activated in your `config.yaml`
+- **MCP Gateway (3.5 TP):** Auto-enforcement of guardrails on all tool calls via MCP Gateway Extension
+
+!!! info "Manifest-validated"
+    Guardrails configuration has been manifest-validated (CRs generate correctly). See the [official RHOAI 3.4 guardrails documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails/index) for the latest CRD schema.
 
 ## Step 7: Run the Deep Agent Harness (Optional)
 
@@ -691,15 +699,16 @@ The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestrat
 !!! success "Validated on RHOAI 3.4.2"
     Steps 0-3 (MCP server, data generation, formatting, training) have been **runtime-validated** on RHOAI 3.4.2. Steps 4-6 (deployment, evaluation, guardrails) have been **manifest-validated** (YAML generates correctly and passes dry-run). Full environment: OpenShift 4.18.21 on g6.xlarge (1x NVIDIA L4 24GB GPU).
 
-| Component | What Was Tested | Result |
-|-----------|----------------|--------|
-| MCP Server | 15 financial tools via FastMCP | All tools callable |
-| SDG Hub | MCP distillation flow loads, teacher model (Gemini 3.6 Flash) connects | Flow discovers 22 blocks, input dataset builds |
-| Data Formatting | Parquet → chat-format JSONL | Function-call structure validated |
-| LoRA SFT Training | Kubeflow Trainer (`training-hub` runtime), Qwen3-4B, 50 examples, 1 epoch | Loss 1.817→1.511 in 38 seconds |
-| KFP Pipeline | Compile → upload to DSPA pipeline server | 2,367-line YAML, pipeline visible in dashboard |
-| Model Deployment | KServe RawDeployment + vLLM | Manifest generates correctly |
-| Guardrails | NemoGuardrails CR | CR generates correctly |
+| Component | What Was Tested | Result | Level |
+|-----------|----------------|--------|-------|
+| MCP Server | 15 financial tools via FastMCP | All tools callable | Runtime |
+| SDG Hub | MCP distillation flow loads, teacher model (Gemini 3.6 Flash) connects | Flow discovers 22 blocks, input dataset builds | Runtime |
+| Data Formatting | Parquet → chat-format JSONL | `tool_calls` structure validated | Runtime |
+| LoRA SFT Training | Kubeflow Trainer (`training-hub` runtime), Qwen3-4B, 50 examples, 1 epoch | Loss 1.817→1.511 in 38 seconds | Runtime |
+| KFP Pipeline | Compile → upload to DSPA pipeline server | 2,367-line YAML, pipeline visible in dashboard | Compile + upload only |
+| Model Deployment | KServe RawDeployment + vLLM | Manifest generates correctly; same pattern runtime-validated via MCP Distillation | Manifest |
+| Evaluation | Tool-use evaluation script | Manifest-validated; requires Langflow + API key | Manifest |
+| Guardrails | NemoGuardrails CR + PII regex rails | CR generates correctly | Manifest |
 
 ### Important Cluster Notes
 

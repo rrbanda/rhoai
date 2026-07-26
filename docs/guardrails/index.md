@@ -26,16 +26,22 @@ graph LR
     GR --> User
 ```
 
+!!! info "Documentation source"
+    The YAML examples and CRD schemas on this page follow the [official RHOAI 3.4 guardrails documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails/index). They have not been independently runtime-validated on this project's test cluster. The [Tool-Calling Model Pipeline](../end-to-end/tool-calling-financial.md#step-6-configure-guardrails) includes manifest-validated example CRs.
+
 ### Core Capabilities
 
 | Capability | Type | Description |
 |-----------|------|-------------|
+| PII detection (Presidio) | Input + output | Detects entities like SSN, email, phone numbers |
+| Regex-based rails | Input + output | Pattern matching for domain-specific data (account numbers, routing numbers) |
 | Jailbreak detection | Input rail | Blocks prompt injection and adversarial inputs |
-| PII detection & masking | Input + output | Detects and masks SSNs, account numbers, etc. |
 | Content safety | Output rail | Blocks harmful, biased, or off-topic responses |
 | Topic control | Input rail | Restricts the model to approved topics |
-| Regex-based rails | Input + output | Pattern matching for domain-specific data (account numbers, routing numbers) |
 | Custom Colang flows | Both | Programmable compliance logic in Colang 2.0 |
+
+!!! note "Activating rails"
+    PII detection (via Presidio) and regex rails are ready to use — add them to the `flows` section of your `config.yaml`. Jailbreak detection, content safety, topic control, and custom Colang flows require additional configuration — write Colang 2.0 flow definitions and activate them in `config.yaml`. See the [Custom Compliance Flows](#custom-compliance-flows-colang-20) section below for examples.
 
 ### Configuration
 
