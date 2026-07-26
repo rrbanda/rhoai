@@ -7,7 +7,7 @@
 # Alternatively, create this via RHOAI Dashboard → Data connections → Add.
 #
 # Apply:
-#   oc apply -f 04-s3-data-connection.yaml -n financial-agent
+#   oc apply -f 04-s3-data-connection.yaml -n tool-calling-financial
 ---
 apiVersion: v1
 kind: Secret

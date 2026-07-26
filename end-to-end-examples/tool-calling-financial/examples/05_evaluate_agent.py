@@ -1,4 +1,4 @@
-"""Evaluate a fine-tuned financial agent's tool-calling accuracy.
+"""Evaluate a fine-tuned tool-calling financial model's tool-calling accuracy.
 
 Generates a financial benchmark by connecting to the FinanceInsights MCP server
 and running the MCP distillation flow at multiple complexity levels, then
@@ -19,7 +19,7 @@ Usage:
     export JUDGE_MODEL="openai/gpt-4o"
 
     python 05_evaluate_agent.py \\
-        --model-endpoint http://financial-agent-lora-predictor.financial-agent.svc.cluster.local:8080 \\
+        --model-endpoint http://tool-calling-financial-lora-predictor.tool-calling-financial.svc.cluster.local:8080 \\
         --mcp-server-url http://localhost:8009 \\
         --output evaluation_results.json
 
@@ -350,7 +350,7 @@ def submit_to_evalhub(results_df: pd.DataFrame, model_name: str) -> bool:
         client = EvalHubClient(url=evalhub_url, api_key=evalhub_api_key)
         client.submit_evaluation(
             model=model_name,
-            task="financial-agent-tool-calling",
+            task="tool-calling-financial-tool-calling",
             results=results_df.to_dict("records"),
         )
         print(f"  Submitted {len(results_df)} results to EvalHub.")
@@ -369,14 +369,14 @@ def submit_to_evalhub(results_df: pd.DataFrame, model_name: str) -> bool:
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Evaluate a fine-tuned financial agent's tool-calling accuracy.",
+        description="Evaluate a fine-tuned tool-calling financial model's tool-calling accuracy.",
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog=__doc__,
     )
     parser.add_argument(
         "--model-endpoint",
         required=True,
-        help="vLLM endpoint URL (e.g. http://financial-agent-lora-predictor.financial-agent.svc.cluster.local:8080)",
+        help="vLLM endpoint URL (e.g. http://tool-calling-financial-lora-predictor.tool-calling-financial.svc.cluster.local:8080)",
     )
     parser.add_argument(
         "--mcp-server-url",
@@ -422,7 +422,7 @@ def main() -> None:
         sys.exit(1)
 
     print("=" * 60)
-    print("Financial Agent — Tool-Calling Evaluation")
+    print("tool-calling financial model — Tool-Calling Evaluation")
     print("=" * 60)
     print(f"  Model endpoint:   {args.model_endpoint}")
     print(f"  Judge model:      {judge_model}")
@@ -592,7 +592,7 @@ def main() -> None:
 
     # -- EvalHub submission (optional) ----------------------------------------
     if args.use_evalhub:
-        model_name = args.model_endpoint.split("/")[-1] or "financial-agent"
+        model_name = args.model_endpoint.split("/")[-1] or "tool-calling-financial"
         submit_to_evalhub(results_df, model_name)
 
     print("\nEvaluation complete.")

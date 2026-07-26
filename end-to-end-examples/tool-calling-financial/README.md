@@ -19,7 +19,7 @@ Fine-tune a small language model (Qwen3-4B) to make accurate tool calls for fina
 
 ## Architecture
 
-![Financial Agent Architecture](docs/architecture.png)
+![tool-calling financial model Architecture](docs/architecture.png)
 
 ## What You Will Build
 
@@ -48,7 +48,7 @@ Both use the same algorithm (LoRA + SFT via Unsloth backend) and produce identic
 ## Directory Structure
 
 ```
-financial-agent/
+tool-calling-financial/
 ├── README.md                               This guide
 ├── demo_server/
 │   ├── server.py                           FastMCP financial server (15 tools)
@@ -89,7 +89,7 @@ financial-agent/
 First, create the namespace where all resources will be deployed:
 
 ```bash
-oc new-project financial-agent
+oc new-project tool-calling-financial
 ```
 
 Then start the server:
@@ -178,7 +178,7 @@ oc get clustertrainingruntimes training-hub
 **Step 3B.1:** Create workspace PVC and training script ConfigMap:
 
 ```bash
-cat <<'YAML' | oc apply -n financial-agent -f -
+cat <<'YAML' | oc apply -n tool-calling-financial -f -
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -268,11 +268,11 @@ YAML
 **Step 3B.2:** Create the TrainJob:
 
 ```bash
-cat <<'YAML' | oc apply -n financial-agent -f -
+cat <<'YAML' | oc apply -n tool-calling-financial -f -
 apiVersion: trainer.kubeflow.org/v1alpha1
 kind: TrainJob
 metadata:
-  name: financial-agent-lora-sft
+  name: tool-calling-financial-lora-sft
 spec:
   runtimeRef:
     name: training-hub
@@ -326,10 +326,10 @@ YAML
 
 ```bash
 # Watch the pod start
-oc get pods -n financial-agent -l job-name=financial-agent-lora-sft-node-0 -w
+oc get pods -n tool-calling-financial -l job-name=tool-calling-financial-lora-sft-node-0 -w
 
 # Stream logs once Running
-oc logs -f -l job-name=financial-agent-lora-sft-node-0 -n financial-agent
+oc logs -f -l job-name=tool-calling-financial-lora-sft-node-0 -n tool-calling-financial
 ```
 
 Expected output (validated on RHOAI 3.4.2 with L4 GPU):
@@ -350,7 +350,7 @@ Training complete!
 **Step 3B.4:** Verify and retrieve:
 
 ```bash
-oc get trainjob financial-agent-lora-sft -n financial-agent
+oc get trainjob tool-calling-financial-lora-sft -n tool-calling-financial
 # The LoRA adapter is saved in the PVC at /workspace/output
 ```
 
@@ -431,7 +431,7 @@ oc get servingruntimes -n redhat-ods-applications | grep vllm
 # Expected: vllm-runtime-...
 ```
 
-> If the vLLM runtime is not listed, enable it via **RHOAI Dashboard → Settings → Serving runtimes → vLLM ServingRuntime for KServe**, or apply the provided manifest: `oc apply -f serving/01-serving-runtime.yaml -n financial-agent`
+> If the vLLM runtime is not listed, enable it via **RHOAI Dashboard → Settings → Serving runtimes → vLLM ServingRuntime for KServe**, or apply the provided manifest: `oc apply -f serving/01-serving-runtime.yaml -n tool-calling-financial`
 
 #### 4.2 Option A: Serve the LoRA adapter directly (recommended)
 
@@ -441,23 +441,23 @@ vLLM natively supports LoRA adapters without merging. The base model (Qwen3-4B) 
 
 ```bash
 # Apply the InferenceService
-oc apply -f serving/02-inferenceservice-lora.yaml -n financial-agent
+oc apply -f serving/02-inferenceservice-lora.yaml -n tool-calling-financial
 
 # Expose the endpoint externally
-oc apply -f serving/05-route.yaml -n financial-agent
+oc apply -f serving/05-route.yaml -n tool-calling-financial
 ```
 
 **Monitor readiness:**
 
 ```bash
 # Watch until READY=True (typically 2-5 minutes for initial model download)
-oc get inferenceservice financial-agent-lora -n financial-agent -w
+oc get inferenceservice tool-calling-financial-lora -n tool-calling-financial -w
 
 # Check predictor pod
-oc get pods -n financial-agent -l serving.kserve.io/inferenceservice=financial-agent-lora
+oc get pods -n tool-calling-financial -l serving.kserve.io/inferenceservice=tool-calling-financial-lora
 
 # Stream vLLM startup logs
-oc logs -f deployment/financial-agent-lora-predictor -n financial-agent
+oc logs -f deployment/tool-calling-financial-lora-predictor -n tool-calling-financial
 ```
 
 Model is ready when logs show:
@@ -470,7 +470,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8080
 **Get the inference endpoint:**
 
 ```bash
-ROUTE_URL=$(oc get route financial-agent -n financial-agent -o jsonpath='{.spec.host}')
+ROUTE_URL=$(oc get route tool-calling-financial -n tool-calling-financial -o jsonpath='{.spec.host}')
 echo "Inference endpoint: https://${ROUTE_URL}"
 ```
 
@@ -480,7 +480,7 @@ echo "Inference endpoint: https://${ROUTE_URL}"
 curl -sk "https://${ROUTE_URL}/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "financial-agent",
+    "model": "tool-calling-financial",
     "messages": [{"role": "user", "content": "What is the current price of AAPL?"}],
     "tools": [{
       "type": "function",
@@ -541,23 +541,23 @@ AutoTokenizer.from_pretrained("Qwen/Qwen3-4B").save_pretrained("/workspace/merge
 **Step 4B.2:** Upload to S3:
 
 ```bash
-aws s3 sync /workspace/merged-model s3://your-bucket/models/financial-agent-merged/
+aws s3 sync /workspace/merged-model s3://your-bucket/models/tool-calling-financial-merged/
 ```
 
 **Step 4B.3:** Create the data connection and deploy:
 
 ```bash
 # Edit 04-s3-data-connection.yaml with your S3 credentials
-oc apply -f serving/04-s3-data-connection.yaml -n financial-agent
+oc apply -f serving/04-s3-data-connection.yaml -n tool-calling-financial
 
 # Edit storage.path in 03-inferenceservice-merged.yaml to match your S3 path
-oc apply -f serving/03-inferenceservice-merged.yaml -n financial-agent
+oc apply -f serving/03-inferenceservice-merged.yaml -n tool-calling-financial
 
-# Expose externally (update service name in 05-route.yaml to financial-agent-merged-predictor)
-oc apply -f serving/05-route.yaml -n financial-agent
+# Expose externally (update service name in 05-route.yaml to tool-calling-financial-merged-predictor)
+oc apply -f serving/05-route.yaml -n tool-calling-financial
 ```
 
-**Step 4B.4:** Monitor and verify using the same commands from Option A (replace `financial-agent-lora` with `financial-agent-merged`).
+**Step 4B.4:** Monitor and verify using the same commands from Option A (replace `tool-calling-financial-lora` with `tool-calling-financial-merged`).
 
 ### Step 5: Evaluate
 
@@ -565,7 +565,7 @@ oc apply -f serving/05-route.yaml -n financial-agent
 
 ```bash
 python 05_evaluate_agent.py \
-  --model-endpoint http://financial-agent-lora-predictor.financial-agent.svc.cluster.local:8080 \
+  --model-endpoint http://tool-calling-financial-lora-predictor.tool-calling-financial.svc.cluster.local:8080 \
   --output evaluation_results.json
 ```
 
@@ -601,7 +601,7 @@ python 06_configure_guardrails.py
 ```bash
 pip install deepagents langchain-openai langgraph-cli[inmem]
 
-export MODEL_ENDPOINT=https://financial-agent-predictor.apps.your-cluster.com/v1
+export MODEL_ENDPOINT=https://tool-calling-financial-predictor.apps.your-cluster.com/v1
 
 cd examples/
 langgraph dev

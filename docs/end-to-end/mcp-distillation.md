@@ -48,6 +48,16 @@ def get_product(product_id: int) -> dict | None:
 
 ## Step 2: Generate Tool-Use Traces
 
+!!! tip "Skip this step with sample data"
+    The repository includes pre-generated sample data in `examples/sample_data/`. To jump straight to training:
+
+    ```bash
+    # Use the included sample data — no Langflow or API keys needed
+    python 03_train_grpo.py --data-path sample_data/training_data.jsonl
+    ```
+
+    Then continue from [Step 4](#step-4-train-with-grpo). Use this path to validate the full train → deploy → serve pipeline before investing in Langflow setup.
+
 Use SDG Hub's MCP distillation flow. The teacher LLM explores your MCP server, discovering tools and generating realistic usage scenarios:
 
 ```python
@@ -138,6 +148,163 @@ lora_grpo(
 
 !!! info "GRPO vs LoRA SFT for tool-use"
     GRPO learns from verifiable rewards (did the tool call succeed?) rather than just imitating examples. This can produce models that generalize better to unseen tool combinations. However, LoRA SFT on expert traces is faster to train, simpler to set up, and has a [validated pipeline on RHOAI](tool-calling-financial.md). Use GRPO when you want reward-based exploration; use LoRA SFT when you have high-quality expert demonstrations from MCP distillation.
+
+### Training on RHOAI with TrainJob
+
+The RHOAI-native approach uses the **Kubeflow Trainer** with the pre-installed `training-hub` ClusterTrainingRuntime. This runs directly on GPU nodes with no local Python environment required.
+
+**Prerequisite:** Verify the Trainer is enabled and the runtime exists:
+
+```bash
+oc get dsc default-dsc -o jsonpath='{.spec.components.trainer.managementState}' && echo
+# Expected: Managed
+
+oc get clustertrainingruntimes training-hub
+# Expected: training-hub   (pre-installed by RHOAI 3.4+)
+```
+
+#### Create namespace and workspace PVC
+
+```bash
+oc new-project mcp-distillation
+
+cat <<'YAML' | oc apply -n mcp-distillation -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: grpo-workspace
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: gp3-csi
+  resources:
+    requests:
+      storage: 50Gi
+YAML
+```
+
+#### Create the training script ConfigMap
+
+```bash
+cat <<'YAML' | oc apply -n mcp-distillation -f -
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: grpo-train-script
+data:
+  train.py: |
+    """GRPO training via Training Hub on RHOAI."""
+    import os, sys
+
+    WORKSPACE = os.environ.get("WORKSPACE_PATH", "/workspace")
+    DATA_DIR = os.path.join(WORKSPACE, "data")
+    OUTPUT_DIR = os.path.join(WORKSPACE, "output")
+    os.makedirs(OUTPUT_DIR, exist_ok=True)
+
+    data_path = os.path.join(DATA_DIR, "training_data.jsonl")
+    if not os.path.isfile(data_path):
+        print(f"ERROR: Training data not found at {data_path}")
+        print("Upload your training data to the PVC first.")
+        sys.exit(1)
+
+    with open(data_path) as f:
+        count = sum(1 for _ in f)
+    print(f"Found {count} training examples at {data_path}")
+
+    from training_hub import lora_grpo
+    lora_grpo(
+        model_path=os.environ.get("MODEL_PATH", "Qwen/Qwen3-4B"),
+        data_path=data_path,
+        ckpt_output_dir=OUTPUT_DIR,
+        lora_r=16,
+        lora_alpha=8,
+        num_iterations=15,
+        group_size=8,
+        backend="art",
+    )
+    print(f"Training complete. Output saved to: {OUTPUT_DIR}")
+YAML
+```
+
+#### Upload training data to the PVC
+
+```bash
+oc run copy-data --rm -i --restart=Never --image=busybox \
+  -n mcp-distillation \
+  --overrides='{"spec":{"containers":[{"name":"copy","image":"busybox","command":["sh","-c","mkdir -p /workspace/data && cat > /workspace/data/training_data.jsonl"],"stdin":true,"volumeMounts":[{"mountPath":"/workspace","name":"ws"}]}],"volumes":[{"name":"ws","persistentVolumeClaim":{"claimName":"grpo-workspace"}}]}}' \
+  < training_data.jsonl
+```
+
+#### Submit the TrainJob
+
+```bash
+cat <<'YAML' | oc apply -n mcp-distillation -f -
+apiVersion: trainer.kubeflow.org/v1alpha1
+kind: TrainJob
+metadata:
+  name: mcp-distillation-grpo
+spec:
+  runtimeRef:
+    name: training-hub
+    apiGroup: trainer.kubeflow.org
+    kind: ClusterTrainingRuntime
+  trainer:
+    command:
+      - python
+      - /scripts/train.py
+    numNodes: 1
+    resourcesPerNode:
+      requests:
+        cpu: "2"
+        memory: "16Gi"
+        nvidia.com/gpu: "1"
+      limits:
+        cpu: "2"
+        memory: "16Gi"
+        nvidia.com/gpu: "1"
+    env:
+      - name: WORKSPACE_PATH
+        value: /workspace
+      - name: MODEL_PATH
+        value: Qwen/Qwen3-4B
+  podTemplateOverrides:
+    - targetJobs:
+        - name: node
+      spec:
+        tolerations:
+          - key: nvidia.com/gpu
+            operator: Exists
+            effect: NoSchedule
+        volumes:
+          - name: workspace
+            persistentVolumeClaim:
+              claimName: grpo-workspace
+          - name: scripts
+            configMap:
+              name: grpo-train-script
+        containers:
+          - name: node
+            volumeMounts:
+              - name: workspace
+                mountPath: /workspace
+              - name: scripts
+                mountPath: /scripts
+YAML
+```
+
+!!! note "GPU memory for GRPO"
+    GRPO generates multiple completions per prompt (group_size=8), requiring more memory than LoRA SFT. With QLoRA 4-bit quantization, `Qwen/Qwen3-4B` fits on a single L4 24GB. For larger models, increase to an L40 or A100 and consider the `verl` backend with `numNodes > 1`.
+
+#### Monitor and verify
+
+```bash
+oc get trainjob mcp-distillation-grpo -n mcp-distillation -w
+oc logs -f job/mcp-distillation-grpo-node -n mcp-distillation
+
+# Verify checkpoint output
+oc run check --rm -i --restart=Never --image=busybox \
+  -n mcp-distillation \
+  --overrides='{"spec":{"containers":[{"name":"check","image":"busybox","command":["ls","-la","/workspace/output/"],"volumeMounts":[{"mountPath":"/workspace","name":"ws"}]}],"volumes":[{"name":"ws","persistentVolumeClaim":{"claimName":"grpo-workspace"}}]}}'
+```
 
 ## Step 5: Evaluate
 

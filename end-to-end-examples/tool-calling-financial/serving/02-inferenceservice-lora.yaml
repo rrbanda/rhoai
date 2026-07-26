@@ -14,16 +14,16 @@
 #   - training-workspace PVC exists with adapter at /output (from Step 3)
 #
 # Apply:
-#   oc apply -f 01-serving-runtime.yaml -n financial-agent
-#   oc apply -f 02-inferenceservice-lora.yaml -n financial-agent
+#   oc apply -f 01-serving-runtime.yaml -n tool-calling-financial
+#   oc apply -f 02-inferenceservice-lora.yaml -n tool-calling-financial
 #
 # Monitor:
-#   oc get inferenceservice financial-agent-lora -n financial-agent -w
+#   oc get inferenceservice tool-calling-financial-lora -n tool-calling-financial -w
 ---
 apiVersion: serving.kserve.io/v1beta1
 kind: InferenceService
 metadata:
-  name: financial-agent-lora
+  name: tool-calling-financial-lora
   annotations:
     serving.kserve.io/deploymentMode: RawDeployment
   labels:

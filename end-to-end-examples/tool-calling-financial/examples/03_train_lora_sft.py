@@ -180,7 +180,7 @@ def main() -> None:
     load_in_4bit = args.load_in_4bit and not args.no_4bit
 
     print("=" * 60)
-    print("Financial Agent — LoRA SFT Training")
+    print("Tool-Calling Financial Model — LoRA SFT Training")
     print("=" * 60)
     print(f"  Base model:       {student_model}")
     print(f"  Training data:    {data_path} ({n_examples} examples)")

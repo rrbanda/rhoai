@@ -2,7 +2,7 @@
 
 This script compiles and uploads the official LoRA training pipeline from
 red-hat-data-services/pipelines-components, then creates a pipeline run
-with parameters configured for the financial agent use case.
+with parameters configured for the tool-calling financial model use case.
 
 The pipeline executes four stages on the RHOAI cluster:
   1. Dataset Download — fetches training data from HuggingFace or S3
@@ -30,11 +30,11 @@ Usage:
     python 03b_train_kfp_pipeline.py \\
         --dataset-uri hf://LipengCS/Table-GPT:All \\
         --base-model Qwen/Qwen3-4B \\
-        --namespace financial-agent
+        --namespace tool-calling-financial
 
     # With local SDG data pushed to S3:
     python 03b_train_kfp_pipeline.py \\
-        --dataset-uri s3://my-bucket/financial-agent/training_data.jsonl \\
+        --dataset-uri s3://my-bucket/tool-calling-financial/training_data.jsonl \\
         --base-model Qwen/Qwen3-4B
 """
 
@@ -125,7 +125,7 @@ def parse_args() -> argparse.Namespace:
         "--namespace",
         type=str,
         default=None,
-        help="RHOAI namespace (default: OPENSHIFT_NAMESPACE env or financial-agent)",
+        help="RHOAI namespace (default: OPENSHIFT_NAMESPACE env or tool-calling-financial)",
     )
     parser.add_argument(
         "--registry-address",
@@ -199,7 +199,7 @@ def upload_and_run(yaml_path: Path, args: argparse.Namespace) -> None:
         print("ERROR: kfp package required. Install with: pip install kfp==2.15.2")
         sys.exit(1)
 
-    namespace = args.namespace or os.environ.get("OPENSHIFT_NAMESPACE", "financial-agent")
+    namespace = args.namespace or os.environ.get("OPENSHIFT_NAMESPACE", "tool-calling-financial")
     base_model = args.base_model or os.environ.get("STUDENT_MODEL", "Qwen/Qwen3-4B")
 
     kfp_endpoint = os.environ.get("KFP_ENDPOINT")
@@ -214,8 +214,8 @@ def upload_and_run(yaml_path: Path, args: argparse.Namespace) -> None:
     print(f"Uploading pipeline from {yaml_path}...")
     pipeline = kfp_client.upload_pipeline(
         pipeline_package_path=str(yaml_path),
-        pipeline_name="financial-agent-lora-training",
-        description="LoRA fine-tuning pipeline for the financial agent",
+        pipeline_name="tool-calling-financial-lora-training",
+        description="LoRA fine-tuning pipeline for the tool-calling financial model",
     )
 
     params = {
@@ -231,7 +231,7 @@ def upload_and_run(yaml_path: Path, args: argparse.Namespace) -> None:
         "phase_02_train_opt_lr_scheduler": "cosine",
         "phase_03_eval_man_eval_tasks": args.eval_tasks,
         "phase_04_registry_man_address": args.registry_address,
-        "phase_04_registry_man_reg_name": "financial-agent-lora",
+        "phase_04_registry_man_reg_name": "tool-calling-financial-lora",
     }
 
     print(f"\nCreating pipeline run...")
@@ -244,8 +244,8 @@ def upload_and_run(yaml_path: Path, args: argparse.Namespace) -> None:
     run = kfp_client.create_run_from_pipeline_package(
         pipeline_file=str(yaml_path),
         arguments=params,
-        run_name=f"financial-agent-lora-{base_model.split('/')[-1]}",
-        experiment_name="financial-agent",
+        run_name=f"tool-calling-financial-lora-{base_model.split('/')[-1]}",
+        experiment_name="tool-calling-financial",
         namespace=namespace,
     )
 
@@ -267,7 +267,7 @@ def main() -> None:
     args = parse_args()
 
     print("=" * 60)
-    print("Financial Agent — LoRA KFP Pipeline on RHOAI")
+    print("tool-calling financial model — LoRA KFP Pipeline on RHOAI")
     print("=" * 60)
 
     if args.pipeline_yaml:

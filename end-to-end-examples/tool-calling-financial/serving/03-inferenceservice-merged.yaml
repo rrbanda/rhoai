@@ -11,15 +11,15 @@
 #   4. Update the storage.path below to match your S3 path
 #
 # Apply:
-#   oc apply -f 03-inferenceservice-merged.yaml -n financial-agent
+#   oc apply -f 03-inferenceservice-merged.yaml -n tool-calling-financial
 #
 # Monitor:
-#   oc get inferenceservice financial-agent-merged -n financial-agent -w
+#   oc get inferenceservice tool-calling-financial-merged -n tool-calling-financial -w
 ---
 apiVersion: serving.kserve.io/v1beta1
 kind: InferenceService
 metadata:
-  name: financial-agent-merged
+  name: tool-calling-financial-merged
   annotations:
     serving.kserve.io/deploymentMode: RawDeployment
   labels:
@@ -39,7 +39,7 @@ spec:
         # Create with 04-s3-data-connection.yaml or via RHOAI Dashboard
         key: aws-connection-models
         # Path within the S3 bucket to the merged model directory
-        path: models/financial-agent-merged/
+        path: models/tool-calling-financial-merged/
       resources:
         requests:
           cpu: "2"

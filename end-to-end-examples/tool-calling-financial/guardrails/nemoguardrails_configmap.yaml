@@ -9,15 +9,15 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: financial-guardrails-config
-  namespace: financial-agent  # Change to your namespace if different
+  namespace: tool-calling-financial  # Change to your namespace if different
 data:
   config.yaml: |
     models:
       - type: main
         engine: openai
         parameters:
-          openai_api_base: "http://financial-agent-lora-predictor.financial-agent.svc.cluster.local:8080/v1"
-          model_name: "financial-agent"
+          openai_api_base: "http://tool-calling-financial-lora-predictor.tool-calling-financial.svc.cluster.local:8080/v1"
+          model_name: "tool-calling-financial"
     rails:
       config:
         sensitive_data_detection:

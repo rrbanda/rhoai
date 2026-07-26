@@ -32,7 +32,7 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 
-_DEFAULT_NAMESPACE = "financial-agent"
+_DEFAULT_NAMESPACE = "tool-calling-financial"
 _READY_TIMEOUT = 300
 _POLL_INTERVAL = 10
 
@@ -44,7 +44,7 @@ _GATEWAY_PLURAL = "mcpgatewayextensions"
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Deploy NeMo Guardrails for the financial agent on RHOAI 3.4+.",
+        description="Deploy NeMo Guardrails for the tool-calling financial model on RHOAI 3.4+.",
     )
     parser.add_argument(
         "--model-endpoint",
@@ -164,17 +164,17 @@ def build_nemoguardrails_cr(
         "apiVersion": f"{_CRD_GROUP}/{_CRD_VERSION}",
         "kind": "NemoGuardrails",
         "metadata": {
-            "name": "financial-agent-guardrails",
+            "name": "tool-calling-financial-guardrails",
             "namespace": namespace,
             "labels": {
-                "app.kubernetes.io/part-of": "financial-agent",
+                "app.kubernetes.io/part-of": "tool-calling-financial",
                 "app.kubernetes.io/managed-by": "rhoai-examples",
             },
         },
         "spec": {
             "nemoConfigs": [
                 {
-                    "name": "financial-agent",
+                    "name": "tool-calling-financial",
                     "default": True,
                     "configMaps": ["financial-guardrails-config"],
                 }
@@ -201,14 +201,14 @@ def build_mcpgateway_extension_cr(
             "name": "financial-mcp-gateway",
             "namespace": namespace,
             "labels": {
-                "app.kubernetes.io/part-of": "financial-agent",
+                "app.kubernetes.io/part-of": "tool-calling-financial",
                 "app.kubernetes.io/managed-by": "rhoai-examples",
             },
         },
         "spec": {
             "mcpServerUrl": mcp_server_url,
             "guardrailsRef": {
-                "name": "financial-agent-guardrails",
+                "name": "tool-calling-financial-guardrails",
                 "namespace": namespace,
             },
         },
@@ -283,7 +283,7 @@ def test_guardrails_endpoint(endpoint: str) -> None:
     """Send a test query through the guardrails check endpoint."""
     checks_url = f"{endpoint}/v1/guardrail/checks"
     payload = {
-        "model": "financial-agent",
+        "model": "tool-calling-financial",
         "messages": [
             {
                 "role": "user",
@@ -318,7 +318,7 @@ def main() -> None:
         sys.exit(1)
 
     print("=" * 60)
-    print("Configure NeMo Guardrails — Financial Agent")
+    print("Configure NeMo Guardrails — tool-calling financial model")
     print("=" * 60)
     print(f"  Model endpoint:     {args.model_endpoint}")
     print(f"  Namespace:          {namespace}")

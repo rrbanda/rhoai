@@ -4,14 +4,14 @@
 apiVersion: trustyai.opendatahub.io/v1alpha1
 kind: NemoGuardrails
 metadata:
-  name: financial-agent-guardrails
-  namespace: financial-agent  # Change to your namespace if different
+  name: tool-calling-financial-guardrails
+  namespace: tool-calling-financial  # Change to your namespace if different
   labels:
-    app.kubernetes.io/part-of: financial-agent
+    app.kubernetes.io/part-of: tool-calling-financial
 spec:
   # Reference the ConfigMap(s) containing config.yaml + rails.co
   nemoConfigs:
-    - name: financial-agent
+    - name: tool-calling-financial
       default: true
       configMaps:
         - financial-guardrails-config

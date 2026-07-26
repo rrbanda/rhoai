@@ -34,7 +34,7 @@ Quick start:
   4. Headless:   python 07_deep_agent.py
 
 Environment variables:
-  MODEL_ENDPOINT    vLLM endpoint URL (e.g. https://financial-agent.apps.cluster.com/v1)
+  MODEL_ENDPOINT    vLLM endpoint URL (e.g. https://tool-calling-financial.apps.cluster.com/v1)
   MODEL_NAME        Model name at the endpoint (default: default)
   MCP_SERVER_URL    MCP server URL (default: http://localhost:8009/mcp)
   OPENAI_API_KEY    API key for the vLLM endpoint (default: not-needed)

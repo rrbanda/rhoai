@@ -27,7 +27,7 @@ The core pipeline (Steps 0-7) runs fully on RHOAI 3.4. RHOAI 3.5 features are ad
     - **`tool_calls` format** output from data formatting (modern OpenAI spec)
     - **LoRA SFT TrainJob** completed successfully on-cluster
     - **KServe RawDeployment** serving with single and parallel tool calls
-    - **NeMo Guardrails** proxy operational with `financial-agent` config
+    - **NeMo Guardrails** proxy operational with `tool-calling-financial` config
     - **Gemini 3.6 Flash** as teacher model for data generation
 
 ## Pipeline Overview
@@ -53,7 +53,7 @@ graph LR
 
 ```bash
 git clone https://github.com/rrbanda/rhoai.git
-cd rhoai/end-to-end-examples/financial-agent/
+cd rhoai/end-to-end-examples/tool-calling-financial/
 
 # Install dependencies
 cd examples/
@@ -69,7 +69,7 @@ cp .env.example .env
 First, create the namespace where all resources will be deployed:
 
 ```bash
-oc new-project financial-agent
+oc new-project tool-calling-financial
 ```
 
 The demo server provides 15 financial tools organized into domains — groups of tools covering portfolio management, market data, risk analysis, and trade execution.
@@ -112,7 +112,7 @@ python server.py
     3. **Teacher model API key** (Gemini 3.6 Flash recommended for cost)
 
     ```bash
-    cd end-to-end-examples/financial-agent/examples/
+    cd end-to-end-examples/tool-calling-financial/examples/
     cp .env.example .env
     # Edit .env: set TEACHER_API_KEY, LANGFLOW_URL
 
@@ -190,8 +190,8 @@ oc get clustertrainingruntimes training-hub
     ```bash
     # Copy your Step 2 output to the training PVC
     oc cp generated_data/training_data.jsonl \
-      $(oc get pod -l job-name=copy-data -o name -n financial-agent):/workspace/data/training_data.jsonl \
-      -n financial-agent
+      $(oc get pod -l job-name=copy-data -o name -n tool-calling-financial):/workspace/data/training_data.jsonl \
+      -n tool-calling-financial
     ```
 
     Then modify the ConfigMap script to skip the HuggingFace download and read directly from `/workspace/data/training_data.jsonl`.
@@ -199,7 +199,7 @@ oc get clustertrainingruntimes training-hub
 #### Step 3B.1: Create the workspace PVC and training script
 
 ```bash
-cat <<'YAML' | oc apply -n financial-agent -f -
+cat <<'YAML' | oc apply -n tool-calling-financial -f -
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -289,11 +289,11 @@ YAML
 #### Step 3B.2: Create the TrainJob
 
 ```bash
-cat <<'YAML' | oc apply -n financial-agent -f -
+cat <<'YAML' | oc apply -n tool-calling-financial -f -
 apiVersion: trainer.kubeflow.org/v1alpha1
 kind: TrainJob
 metadata:
-  name: financial-agent-lora-sft
+  name: tool-calling-financial-lora-sft
 spec:
   runtimeRef:
     name: training-hub
@@ -351,10 +351,10 @@ YAML
 
 ```bash
 # Watch the pod start
-oc get pods -n financial-agent -l job-name=financial-agent-lora-sft-node-0 -w
+oc get pods -n tool-calling-financial -l job-name=tool-calling-financial-lora-sft-node-0 -w
 
 # Once Running, stream the logs
-oc logs -f -l job-name=financial-agent-lora-sft-node-0 -n financial-agent
+oc logs -f -l job-name=tool-calling-financial-lora-sft-node-0 -n tool-calling-financial
 ```
 
 Expected output:
@@ -382,7 +382,7 @@ Training complete!
 
 ```bash
 # Verify TrainJob completed
-oc get trainjob financial-agent-lora-sft -n financial-agent
+oc get trainjob tool-calling-financial-lora-sft -n tool-calling-financial
 
 # The LoRA adapter is saved in the PVC at /workspace/output
 # To use it for deployment, copy to S3 or a model registry
@@ -443,7 +443,7 @@ oc create secret generic kubernetes-credentials \
 
 **RHOAI Feature:** KServe RawDeployment (GA) + vLLM ServingRuntime (GA)
 
-After training completes, the LoRA adapter weights are on the PVC at `/workspace/output`. This step deploys the model on RHOAI using YAML manifests applied with `oc apply`. All manifests are in the [`serving/`](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent/serving) directory.
+After training completes, the LoRA adapter weights are on the PVC at `/workspace/output`. This step deploys the model on RHOAI using YAML manifests applied with `oc apply`. All manifests are in the [`serving/`](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/tool-calling-financial/serving) directory.
 
 ```
 serving/
@@ -472,26 +472,26 @@ The LoRA adapter, tool-calling flags, and PVC volume mount are configured in the
 
 ```bash
 # Apply the LoRA-enabled ServingRuntime (includes PVC mount + tool-calling args)
-oc apply -f serving/01-serving-runtime.yaml -n financial-agent
+oc apply -f serving/01-serving-runtime.yaml -n tool-calling-financial
 
 # Apply the InferenceService
-oc apply -f serving/02-inferenceservice-lora.yaml -n financial-agent
+oc apply -f serving/02-inferenceservice-lora.yaml -n tool-calling-financial
 
 # Expose the endpoint externally
-oc apply -f serving/05-route.yaml -n financial-agent
+oc apply -f serving/05-route.yaml -n tool-calling-financial
 ```
 
 **Monitor readiness:**
 
 ```bash
 # Watch until READY=True (typically 2-5 minutes for initial model download)
-oc get inferenceservice financial-agent-lora -n financial-agent -w
+oc get inferenceservice tool-calling-financial-lora -n tool-calling-financial -w
 
 # Check the predictor pod
-oc get pods -n financial-agent -l serving.kserve.io/inferenceservice=financial-agent-lora
+oc get pods -n tool-calling-financial -l serving.kserve.io/inferenceservice=tool-calling-financial-lora
 
 # Stream vLLM startup logs
-oc logs -f deployment/financial-agent-lora-predictor -n financial-agent
+oc logs -f deployment/tool-calling-financial-lora-predictor -n tool-calling-financial
 ```
 
 Model is ready when logs show:
@@ -504,7 +504,7 @@ INFO:     Uvicorn running on http://0.0.0.0:8080
 **Get the inference endpoint:**
 
 ```bash
-ROUTE_URL=$(oc get route financial-agent -n financial-agent -o jsonpath='{.spec.host}')
+ROUTE_URL=$(oc get route tool-calling-financial -n tool-calling-financial -o jsonpath='{.spec.host}')
 echo "Inference endpoint: https://${ROUTE_URL}"
 ```
 
@@ -514,7 +514,7 @@ echo "Inference endpoint: https://${ROUTE_URL}"
 curl -sk "https://${ROUTE_URL}/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -d '{
-    "model": "financial-agent",
+    "model": "tool-calling-financial",
     "messages": [
       {"role": "user", "content": "What is the current price of AAPL?"}
     ],
@@ -588,23 +588,23 @@ AutoTokenizer.from_pretrained("Qwen/Qwen3-4B").save_pretrained("/workspace/merge
 **Step 4B.2:** Upload to S3:
 
 ```bash
-aws s3 sync /workspace/merged-model s3://your-bucket/models/financial-agent-merged/
+aws s3 sync /workspace/merged-model s3://your-bucket/models/tool-calling-financial-merged/
 ```
 
 **Step 4B.3:** Create the data connection and deploy:
 
 ```bash
 # Edit 04-s3-data-connection.yaml with your S3 credentials, then apply
-oc apply -f serving/04-s3-data-connection.yaml -n financial-agent
+oc apply -f serving/04-s3-data-connection.yaml -n tool-calling-financial
 
 # Edit storage.path in 03-inferenceservice-merged.yaml to match your S3 path
-oc apply -f serving/03-inferenceservice-merged.yaml -n financial-agent
+oc apply -f serving/03-inferenceservice-merged.yaml -n tool-calling-financial
 
-# Expose externally (update service name in 05-route.yaml to financial-agent-merged-predictor)
-oc apply -f serving/05-route.yaml -n financial-agent
+# Expose externally (update service name in 05-route.yaml to tool-calling-financial-merged-predictor)
+oc apply -f serving/05-route.yaml -n tool-calling-financial
 ```
 
-**Step 4B.4:** Monitor and verify using the same commands from Option A (replace `financial-agent-lora` with `financial-agent-merged`).
+**Step 4B.4:** Monitor and verify using the same commands from Option A (replace `tool-calling-financial-lora` with `tool-calling-financial-merged`).
 
 ## Step 5: Evaluate
 
@@ -615,7 +615,7 @@ oc apply -f serving/05-route.yaml -n financial-agent
 
     ```bash
     python 05_evaluate_agent.py \
-      --model-endpoint http://financial-agent-lora-predictor.financial-agent.svc.cluster.local:8080 \
+      --model-endpoint http://tool-calling-financial-lora-predictor.tool-calling-financial.svc.cluster.local:8080 \
       --benchmark-file benchmark_tasks.jsonl \
       --output evaluation_results.json
     ```
@@ -624,7 +624,7 @@ Full evaluation (generates benchmarks + evaluates):
 
 ```bash
 python 05_evaluate_agent.py \
-  --model-endpoint http://financial-agent-lora-predictor.financial-agent.svc.cluster.local:8080 \
+  --model-endpoint http://tool-calling-financial-lora-predictor.tool-calling-financial.svc.cluster.local:8080 \
   --output evaluation_results.json
 ```
 
@@ -642,7 +642,7 @@ The evaluation script measures:
 
 ```bash
 python 06_configure_guardrails.py \
-  --model-endpoint https://financial-agent.apps.cluster.example.com/v1
+  --model-endpoint https://tool-calling-financial.apps.cluster.example.com/v1
 ```
 
 - **Tier 1 (GA):** PII detection, jailbreak protection, financial disclaimers
@@ -655,9 +655,9 @@ python 06_configure_guardrails.py \
 
 ```bash
 pip install deepagents langchain-openai langgraph-cli[inmem]
-export MODEL_ENDPOINT=https://financial-agent-predictor.apps.your-cluster.com/v1
+export MODEL_ENDPOINT=https://tool-calling-financial-predictor.apps.your-cluster.com/v1
 
-cd end-to-end-examples/financial-agent/examples/
+cd end-to-end-examples/tool-calling-financial/examples/
 langgraph dev
 
 # Or headless:
@@ -717,7 +717,7 @@ The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestrat
 
 ## Source Code
 
-- [Source Code (Financial Example)](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent)
+- [Source Code (Financial Example)](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/tool-calling-financial)
 
 ## Related
 

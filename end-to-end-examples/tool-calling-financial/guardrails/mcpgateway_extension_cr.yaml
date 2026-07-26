@@ -5,15 +5,15 @@ apiVersion: trustyai.opendatahub.io/v1alpha1
 kind: MCPGatewayExtension
 metadata:
   name: financial-mcp-gateway
-  namespace: financial-agent  # Change to your namespace if different
+  namespace: tool-calling-financial  # Change to your namespace if different
   labels:
-    app.kubernetes.io/part-of: financial-agent
+    app.kubernetes.io/part-of: tool-calling-financial
     app.kubernetes.io/managed-by: rhoai-examples
 spec:
   # MCP server that provides financial tools (portfolio lookup, trade execution, etc.)
   # Must match the deployed MCP server Service (default FastMCP port is 8009)
-  mcpServerUrl: "http://finance-insights-mcp.financial-agent.svc:8009"
+  mcpServerUrl: "http://finance-insights-mcp.tool-calling-financial.svc:8009"
   # NemoGuardrails instance that protects tool calls through this gateway
   guardrailsRef:
-    name: financial-agent-guardrails
-    namespace: financial-agent  # Change to your namespace if different
+    name: tool-calling-financial-guardrails
+    namespace: tool-calling-financial  # Change to your namespace if different

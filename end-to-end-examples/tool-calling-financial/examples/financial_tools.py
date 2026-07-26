@@ -57,7 +57,7 @@ def _call_mcp(tool_name: str, arguments: dict) -> dict:
                 "params": {
                     "protocolVersion": "2025-03-26",
                     "capabilities": {},
-                    "clientInfo": {"name": "financial-agent", "version": "1.0"},
+                    "clientInfo": {"name": "tool-calling-financial", "version": "1.0"},
                 },
             },
             headers=headers,

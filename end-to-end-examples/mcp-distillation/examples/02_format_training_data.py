@@ -1,12 +1,12 @@
-"""Format distillation output into function-calling JSONL for training.
+"""Format distillation output into tool-calling JSONL for training.
 
 Converts the raw pipeline output (Parquet from step 01) into the structured
-function-calling conversation format used for supervised fine-tuning:
+tool-calling conversation format used for supervised fine-tuning:
 
   [system]    Tool declarations (all MCP server tools)
   [user]      Natural language question
-  [assistant] function_call: tool_name(arguments)
-  [function]  Tool response
+  [assistant] tool_calls: [{function: {name, arguments}}]
+  [tool]      Tool response (with tool_call_id)
   ...         (repeated for multi-step tool use)
   [assistant] Final synthesized answer
 
@@ -100,38 +100,43 @@ def format_tool_trace(
     messages.append({"role": "user", "content": question})
 
     # Convert each trace step into the appropriate message format
+    call_counter = 0
     for step in tool_trace:
         role = step.get("role", "")
 
         if role == "assistant" and step.get("tool_calls"):
-            # Tool call -> function_call message
+            tool_calls_list = []
             for tc in step["tool_calls"]:
                 func = tc.get("function", {})
                 arguments = func.get("arguments", {})
                 if isinstance(arguments, dict):
                     arguments = json.dumps(arguments)
-                messages.append({
-                    "role": "assistant",
-                    "content": "",
-                    "function_call": {
+                call_counter += 1
+                tool_calls_list.append({
+                    "id": f"call_{call_counter}",
+                    "type": "function",
+                    "function": {
                         "name": func.get("name", ""),
                         "arguments": arguments,
                     },
                 })
+            messages.append({
+                "role": "assistant",
+                "content": None,
+                "tool_calls": tool_calls_list,
+            })
 
         elif role == "tool":
-            # Tool response -> function message
             content = step.get("content", "")
             if isinstance(content, dict):
                 content = json.dumps(content)
             messages.append({
-                "role": "function",
+                "role": "tool",
                 "content": content,
-                "name": step.get("name", ""),
+                "tool_call_id": f"call_{call_counter}",
             })
 
         elif role == "assistant":
-            # Final text answer
             content = step.get("content", "")
             if content:
                 messages.append({
@@ -139,9 +144,9 @@ def format_tool_trace(
                     "content": content,
                 })
 
-    # Validate: must have at least system + user + one assistant response
-    roles = [m["role"] for m in messages]
-    if "function_call" not in str(messages) and roles.count("assistant") < 2:
+    # Validate: must have at least system + user + one tool call
+    has_tool_calls = any(m.get("tool_calls") for m in messages)
+    if not has_tool_calls and sum(1 for m in messages if m["role"] == "assistant") < 2:
         return None
 
     return {"messages": messages}
@@ -194,7 +199,7 @@ def main() -> None:
             continue
 
         # Count tool calls in this example
-        n_calls = sum(1 for m in result["messages"] if "function_call" in m)
+        n_calls = sum(1 for m in result["messages"] if m.get("tool_calls"))
         total_tool_calls += n_calls
 
         formatted.append(result)

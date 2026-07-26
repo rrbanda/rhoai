@@ -92,7 +92,7 @@ Train a model to call financial APIs using MCP distillation + LoRA SFT. This pat
 
 ### Set Up a Financial MCP Server
 
-Create or use a financial MCP server with tools covering portfolio management, market data, risk analysis, and trade execution. The demo server provides 15 tools across 4 domains — see the [full tool reference in the Tool-Calling Model Pipeline](../end-to-end/tool-calling-financial.md#step-0-start-the-financial-mcp-server) and the [demo server source code](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent/demo_server).
+Create or use a financial MCP server with tools covering portfolio management, market data, risk analysis, and trade execution. The demo server provides 15 tools across 4 domains — see the [full tool reference in the Tool-Calling Model Pipeline](../end-to-end/tool-calling-financial.md#step-0-start-the-financial-mcp-server) and the [demo server source code](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/tool-calling-financial/demo_server).
 
 ### Generate Tool-Use Training Data
 
@@ -134,7 +134,7 @@ from training_hub import lora_sft
 lora_sft(
     model_path="Qwen/Qwen3-4B",
     data_path="training_data.jsonl",
-    ckpt_output_dir="./financial-agent",
+    ckpt_output_dir="./tool-calling-financial",
     lora_r=8,
     lora_alpha=16,
     num_epochs=1,
@@ -152,7 +152,7 @@ After training, deploy the model with tool-calling support via KServe + vLLM. Tw
 - **LoRA adapter serving** (recommended) — Serve the adapter directly from the training PVC without merging
 - **Merged model** — Merge adapter into base model and deploy from S3
 
-Full YAML manifests and step-by-step deployment instructions are in the [Tool-Calling Model Pipeline Step 4](../end-to-end/tool-calling-financial.md#step-4-deploy-the-fine-tuned-model-on-rhoai) and the [`serving/` directory](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent/serving).
+Full YAML manifests and step-by-step deployment instructions are in the [Tool-Calling Model Pipeline Step 4](../end-to-end/tool-calling-financial.md#step-4-deploy-the-fine-tuned-model-on-rhoai) and the [`serving/` directory](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/tool-calling-financial/serving).
 
 ### Add Financial Guardrails
 
@@ -172,7 +172,7 @@ Financial tool-calling models require compliance rails. See [Guardrails](../guar
     Financial APIs often have overlapping functionality (e.g., `get_portfolio_positions` vs `get_account_summary`). Ensure your training data includes diverse examples covering these overlapping tools so the model learns the correct tool for each context. For reinforcement-learning-based training (GRPO), see the [LoRA GRPO docs](https://github.com/Red-Hat-AI-Innovation-Team/training_hub/blob/main/docs/algorithms/lora_grpo.md) — GRPO KFP pipeline support is planned.
 
 !!! tip "Deterministic Test Data"
-    Use fixed random seeds for financial test data so evaluations are reproducible. The [demo server](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent/demo_server) uses `SEED=42` for all generated data.
+    Use fixed random seeds for financial test data so evaluations are reproducible. The [demo server](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/tool-calling-financial/demo_server) uses `SEED=42` for all generated data.
 
 ## Validated Environment
 

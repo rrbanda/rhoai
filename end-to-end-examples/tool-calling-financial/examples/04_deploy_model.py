@@ -1,4 +1,4 @@
-"""Deploy a fine-tuned financial agent model via KServe RawDeployment.
+"""Deploy a fine-tuned tool-calling financial model model via KServe RawDeployment.
 
 Creates an InferenceService that loads the trained model from S3 or PVC storage
 and serves it using the vLLM runtime with GPU acceleration and tool-calling
@@ -25,8 +25,8 @@ Requirements:
     pip install kubernetes requests
 
 Usage:
-    python 04_deploy_model.py --model-path s3://my-bucket/models/financial-agent-lora
-    python 04_deploy_model.py --model-path /mnt/models/financial-agent --storage-type pvc
+    python 04_deploy_model.py --model-path s3://my-bucket/models/tool-calling-financial-lora
+    python 04_deploy_model.py --model-path /mnt/models/tool-calling-financial --storage-type pvc
     python 04_deploy_model.py --model-path s3://bucket/model --tool-call-parser auto --gpu-count 4
 
 Environment variables:
@@ -50,7 +50,7 @@ from kubernetes import client, config
 from kubernetes.client.rest import ApiException
 
 
-_DEFAULT_NAMESPACE = "financial-agent"
+_DEFAULT_NAMESPACE = "tool-calling-financial"
 _DEFAULT_RUNTIME = "vllm-runtime"
 _READY_TIMEOUT = 600
 _POLL_INTERVAL = 10
@@ -58,7 +58,7 @@ _POLL_INTERVAL = 10
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Deploy a fine-tuned financial agent model via KServe RawDeployment on RHOAI 3.5.",
+        description="Deploy a fine-tuned tool-calling financial model model via KServe RawDeployment on RHOAI 3.5.",
     )
     parser.add_argument(
         "--model-path",
@@ -315,7 +315,7 @@ def wait_for_ready(name: str, namespace: str, timeout: int) -> str:
 
 
 def test_tool_calling(url: str) -> None:
-    """Send a tool-calling test request to verify the financial agent deployment."""
+    """Send a tool-calling test request to verify the tool-calling financial model deployment."""
     endpoint = f"{url}/v1/chat/completions"
 
     tools = [
@@ -390,7 +390,7 @@ def main() -> None:
     namespace = args.namespace or os.getenv("INFERENCE_NS", _DEFAULT_NAMESPACE)
 
     print("=" * 60)
-    print("Deploy Financial Agent — KServe RawDeployment + Tool Calling")
+    print("Deploy tool-calling financial model — KServe RawDeployment + Tool Calling")
     print("=" * 60)
     print(f"  Model path:         {args.model_path}")
     print(f"  Namespace:          {namespace}")

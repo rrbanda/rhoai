@@ -4,24 +4,24 @@
 # Apply this to expose the model endpoint outside the cluster.
 #
 # For LoRA adapter deployment:
-#   oc apply -f 05-route.yaml -n financial-agent
+#   oc apply -f 05-route.yaml -n tool-calling-financial
 #
 # For merged model deployment:
-#   Change the service name to financial-agent-merged-predictor
+#   Change the service name to tool-calling-financial-merged-predictor
 #
 # Get the endpoint:
-#   oc get route financial-agent -n financial-agent -o jsonpath='{.spec.host}'
+#   oc get route tool-calling-financial -n tool-calling-financial -o jsonpath='{.spec.host}'
 ---
 apiVersion: route.openshift.io/v1
 kind: Route
 metadata:
-  name: financial-agent
+  name: tool-calling-financial
   labels:
     opendatahub.io/dashboard: "true"
 spec:
   to:
     kind: Service
-    name: financial-agent-lora-predictor
+    name: tool-calling-financial-lora-predictor
   port:
     targetPort: 8080
   tls:
