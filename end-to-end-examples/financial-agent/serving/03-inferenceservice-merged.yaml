@@ -1,0 +1,59 @@
+# InferenceService — Merged Model from S3 (Alternative)
+#
+# Serves a fully merged model (LoRA weights baked into the base model)
+# from S3-compatible storage. Use this if you prefer a simpler deployment
+# without dynamic adapter loading.
+#
+# Before applying:
+#   1. Merge the LoRA adapter into the base model (see README Step 4B.1)
+#   2. Upload the merged model to S3 (see README Step 4B.2)
+#   3. Create the S3 data connection secret (see 04-s3-data-connection.yaml)
+#   4. Update the storage.path below to match your S3 path
+#
+# Apply:
+#   oc apply -f 03-inferenceservice-merged.yaml -n financial-agent
+#
+# Monitor:
+#   oc get inferenceservice financial-agent-merged -n financial-agent -w
+---
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: financial-agent-merged
+  annotations:
+    serving.kserve.io/deploymentMode: RawDeployment
+  labels:
+    opendatahub.io/dashboard: "true"
+spec:
+  predictor:
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+    model:
+      modelFormat:
+        name: vLLM
+      runtime: vllm-runtime
+      storage:
+        # Name of the Secret containing S3 credentials
+        # Create with 04-s3-data-connection.yaml or via RHOAI Dashboard
+        key: aws-connection-models
+        # Path within the S3 bucket to the merged model directory
+        path: models/financial-agent-merged/
+      resources:
+        requests:
+          cpu: "2"
+          memory: "16Gi"
+          nvidia.com/gpu: "1"
+        limits:
+          cpu: "4"
+          memory: "24Gi"
+          nvidia.com/gpu: "1"
+    containers:
+      - name: kserve-container
+        env:
+          - name: EXTRA_ARGS
+            value: >-
+              --enable-auto-tool-choice
+              --tool-call-parser hermes
+              --max-model-len 4096

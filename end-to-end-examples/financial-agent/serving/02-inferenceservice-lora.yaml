@@ -1,0 +1,70 @@
+# InferenceService — LoRA Adapter Serving (Recommended)
+#
+# Serves the base model (Qwen3-4B) from HuggingFace and loads the
+# LoRA adapter directly from the training PVC. No merge step needed.
+#
+# Prerequisites:
+#   - KServe enabled in RHOAI (oc get dsc default-dsc)
+#   - vLLM ServingRuntime available (preinstalled or 01-serving-runtime.yaml)
+#   - training-workspace PVC exists with adapter at /output (from Step 3)
+#
+# Apply:
+#   oc apply -f 02-inferenceservice-lora.yaml -n financial-agent
+#
+# Monitor:
+#   oc get inferenceservice financial-agent-lora -n financial-agent -w
+#
+# Get endpoint:
+#   oc get route financial-agent-lora -n financial-agent
+---
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: financial-agent-lora
+  annotations:
+    serving.kserve.io/deploymentMode: RawDeployment
+  labels:
+    opendatahub.io/dashboard: "true"
+spec:
+  predictor:
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+    model:
+      modelFormat:
+        name: vLLM
+      runtime: vllm-runtime
+      # Base model — pulled from HuggingFace on first deploy
+      storageUri: hf://Qwen/Qwen3-4B
+      resources:
+        requests:
+          cpu: "2"
+          memory: "16Gi"
+          nvidia.com/gpu: "1"
+        limits:
+          cpu: "4"
+          memory: "24Gi"
+          nvidia.com/gpu: "1"
+    containers:
+      - name: kserve-container
+        env:
+          - name: EXTRA_ARGS
+            value: >-
+              --enable-lora
+              --lora-modules financial-agent=/mnt/lora-adapter
+              --max-lora-rank 16
+              --enable-auto-tool-choice
+              --tool-call-parser hermes
+              --max-model-len 4096
+        volumeMounts:
+          - name: lora-adapter
+            mountPath: /mnt/lora-adapter
+            readOnly: true
+    volumes:
+      - name: lora-adapter
+        persistentVolumeClaim:
+          # Same PVC created during training (Step 3)
+          # Adapter files are in the root — training writes to /workspace/output
+          # which maps to the PVC root
+          claimName: training-workspace

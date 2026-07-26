@@ -1,0 +1,29 @@
+# S3 Data Connection Secret (for merged model deployment)
+#
+# Required only for Option B (03-inferenceservice-merged.yaml).
+# Skip this if using Option A (LoRA adapter from PVC).
+#
+# Replace the placeholder values below with your actual S3 credentials.
+# Alternatively, create this via RHOAI Dashboard → Data connections → Add.
+#
+# Apply:
+#   oc apply -f 04-s3-data-connection.yaml -n financial-agent
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: aws-connection-models
+  labels:
+    opendatahub.io/dashboard: "true"
+    opendatahub.io/managed: "true"
+  annotations:
+    openshift.io/display-name: "Model Storage (S3)"
+    opendatahub.io/connection-type: s3
+type: Opaque
+stringData:
+  # ---- Replace these values ----
+  AWS_ACCESS_KEY_ID: "your-access-key"
+  AWS_SECRET_ACCESS_KEY: "your-secret-key"
+  AWS_S3_ENDPOINT: "https://s3.amazonaws.com"
+  AWS_S3_BUCKET: "your-bucket-name"
+  AWS_DEFAULT_REGION: "us-east-1"

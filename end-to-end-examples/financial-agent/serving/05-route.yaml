@@ -1,0 +1,29 @@
+# OpenShift Route for the InferenceService (RawDeployment)
+#
+# KServe RawDeployment does not auto-create an external route.
+# Apply this to expose the model endpoint outside the cluster.
+#
+# For LoRA adapter deployment:
+#   oc apply -f 05-route.yaml -n financial-agent
+#
+# For merged model deployment:
+#   Change the service name to financial-agent-merged-predictor
+#
+# Get the endpoint:
+#   oc get route financial-agent -n financial-agent -o jsonpath='{.spec.host}'
+---
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  name: financial-agent
+  labels:
+    opendatahub.io/dashboard: "true"
+spec:
+  to:
+    kind: Service
+    name: financial-agent-lora-predictor
+  port:
+    targetPort: http
+  tls:
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
