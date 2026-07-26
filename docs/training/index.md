@@ -30,6 +30,34 @@ Not sure which to pick? Use the [decision flowchart](../getting-started/choosing
     - **LoRA SFT** (recommended, [validated on RHOAI](../end-to-end/financial-agent.md)) — Train on expert demonstrations from MCP distillation
     - **GRPO** — Learn from rewards when expert traces are unavailable
 
+## After Training: Next Steps
+
+All training algorithms produce model artifacts in your `ckpt_output_dir`. To deploy your model on RHOAI, you need to make those artifacts accessible to KServe:
+
+=== "Upload to S3"
+
+    ```bash
+    # Full model (SFT, OSFT) or merged LoRA
+    aws s3 sync ./my-model s3://my-bucket/models/my-model/
+
+    # Then use storageUri: s3://my-bucket/models/my-model in your InferenceService
+    ```
+
+=== "Copy to PVC"
+
+    ```bash
+    # Create a PVC in your namespace, then copy via a helper pod
+    oc cp ./my-model $(oc get pod -l app=model-copy -o name):/mnt/models/my-model
+
+    # Then use storageUri: pvc://model-storage/my-model in your InferenceService
+    ```
+
+=== "LoRA adapter (no merge)"
+
+    If you trained with LoRA, vLLM can serve the adapter directly without merging. Mount the adapter PVC alongside the base model — see the [Tool-Calling Model Pipeline Step 4](../end-to-end/financial-agent.md#step-4-deploy-the-fine-tuned-model-on-rhoai) for a worked example.
+
+See the [Serving Guide](../serving/index.md) for full KServe + vLLM deployment instructions and YAML manifests.
+
 ## Advanced Algorithms
 
 | Algorithm | Use Case | Guide |

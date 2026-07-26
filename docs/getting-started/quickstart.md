@@ -2,6 +2,11 @@
 
 This page walks through environment setup, package installation, and a minimal end-to-end pipeline: generate training data from a document, train a model, and verify convergence.
 
+!!! info "This quickstart follows the Knowledge Track"
+    The pipeline below demonstrates **knowledge tuning** — generating Q&A training data from documents and fine-tuning with SFT, OSFT, or LoRA. If your goal is to fine-tune a model for **tool calling** (MCP servers, APIs), start with the [Tool-Calling Model Pipeline](../end-to-end/financial-agent.md) instead.
+
+For conceptual background on model customization, see the [Overview](overview.md).
+
 ## Prerequisites
 
 | Requirement | Details |

@@ -1,6 +1,9 @@
 # Tool-Calling Model Pipeline (Financial Example)
 
-Fine-tune a model to make accurate tool calls by training on domain-specific demonstrations, then deploy it with vLLM tool-calling support behind NeMo Guardrails. This pipeline uses SDG Hub's MCP distillation to generate training data from a financial MCP server with 15 tools. The same technique works with any MCP server and any supported base model — financial services is the validated example.
+Fine-tune a model to make accurate tool calls by training on domain-specific demonstrations, then deploy it with vLLM tool-calling support behind NeMo Guardrails. This pipeline uses SDG Hub's **MCP distillation for data generation**, then trains with **LoRA SFT** (not GRPO). The same technique works with any MCP server and any supported base model — financial services is the validated example.
+
+!!! note "MCP distillation = data generation technique"
+    "MCP distillation" refers to the **data generation step** — a teacher model explores your MCP server and produces tool-use traces. This pipeline trains on those traces with **LoRA SFT**. For a GRPO-based training variant, see the [MCP Distillation (GRPO) Pipeline](mcp-distillation.md).
 
 ## RHOAI Feature Matrix
 
@@ -11,7 +14,7 @@ Fine-tune a model to make accurate tool calls by training on domain-specific dem
 | LoRA KFP Pipeline | 3.4+ | GA |
 | KServe RawDeployment + vLLM | 3.4+ | GA |
 | NeMo Guardrails | 3.4+ | GA |
-| LM-Eval | 3.4+ | GA |
+| Agent Evaluation | 3.4+ | GA |
 | NeMo + MCP Gateway | 3.5 EA2 | **TP** |
 | Validated Tool-Calling Config | 3.5 EA2 | **TP** |
 
@@ -30,6 +33,12 @@ The core pipeline (Steps 0-7) runs fully on RHOAI 3.4. RHOAI 3.5 features are ad
 - Python 3.11+, `oc` CLI authenticated to your cluster
 
 ## Step 0: Start the Financial MCP Server
+
+First, create the namespace where all resources will be deployed:
+
+```bash
+oc new-project financial-agent
+```
 
 The demo server provides 15 financial tools organized into domains — groups of tools covering portfolio management, market data, risk analysis, and trade execution.
 
@@ -116,10 +125,10 @@ This approach creates a Kubeflow `TrainJob` custom resource that uses the `train
 oc get clustertrainingruntimes training-hub
 ```
 
-!!! note "Validation example vs production data"
-    The ConfigMap below uses a small public HuggingFace dataset (`LipengCS/Table-GPT`) to validate the training infrastructure end-to-end. This is intentional — it lets you verify that the TrainJob, GPU scheduling, and LoRA SFT all work correctly before investing time in data generation.
+!!! warning "This ConfigMap uses validation data, NOT your financial data"
+    The ConfigMap below uses a small public HuggingFace dataset (`LipengCS/Table-GPT`) to validate the training infrastructure. **This is not your financial tool-calling data from Steps 1-2.** It lets you verify that the TrainJob, GPU scheduling, and LoRA SFT work correctly before investing time in data generation.
 
-    **For production**, replace the dataset download with your own financial tool-calling JSONL from Steps 1-2. Upload your `training_data.jsonl` to the PVC first:
+    **For production, you must replace this dataset** with your own financial tool-calling JSONL from Steps 1-2. Upload your `training_data.jsonl` to the PVC first:
 
     ```bash
     # Copy your Step 2 output to the training PVC
@@ -333,18 +342,29 @@ The KFP pipeline wraps the same LoRA SFT algorithm in a four-stage automated pip
 python 03b_train_kfp_pipeline.py --compile-only
 
 # Upload pipeline.yaml to RHOAI Dashboard > Pipelines > Import Pipeline
-# Create a run with parameters:
-#   dataset_uri = hf://LipengCS/Table-GPT:All  (or your S3 dataset)
-#   base_model = Qwen/Qwen3-4B
-#   lora_r = 16, lora_alpha = 32
+# Create a run with parameters (use these exact KFP parameter names):
+#   phase_01_dataset_man_data_uri = hf://LipengCS/Table-GPT:All  (or your S3 dataset)
+#   phase_02_train_man_train_model = Qwen/Qwen3-4B
+#   phase_02_train_man_lora_r = 16
+#   phase_02_train_man_lora_alpha = 32
+#   phase_02_train_man_train_epochs = 2
+
+# Or run directly from CLI (the script maps CLI flags to KFP params):
+python 03b_train_kfp_pipeline.py \
+  --dataset-uri hf://LipengCS/Table-GPT:All \
+  --base-model Qwen/Qwen3-4B \
+  --lora-r 16 --lora-alpha 32 --num-epochs 2
 ```
 
 The four pipeline stages:
 
 1. **Dataset Download** — fetches and validates training data
 2. **LoRA Training** — fine-tunes via Kubeflow Trainer + Training Hub Unsloth backend
-3. **Evaluation** — LM-Eval harness benchmarks
+3. **Evaluation** — LM-Eval harness benchmarks (arc_easy by default)
 4. **Model Registry** — registers the fine-tuned model (optional)
+
+!!! note "KFP pipeline vs standalone evaluation"
+    The KFP pipeline's evaluation stage uses LM-Eval (general benchmarks like arc_easy). This is different from the standalone `05_evaluate_agent.py` in Step 5, which evaluates tool-calling quality specifically. Both are complementary — use the KFP eval to check for capability regression and Step 5 to measure tool-use accuracy.
 
 Prerequisites for KFP pipeline:
 
@@ -533,15 +553,21 @@ oc apply -f serving/05-route.yaml -n financial-agent
 
 ## Step 5: Evaluate
 
-**RHOAI Feature:** LM-Eval (GA) + Agent Evaluation
+**RHOAI Feature:** Agent Evaluation (GA)
 
 ```bash
 python 05_evaluate_agent.py \
-  --model-endpoint http://financial-agent.rhoai-serving.svc:8080 \
+  --model-endpoint http://financial-agent-lora-predictor.financial-agent.svc.cluster.local:8080 \
   --output evaluation_results.json
 ```
 
-Measures tool recall, tool precision, argument correctness, multi-step success rate, and LLM-as-judge scoring.
+The evaluation script measures:
+
+- **Tool recall** — Did the model call the correct tools?
+- **Tool precision** — Did the model avoid calling unnecessary tools?
+- **Argument correctness** — Were function arguments well-formed and accurate?
+- **Order match** — Did the model chain tools in the correct sequence?
+- **LLM-as-judge scoring** — An LLM judges task fulfillment, grounding, tool appropriateness, parameter accuracy, dependency awareness, and parallelism efficiency on a 1-10 scale
 
 ## Step 6: Configure Guardrails
 

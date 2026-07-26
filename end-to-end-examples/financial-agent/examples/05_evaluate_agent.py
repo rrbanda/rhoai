@@ -19,7 +19,7 @@ Usage:
     export JUDGE_MODEL="openai/gpt-4o"
 
     python 05_evaluate_agent.py \\
-        --model-endpoint http://financial-agent.rhoai-serving.svc:8080 \\
+        --model-endpoint http://financial-agent-lora-predictor.financial-agent.svc.cluster.local:8080 \\
         --mcp-server-url http://localhost:8009 \\
         --output evaluation_results.json
 
@@ -376,11 +376,11 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--model-endpoint",
         required=True,
-        help="vLLM endpoint URL (e.g. http://financial-agent.rhoai-serving.svc:8080)",
+        help="vLLM endpoint URL (e.g. http://financial-agent-lora-predictor.financial-agent.svc.cluster.local:8080)",
     )
     parser.add_argument(
         "--mcp-server-url",
-        default=os.environ.get("MCP_SERVER_URL", "http://localhost:3000"),
+        default=os.environ.get("MCP_SERVER_URL", "http://localhost:8009"),
         help="FinanceInsights MCP server URL for benchmark generation (default: $MCP_SERVER_URL)",
     )
     parser.add_argument(

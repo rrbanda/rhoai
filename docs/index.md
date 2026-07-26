@@ -19,8 +19,8 @@ Fine-tune LLMs with smaller, efficient architectures on RHOAI. This track covers
 
 <div class="featured-track-buttons" markdown>
 
-[Start the Guide](getting-started/overview.md){ .md-button .md-button--primary }
-[Setup & First Pipeline](getting-started/quickstart.md){ .md-button }
+[New to model customization? Start with concepts](getting-started/overview.md){ .md-button .md-button--primary }
+[Ready to code? Jump to the quickstart](getting-started/quickstart.md){ .md-button }
 
 </div>
 

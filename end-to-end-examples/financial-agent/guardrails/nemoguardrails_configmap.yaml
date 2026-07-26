@@ -10,7 +10,7 @@ apiVersion: v1
 kind: ConfigMap
 metadata:
   name: financial-guardrails-config
-  namespace: <namespace>
+  namespace: financial-agent  # Change to your namespace if different
 data:
   config.yaml: |
     models:

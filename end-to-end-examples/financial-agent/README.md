@@ -11,7 +11,7 @@ Fine-tune a small language model (Qwen3-4B) to make accurate tool calls for fina
 | LoRA KFP Pipeline | 3.4+ | GA | End-to-end training pipeline (data → train → eval → registry) |
 | KServe RawDeployment | 3.4+ | GA | Deploy fine-tuned model with vLLM runtime |
 | NeMo Guardrails | 3.4+ | GA | Financial compliance rails, PII detection, disclaimers |
-| LM-Eval | 3.4+ | GA | Standard model benchmarks |
+| Agent Evaluation | 3.4+ | GA | Tool-calling quality metrics + LLM-as-judge |
 | NeMo + MCP Gateway | 3.5 EA2 | **TP** | Auto-enforce guardrails on all agent tool calls |
 | Validated Tool-Calling Config | 3.5 EA2 | **TP** | Pre-validated vLLM args for tool-calling models |
 
@@ -74,16 +74,25 @@ financial-agent/
     ├── 03_train_lora_sft.py               LoRA SFT training (local, for dev)
     ├── 03b_train_kfp_pipeline.py          LoRA KFP pipeline (RHOAI production)
     ├── 04_deploy_model.py                  KServe RawDeployment + vLLM
-    ├── 05_evaluate_agent.py                Agent evaluation + LM-Eval
+    ├── 05_evaluate_agent.py                Agent tool-calling evaluation
     ├── 06_configure_guardrails.py          NeMo Guardrails + MCP Gateway
     ├── 07_deep_agent.py                    Deep Agent harness (LangGraph)
     ├── financial_tools.py                  15 @tool wrappers for MCP server
-    └── financial_prompts.py                System prompt for Financial Insights Agent
+    ├── financial_prompts.py                System prompt for Financial Insights Agent
+    └── pipelines-components/               Auto-cloned on first KFP run (Step 3C)
 ```
 
 ## Step-by-Step Guide
 
 ### Step 0: Start the Financial MCP Server
+
+First, create the namespace where all resources will be deployed:
+
+```bash
+oc new-project financial-agent
+```
+
+Then start the server:
 
 ```bash
 cd demo_server/
@@ -356,17 +365,24 @@ The KFP pipeline wraps the same LoRA SFT algorithm in a four-stage automated pip
 python 03b_train_kfp_pipeline.py --compile-only
 
 # Upload pipeline.yaml to RHOAI Dashboard > Pipelines > Import Pipeline
-# Create a run with parameters:
-#   phase_01_dataset_man_data_uri = hf://LipengCS/Table-GPT:All
+# Create a run with parameters (use these exact KFP parameter names):
+#   phase_01_dataset_man_data_uri = hf://LipengCS/Table-GPT:All  (or your S3 dataset)
 #   phase_02_train_man_train_model = Qwen/Qwen3-4B
 #   phase_02_train_man_lora_r = 16
 #   phase_02_train_man_lora_alpha = 32
+#   phase_02_train_man_train_epochs = 2
+
+# Or run directly from CLI (the script maps CLI flags to KFP params):
+python 03b_train_kfp_pipeline.py \
+  --dataset-uri hf://LipengCS/Table-GPT:All \
+  --base-model Qwen/Qwen3-4B \
+  --lora-r 16 --lora-alpha 32 --num-epochs 2
 ```
 
 The four pipeline stages:
 1. **Dataset Download** — fetches and validates training data
 2. **LoRA Training** — fine-tunes via Kubeflow Trainer + Training Hub Unsloth backend
-3. **Evaluation** — LM-Eval harness benchmarks (arc_easy by default)
+3. **Evaluation** — LM-Eval harness benchmarks (arc_easy by default, checks for capability regression)
 4. **Model Registry** — registers the fine-tuned model (optional)
 
 **KFP Pipeline Prerequisites:**
@@ -545,17 +561,19 @@ oc apply -f serving/05-route.yaml -n financial-agent
 
 ### Step 5: Evaluate
 
-**RHOAI Feature:** LM-Eval (GA)
+**RHOAI Feature:** Agent Evaluation (GA)
 
 ```bash
-python 05_evaluate_agent.py
+python 05_evaluate_agent.py \
+  --model-endpoint http://financial-agent-lora-predictor.financial-agent.svc.cluster.local:8080 \
+  --output evaluation_results.json
 ```
 
 Runs:
-- **Tool-call accuracy** — correct tool selection for each query
+- **Tool recall / precision** — correct tool selection for each query
 - **Argument correctness** — valid and complete function arguments
-- **Multi-step success rate** — tool chaining for complex queries
-- **LM-Eval benchmarks** — MMLU, HellaSwag to confirm no capability regression
+- **Order match** — correct tool-chaining sequence for multi-step queries
+- **LLM-as-judge** — GPT-4o scores task fulfillment, grounding, tool appropriateness, parameter accuracy, dependency awareness, and parallelism on a 1-10 scale
 
 ### Step 6: Configure Guardrails
 
@@ -657,7 +675,7 @@ This pipeline has been validated end-to-end on the following environment:
 **Works fully on RHOAI 3.4 (GA features only):**
 - Steps 0-3: MCP server, data generation, formatting, LoRA SFT training
 - Step 4: Model deployment with KServe RawDeployment + vLLM
-- Step 5: Evaluation with LM-Eval benchmarks
+- Step 5: Agent tool-calling evaluation (tool metrics + LLM-as-judge)
 - Step 6 Tier 1: NeMo Guardrails for financial compliance
 
 **RHOAI 3.5 EA2 adds (Technology Preview):**

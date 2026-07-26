@@ -1,6 +1,6 @@
-# End-to-End MCP Distillation Pipeline
+# End-to-End MCP Distillation Pipeline (GRPO)
 
-MCP (Model Context Protocol) distillation teaches a smaller model to use tools by learning from a frontier model's tool-use behavior. A teacher model explores your MCP servers, generating high-quality tool-use traces that train the student model.
+MCP (Model Context Protocol) distillation teaches a smaller model to use tools by learning from a frontier model's tool-use behavior. A teacher model explores your MCP servers, generating high-quality tool-use traces that train the student model. This page documents the **GRPO-based** variant of the pipeline.
 
 !!! tip "Looking for a validated, production-ready example?"
     The [Tool-Calling Model Pipeline](financial-agent.md) uses MCP distillation + **LoRA SFT** (not GRPO) and has been validated end-to-end on RHOAI 3.4.2. This page documents the generic GRPO-based pipeline for reference.
@@ -152,6 +152,10 @@ Evaluation metrics:
 | Argument correctness | Were the arguments well-formed? |
 | Response quality | Did the model use the tool result correctly? |
 | Multi-step success | Can the model chain multiple tool calls? |
+
+## Step 6: Deploy
+
+After training, deploy the GRPO-tuned model on RHOAI with KServe + vLLM. The deployment process is the same as for any LoRA adapter — see the [Serving Guide](../serving/index.md) for full KServe RawDeployment instructions, or follow the [Tool-Calling Model Pipeline Step 4](financial-agent.md#step-4-deploy-the-fine-tuned-model-on-rhoai) for a worked example with YAML manifests.
 
 ## Full Example
 

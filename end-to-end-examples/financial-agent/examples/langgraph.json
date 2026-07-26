@@ -3,5 +3,5 @@
     "graphs": {
         "financial_agent": "./07_deep_agent.py:agent"
     },
-    "env": "../.env"
+    "env": ".env"
 }

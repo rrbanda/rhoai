@@ -5,7 +5,7 @@ apiVersion: trustyai.opendatahub.io/v1alpha1
 kind: NemoGuardrails
 metadata:
   name: financial-agent-guardrails
-  namespace: <namespace>
+  namespace: financial-agent  # Change to your namespace if different
   labels:
     app.kubernetes.io/part-of: financial-agent
 spec:

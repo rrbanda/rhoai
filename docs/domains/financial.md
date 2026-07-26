@@ -74,22 +74,19 @@ osft(
 )
 ```
 
+### Deploy Your Knowledge Model
+
+After OSFT training completes, deploy the model on RHOAI with KServe + vLLM. Upload your model to S3 or a PVC and create an InferenceService — see the [Serving Guide](../serving/index.md) for YAML manifests and step-by-step instructions.
+
+For the full knowledge tuning lifecycle (document preparation, data generation, training, evaluation, deployment), see the [Knowledge Tuning Pipeline](../end-to-end/knowledge-tuning.md).
+
 ## Path 2: Financial Tool-Calling Agent
 
 Train a model to call financial APIs using MCP distillation + LoRA SFT. This path produces an agent that can manage portfolios, execute trades, and perform risk analysis.
 
 ### Set Up a Financial MCP Server
 
-Create or use a financial MCP server with tools organized into functional domains:
-
-| Domain | Tools | Purpose |
-|--------|-------|---------|
-| Market Data | `get_stock_quote`, `get_market_summary`, `get_historical_prices`, `screen_stocks` | Real-time and historical market information |
-| Portfolio Management | `get_portfolio_positions`, `get_portfolio_performance`, `get_account_summary`, `get_transaction_history` | Client account and holdings management |
-| Risk & Analytics | `calculate_portfolio_risk`, `get_sector_exposure`, `run_stress_test`, `analyze_stock` | Risk assessment and analysis |
-| Trading & Compliance | `submit_trade_order`, `check_compliance`, `get_regulatory_status` | Trade execution with pre-trade validation |
-
-A complete demo server is included in the [financial-agent example](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent/demo_server).
+Create or use a financial MCP server with tools covering portfolio management, market data, risk analysis, and trade execution. The demo server provides 15 tools across 4 domains — see the [full tool reference in the Tool-Calling Model Pipeline](../end-to-end/financial-agent.md#step-0-start-the-financial-mcp-server) and the [demo server source code](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent/demo_server).
 
 ### Generate Tool-Use Training Data
 
@@ -122,9 +119,9 @@ lora_sft(
     model_path="Qwen/Qwen3-4B",
     data_path="training_data.jsonl",
     ckpt_output_dir="./financial-agent",
-    lora_r=16,
-    lora_alpha=32,
-    num_epochs=2,
+    lora_r=8,
+    lora_alpha=16,
+    num_epochs=1,
     learning_rate=2e-4,
     load_in_4bit=True,
 )
