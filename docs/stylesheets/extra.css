@@ -137,23 +137,39 @@
 
 /* --------------- Header --------------- */
 .md-header {
-  min-height: 38px;
+  height: 30px;
+  min-height: 30px;
 }
 
 .md-header__inner {
-  padding: 0 0.8rem;
-  min-height: 38px;
+  padding: 0 0.6rem;
+  height: 30px;
+}
+
+.md-header__topic {
+  font-size: 0.72rem;
+}
+
+.md-header .md-icon svg {
+  width: 1rem;
+  height: 1rem;
+}
+
+.md-search__input {
+  font-size: 0.72rem;
+  height: 30px;
 }
 
 /* --------------- Navigation Tabs --------------- */
 .md-tabs {
   font-weight: 500;
-  min-height: 28px;
+  height: 24px;
+  min-height: 24px;
 }
 
 .md-tabs__link {
-  font-size: 0.68rem;
-  padding: 0.25rem 0.8rem;
+  font-size: 0.64rem;
+  padding: 0.15rem 0.7rem;
 }
 
 .md-nav__link {
