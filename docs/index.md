@@ -13,7 +13,7 @@ Fine-tune LLMs with smaller, efficient architectures on RHOAI. This track covers
 
 <div class="featured-track-meta" markdown>
 
-**7 training guides** · **3 end-to-end walkthroughs** · **4 algorithms** · **6 supported model families**
+**7 training guides** · **3 end-to-end walkthroughs** · **4 algorithms** · **6 supported model families** · **Validated on RHOAI 3.4.2**
 
 </div>
 

@@ -215,7 +215,7 @@ def main() -> None:
             continue
 
         # Count tool calls in this example
-        n_calls = sum(1 for m in result["messages"] if "function_call" in m)
+        n_calls = sum(1 for m in result["messages"] if m.get("tool_calls"))
         total_tool_calls += n_calls
 
         formatted.append(result)

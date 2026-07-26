@@ -2,12 +2,21 @@
 
 This walkthrough takes you through the complete model customization lifecycle: preparing documents, generating synthetic training data, training a model, evaluating it, and preparing for deployment.
 
+!!! success "Validated on RHOAI 3.4.2"
+    This pipeline has been validated on RHOAI 3.4.2. Key validated results:
+
+    - **SDG Hub** outputs `question`/`response` columns (not `messages`)
+    - **Data mixing** correctly converts to `messages` format with `unmask: true`
+    - **OSFT** uses `unfreeze_rank_ratio=0.01` (preserves general capability)
+    - **LoRA SFT** option available alongside SFT and OSFT
+    - **Hyperparameters** aligned: `num_epochs=4`, `learning_rate=2e-5`, `effective_batch_size=32`
+
 ## Pipeline Overview
 
 ```mermaid
 graph LR
     A[1. Prepare<br/>Documents] --> B[2. Generate Data<br/>SDG Hub]
-    B --> C[3. Mix &<br/>Validate]
+    B --> C[3. Convert, Mix<br/>& Validate]
     C --> D[4. Train<br/>Training Hub]
     D --> E[5. Evaluate]
     E -->|Iterate| B

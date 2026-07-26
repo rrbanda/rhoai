@@ -20,6 +20,16 @@ Fine-tune a model to make accurate tool calls by training on domain-specific dem
 
 The core pipeline (Steps 0-7) runs fully on RHOAI 3.4. RHOAI 3.5 features are additive enhancements.
 
+!!! success "Validated on RHOAI 3.4.2"
+    This pipeline has been validated end-to-end on RHOAI 3.4.2 (OCP 4.18, g6.xlarge / L4 24GB GPU). Key validated results:
+
+    - **15 MCP server tools** discovered and exercised
+    - **`tool_calls` format** output from data formatting (modern OpenAI spec)
+    - **LoRA SFT TrainJob** completed successfully on-cluster
+    - **KServe RawDeployment** serving with single and parallel tool calls
+    - **NeMo Guardrails** proxy operational with `financial-agent` config
+    - **Gemini 3.6 Flash** as teacher model for data generation
+
 ## Pipeline Overview
 
 ![Financial Agent Architecture](images/financial-agent-architecture.png)
