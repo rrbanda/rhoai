@@ -2,5 +2,6 @@ site/
 __pycache__/
 *.pyc
 .env
+.venv/
 sdg_hub/
 training_hub/

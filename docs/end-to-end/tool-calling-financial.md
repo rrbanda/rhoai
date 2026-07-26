@@ -38,9 +38,8 @@ The core pipeline (Steps 0-7) runs fully on RHOAI 3.4. RHOAI 3.5 features are ad
 
 - RHOAI 3.4+ cluster (3.5 EA2 for MCP Gateway)
 - GPU: 1x NVIDIA L4 24GB (with QLoRA 4-bit) or 1x L40/A100 for full-precision training
-- Teacher model API key (Gemini 3.6 Flash recommended for cost, or GPT-4o) for data generation
-- Langflow instance with a frontier model agent connected to the financial MCP server
 - Python 3.10+, `oc` CLI authenticated to your cluster
+- **(Optional, for Step 1 only)** Teacher model API key + Langflow instance — not needed if using the included sample data
 
 ## Get the Code
 
@@ -54,7 +53,7 @@ pip install -r requirements.txt
 
 # Configure environment
 cp .env.example .env
-# Edit .env: set TEACHER_API_KEY, LANGFLOW_URL, and other values
+# Edit .env with your values (see comments in .env.example)
 ```
 
 ## Step 0: Start the Financial MCP Server
@@ -85,27 +84,50 @@ python server.py
 
 **RHOAI Feature:** SDG Hub MCP Distillation (GA)
 
-```bash
-cd end-to-end-examples/financial-agent/examples/
-cp .env.example .env
-# Edit .env with your API keys and Langflow URL
+!!! tip "Skip this step with sample data"
+    The repository includes pre-generated sample data in `examples/sample_data/`. To jump straight to training:
 
-python 01_generate_tool_data.py --num-samples 10
-```
+    ```bash
+    # Use the included sample data — no Langflow or API keys needed
+    python 02_format_training_data.py \
+        --input-file sample_data/distillation_output.parquet \
+        --output-dir sample_data
+    ```
 
-The pipeline:
+    Then continue from [Step 2](#step-2-format-training-data) using `sample_data/training_data.jsonl`. Use this path to validate the full train → deploy → serve pipeline before investing in Langflow setup.
 
-1. A frontier model (via Langflow) **explores** all 15 financial tools
-2. A teacher LLM **synthesizes** realistic financial questions grounded in the exploration
-3. The frontier model **solves** each question via actual MCP tool calls (expert trajectories)
-4. Quality filters **remove** incomplete or low-quality examples
-5. Output: `generated_data/distillation_output.parquet`
+??? note "Generate your own data (requires Langflow + teacher model API key)"
+    To generate custom training data for your own MCP server, you need:
+
+    1. **A running MCP server** (the demo server or your own)
+    2. **Langflow** instance with a frontier model agent connected to the MCP server
+    3. **Teacher model API key** (Gemini 3.6 Flash recommended for cost)
+
+    ```bash
+    cd end-to-end-examples/financial-agent/examples/
+    cp .env.example .env
+    # Edit .env: set TEACHER_API_KEY, LANGFLOW_URL
+
+    python 01_generate_tool_data.py --num-samples 10
+    ```
+
+    The pipeline:
+
+    1. A frontier model (via Langflow) **explores** all 15 financial tools
+    2. A teacher LLM **synthesizes** realistic financial questions grounded in the exploration
+    3. The frontier model **solves** each question via actual MCP tool calls (expert trajectories)
+    4. Quality filters **remove** incomplete or low-quality examples
+    5. Output: `generated_data/distillation_output.parquet`
 
 ## Step 2: Format Training Data
 
 Convert raw traces into chat-format JSONL:
 
 ```bash
+# If using sample data (skipped Step 1):
+python 02_format_training_data.py --input-file sample_data/distillation_output.parquet --output-dir sample_data
+
+# If you generated your own data in Step 1:
 python 02_format_training_data.py
 ```
 

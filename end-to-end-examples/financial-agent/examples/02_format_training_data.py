@@ -179,7 +179,9 @@ def main() -> None:
 
     if not input_file.exists():
         print(f"ERROR: Input file not found: {input_file}")
-        print("Run 01_generate_tool_data.py first to generate the distillation output.")
+        print("Options:")
+        print("  1. Use sample data:  python 02_format_training_data.py --input-file sample_data/distillation_output.parquet --output-dir sample_data")
+        print("  2. Generate your own: python 01_generate_tool_data.py --num-samples 10  (requires Langflow + API keys)")
         sys.exit(1)
 
     # -- Load the distillation output -----------------------------------------
