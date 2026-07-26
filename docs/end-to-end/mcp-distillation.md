@@ -1,9 +1,12 @@
-# End-to-End MCP Distillation Pipeline (GRPO)
+# End-to-End MCP Distillation Pipeline
 
-MCP (Model Context Protocol) distillation teaches a smaller model to use tools by learning from a frontier model's tool-use behavior. A teacher model explores your MCP servers, generating high-quality tool-use traces that train the student model. This page documents the **GRPO-based** variant of the pipeline.
+MCP (Model Context Protocol) distillation teaches a smaller model to use tools by learning from a frontier model's tool-use behavior. A teacher model explores your MCP servers, generating high-quality tool-use traces that train the student model.
+
+!!! warning "GRPO is not available on RHOAI 3.4.2"
+    The `training-hub` package pre-installed in the RHOAI 3.4.2 ClusterTrainingRuntime includes `lora_sft`, `sft`, and `osft` — but **not `lora_grpo`**. To use GRPO, you must install `training-hub[grpo,lora]` locally or in a custom container image. The RHOAI TrainJob section below uses **LoRA SFT** as the validated on-cluster training method.
 
 !!! tip "Looking for a validated, production-ready example?"
-    The [Tool-Calling Model Pipeline](tool-calling-financial.md) uses MCP distillation + **LoRA SFT** (not GRPO) and has been validated end-to-end on RHOAI 3.4.2. This page documents the generic GRPO-based pipeline for reference.
+    The [Tool-Calling Model Pipeline](tool-calling-financial.md) uses MCP distillation + **LoRA SFT** and has been validated end-to-end on RHOAI 3.4.2. This page documents the generic pipeline with both training options.
 
 ## Pipeline Overview
 
@@ -149,9 +152,12 @@ lora_grpo(
 !!! info "GRPO vs LoRA SFT for tool-use"
     GRPO learns from verifiable rewards (did the tool call succeed?) rather than just imitating examples. This can produce models that generalize better to unseen tool combinations. However, LoRA SFT on expert traces is faster to train, simpler to set up, and has a [validated pipeline on RHOAI](tool-calling-financial.md). Use GRPO when you want reward-based exploration; use LoRA SFT when you have high-quality expert demonstrations from MCP distillation.
 
-### Training on RHOAI with TrainJob
+### Training on RHOAI with TrainJob (LoRA SFT)
 
-The RHOAI-native approach uses the **Kubeflow Trainer** with the pre-installed `training-hub` ClusterTrainingRuntime. This runs directly on GPU nodes with no local Python environment required.
+The RHOAI-native approach uses the **Kubeflow Trainer** with the pre-installed `training-hub` ClusterTrainingRuntime. Since GRPO is not included in the RHOAI 3.4.2 runtime, this section uses **LoRA SFT** — the same validated approach used by the [Tool-Calling Model Pipeline](tool-calling-financial.md).
+
+!!! info "Why LoRA SFT instead of GRPO on-cluster?"
+    The `training-hub` package in the RHOAI 3.4.2 ClusterTrainingRuntime exports: `lora_sft`, `sft`, `osft`, `estimate`, `plot_loss`. GRPO (`lora_grpo`) requires `pip install training-hub[grpo,lora]` which is not pre-installed. LoRA SFT on MCP distillation traces produces strong tool-calling models — the frontier model already generated expert demonstrations, so imitation learning is effective.
 
 **Prerequisite:** Verify the Trainer is enabled and the runtime exists:
 
@@ -172,7 +178,7 @@ cat <<'YAML' | oc apply -n mcp-distillation -f -
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
-  name: grpo-workspace
+  name: mcp-workspace
 spec:
   accessModes: [ReadWriteOnce]
   storageClassName: gp3-csi
@@ -189,10 +195,10 @@ cat <<'YAML' | oc apply -n mcp-distillation -f -
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: grpo-train-script
+  name: mcp-train-script
 data:
   train.py: |
-    """GRPO training via Training Hub on RHOAI."""
+    """MCP distillation training via Training Hub LoRA SFT on RHOAI."""
     import os, sys
 
     WORKSPACE = os.environ.get("WORKSPACE_PATH", "/workspace")
@@ -210,16 +216,21 @@ data:
         count = sum(1 for _ in f)
     print(f"Found {count} training examples at {data_path}")
 
-    from training_hub import lora_grpo
-    lora_grpo(
+    from training_hub import lora_sft
+    lora_sft(
         model_path=os.environ.get("MODEL_PATH", "Qwen/Qwen3-4B"),
         data_path=data_path,
         ckpt_output_dir=OUTPUT_DIR,
         lora_r=16,
-        lora_alpha=8,
-        num_iterations=15,
-        group_size=8,
-        backend="art",
+        lora_alpha=32,
+        num_epochs=3,
+        learning_rate=2e-4,
+        effective_batch_size=32,
+        micro_batch_size=2,
+        max_seq_len=2048,
+        load_in_4bit=True,
+        lr_scheduler="cosine",
+        seed=42,
     )
     print(f"Training complete. Output saved to: {OUTPUT_DIR}")
 YAML
@@ -228,10 +239,13 @@ YAML
 #### Upload training data to the PVC
 
 ```bash
-oc run copy-data --rm -i --restart=Never --image=busybox \
-  -n mcp-distillation \
-  --overrides='{"spec":{"containers":[{"name":"copy","image":"busybox","command":["sh","-c","mkdir -p /workspace/data && cat > /workspace/data/training_data.jsonl"],"stdin":true,"volumeMounts":[{"mountPath":"/workspace","name":"ws"}]}],"volumes":[{"name":"ws","persistentVolumeClaim":{"claimName":"grpo-workspace"}}]}}' \
-  < training_data.jsonl
+# Create a helper pod, copy data in, then delete
+oc run data-helper --image=busybox -n mcp-distillation \
+  --overrides='{"spec":{"containers":[{"name":"data-helper","image":"busybox","command":["sleep","300"],"volumeMounts":[{"mountPath":"/workspace","name":"ws"}]}],"securityContext":{"fsGroup":0},"volumes":[{"name":"ws","persistentVolumeClaim":{"claimName":"mcp-workspace"}}]}}'
+oc wait pod/data-helper -n mcp-distillation --for=condition=Ready --timeout=60s
+oc exec data-helper -n mcp-distillation -- mkdir -p /workspace/data
+oc cp training_data.jsonl mcp-distillation/data-helper:/workspace/data/training_data.jsonl
+oc delete pod data-helper -n mcp-distillation
 ```
 
 #### Submit the TrainJob
@@ -241,7 +255,7 @@ cat <<'YAML' | oc apply -n mcp-distillation -f -
 apiVersion: trainer.kubeflow.org/v1alpha1
 kind: TrainJob
 metadata:
-  name: mcp-distillation-grpo
+  name: mcp-distillation-lora
 spec:
   runtimeRef:
     name: training-hub
@@ -255,11 +269,11 @@ spec:
     resourcesPerNode:
       requests:
         cpu: "2"
-        memory: "16Gi"
+        memory: "10Gi"
         nvidia.com/gpu: "1"
       limits:
         cpu: "2"
-        memory: "16Gi"
+        memory: "10Gi"
         nvidia.com/gpu: "1"
     env:
       - name: WORKSPACE_PATH
@@ -277,10 +291,10 @@ spec:
         volumes:
           - name: workspace
             persistentVolumeClaim:
-              claimName: grpo-workspace
+              claimName: mcp-workspace
           - name: scripts
             configMap:
-              name: grpo-train-script
+              name: mcp-train-script
         containers:
           - name: node
             volumeMounts:
@@ -291,19 +305,14 @@ spec:
 YAML
 ```
 
-!!! note "GPU memory for GRPO"
-    GRPO generates multiple completions per prompt (group_size=8), requiring more memory than LoRA SFT. With QLoRA 4-bit quantization, `Qwen/Qwen3-4B` fits on a single L4 24GB. For larger models, increase to an L40 or A100 and consider the `verl` backend with `numNodes > 1`.
-
 #### Monitor and verify
 
 ```bash
-oc get trainjob mcp-distillation-grpo -n mcp-distillation -w
-oc logs -f job/mcp-distillation-grpo-node -n mcp-distillation
+oc get trainjob mcp-distillation-lora -n mcp-distillation -w
+oc logs -f job/mcp-distillation-lora-node -n mcp-distillation
 
 # Verify checkpoint output
-oc run check --rm -i --restart=Never --image=busybox \
-  -n mcp-distillation \
-  --overrides='{"spec":{"containers":[{"name":"check","image":"busybox","command":["ls","-la","/workspace/output/"],"volumeMounts":[{"mountPath":"/workspace","name":"ws"}]}],"volumes":[{"name":"ws","persistentVolumeClaim":{"claimName":"grpo-workspace"}}]}}'
+oc exec data-helper -n mcp-distillation -- ls -la /workspace/output/
 ```
 
 ## Step 5: Evaluate
@@ -345,9 +354,168 @@ Evaluation metrics:
 | Response quality | Did the model use the tool result correctly? |
 | Multi-step success | Can the model chain multiple tool calls? |
 
-## Step 6: Deploy
+## Step 6: Deploy on RHOAI
 
-After training, deploy the GRPO-tuned model on RHOAI with KServe + vLLM. The deployment process is the same as for any LoRA adapter — see the [Serving Guide](../serving/index.md) for full KServe RawDeployment instructions, or follow the [Tool-Calling Model Pipeline Step 4](tool-calling-financial.md#step-4-deploy-the-fine-tuned-model-on-rhoai) for a worked example with YAML manifests.
+After training, deploy the LoRA adapter on RHOAI with KServe + vLLM. This uses the same validated pattern as the [Tool-Calling Model Pipeline](tool-calling-financial.md).
+
+!!! warning "Base model must be on the PVC"
+    vLLM needs the base model weights at serving time. Download the base model to the PVC before deploying. Avoid using `storageUri: pvc://` with a separate model path — mount the PVC directly in the ServingRuntime and set `--model` to the PVC path.
+
+#### Download base model to PVC
+
+```bash
+cat <<'YAML' | oc apply -n mcp-distillation -f -
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: download-model
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      tolerations:
+        - key: nvidia.com/gpu
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: download
+          image: registry.redhat.io/rhoai/odh-th06-cuda130-torch210-py312-rhel9@sha256:c18bb50a0082f9258afeb95cf9d8bbc6af7a48e712a7587073f2b281ca2200b8
+          command: ["python3", "-c"]
+          args:
+            - |
+              from huggingface_hub import snapshot_download
+              import os
+              target = "/workspace/base-model"
+              os.makedirs(target, exist_ok=True)
+              snapshot_download(
+                  repo_id="Qwen/Qwen3-4B",
+                  local_dir=target,
+                  ignore_patterns=["*.gguf", "*.bin"],
+              )
+              print("Download complete!")
+          resources:
+            requests:
+              cpu: "2"
+              memory: "8Gi"
+            limits:
+              cpu: "2"
+              memory: "8Gi"
+          volumeMounts:
+            - name: workspace
+              mountPath: /workspace
+      volumes:
+        - name: workspace
+          persistentVolumeClaim:
+            claimName: mcp-workspace
+YAML
+
+# Wait for download to complete (~3-5 min)
+oc wait job/download-model -n mcp-distillation --for=condition=complete --timeout=600s
+```
+
+#### Deploy with KServe
+
+```bash
+cat <<'YAML' | oc apply -n mcp-distillation -f -
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: vllm-lora-runtime
+  annotations:
+    openshift.io/display-name: "vLLM LoRA Runtime"
+spec:
+  supportedModelFormats:
+    - name: vLLM
+      autoSelect: true
+  multiModel: false
+  containers:
+    - name: kserve-container
+      image: registry.redhat.io/rhaii/vllm-cuda-rhel9@sha256:5800e12b2a465f15961fcf34b645d79ed4f91ec9161eab22b1205d12682183c8
+      command: ["python", "-m", "vllm.entrypoints.openai.api_server"]
+      args:
+        - "--port=8080"
+        - "--model=/workspace/base-model"
+        - "--enable-lora"
+        - "--lora-modules"
+        - "mcp-distillation-lora=/workspace/output"
+        - "--max-lora-rank=64"
+        - "--max-model-len=4096"
+        - "--enable-auto-tool-choice"
+        - "--tool-call-parser=hermes"
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+      volumeMounts:
+        - name: workspace
+          mountPath: /workspace
+  volumes:
+    - name: workspace
+      persistentVolumeClaim:
+        claimName: mcp-workspace
+---
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: mcp-distillation-model
+  annotations:
+    serving.kserve.io/deploymentMode: RawDeployment
+spec:
+  predictor:
+    model:
+      runtime: vllm-lora-runtime
+      modelFormat:
+        name: vLLM
+      resources:
+        requests:
+          cpu: "2"
+          memory: "10Gi"
+          nvidia.com/gpu: "1"
+        limits:
+          cpu: "2"
+          memory: "10Gi"
+          nvidia.com/gpu: "1"
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+YAML
+```
+
+#### Test inference
+
+```bash
+# Get the predictor pod IP
+POD_IP=$(oc get pod -l app=isvc.mcp-distillation-model-predictor \
+  -n mcp-distillation -o jsonpath='{.items[0].status.podIP}')
+
+# Send a tool-calling request
+oc run test-inference --rm -i --restart=Never --image=curlimages/curl \
+  -n mcp-distillation -- -s -X POST "http://${POD_IP}:8080/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "mcp-distillation-lora",
+    "messages": [
+      {"role": "system", "content": "You are a helpful financial assistant."},
+      {"role": "user", "content": "What is the stock price of AAPL?"}
+    ],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "get_stock_price",
+        "description": "Get stock price for a ticker",
+        "parameters": {
+          "type": "object",
+          "properties": {"ticker": {"type": "string"}},
+          "required": ["ticker"]
+        }
+      }
+    }],
+    "max_tokens": 200,
+    "temperature": 0
+  }'
+```
+
+The response should include `tool_calls` with `get_stock_price({"ticker": "AAPL"})`.
 
 ## Full Example
 

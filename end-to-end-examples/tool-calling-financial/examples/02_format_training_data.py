@@ -137,7 +137,7 @@ def format_tool_trace(
                 })
             messages.append({
                 "role": "assistant",
-                "content": None,
+                "content": "",
                 "tool_calls": tool_calls,
             })
 

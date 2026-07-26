@@ -50,7 +50,7 @@ For training tool-use models (GRPO), messages include tool calls and results:
     {"role": "user", "content": "Find products under $20"},
     {
       "role": "assistant",
-      "content": null,
+      "content": "",
       "tool_calls": [{
         "type": "function",
         "function": {

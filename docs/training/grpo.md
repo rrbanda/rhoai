@@ -15,6 +15,9 @@ GRPO is a reinforcement learning algorithm that trains models to use tools effec
     pip install training-hub[grpo,lora]
     ```
 
+!!! warning "Not available in RHOAI 3.4.2 ClusterTrainingRuntime"
+    The `training-hub` package pre-installed in the RHOAI 3.4.2 ClusterTrainingRuntime does **not** include `lora_grpo`. To use GRPO on-cluster, build a custom training image with `training-hub[grpo,lora]` installed. For on-cluster training via TrainJob, use **LoRA SFT** (`lora_sft`) instead — see the [MCP Distillation Pipeline](../end-to-end/mcp-distillation.md).
+
 ## Quick Start
 
 ```python
@@ -57,7 +60,7 @@ GRPO expects tool-use traces in messages format with tool calls and results:
     {"role": "user", "content": "Find products under $20"},
     {
       "role": "assistant",
-      "content": null,
+      "content": "",
       "tool_calls": [{
         "type": "function",
         "function": {
