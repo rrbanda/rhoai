@@ -7,6 +7,8 @@ repo_name: rrbanda/rhoai
 theme:
   name: material
   custom_dir: docs/overrides
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
   font:
     text: Inter
     code: JetBrains Mono
@@ -32,6 +34,7 @@ theme:
     - navigation.instant
     - navigation.instant.progress
     - navigation.footer
+    - navigation.path
     - search.suggest
     - search.highlight
     - content.code.copy
@@ -49,6 +52,9 @@ extra:
     - icon: fontawesome/solid/book
       link: https://docs.redhat.com/en/documentation/red_hat_openshift_ai/latest
       name: Official RHOAI Docs
+    - icon: fontawesome/solid/bug
+      link: https://github.com/rrbanda/rhoai/issues/new
+      name: Report an issue
 
 extra_css:
   - stylesheets/extra.css
@@ -76,11 +82,15 @@ markdown_extensions:
   - attr_list
   - md_in_html
   - tables
+  - pymdownx.emoji:
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - toc:
       permalink: true
 
 nav:
   - index.md
+  - Contributing: contributing.md
   - Model Customization:
     - Getting Started:
       - Overview: getting-started/overview.md
@@ -114,14 +124,17 @@ nav:
       - Code Evaluation: evaluation/code-evaluation.md
       - Tool-Use Evaluation: evaluation/agent-evaluation.md
     - Domains:
+      - domains/index.md
       - Medical: domains/medical.md
       - Financial: domains/financial.md
       - Model-Specific Configs: domains/model-specific.md
     - Utilities:
+      - utilities/index.md
       - Memory Estimator: utilities/memory-estimator.md
       - Plot Loss: utilities/plot-loss.md
       - Model Interpolation: utilities/model-interpolation.md
     - Reference:
+      - reference/index.md
       - Data Formats: reference/data-formats.md
       - GPU Requirements: reference/gpu-requirements.md
       - Platform Reference: reference/platform-reference.md

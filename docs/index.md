@@ -7,20 +7,21 @@ hide:
 
 <div class="featured-track" markdown>
 
-### Model Customization
+### :material-tune-vertical: Model Customization on RHOAI
 
-Fine-tune LLMs with smaller, efficient architectures on RHOAI. This track covers the full lifecycle — from generating synthetic training data with **SDG Hub** to training with **Training Hub** (SFT, OSFT, LoRA, GRPO), evaluation, and deployment.
+Fine-tune LLMs with smaller, efficient architectures on Red Hat OpenShift AI. Generate synthetic training data with **SDG Hub**, train with **Training Hub** (SFT, OSFT, LoRA, GRPO), evaluate, and deploy — all on your RHOAI cluster.
 
 <div class="featured-track-meta" markdown>
 
-**7 training guides** · **3 end-to-end walkthroughs** · **4 algorithms** · **6 supported model families** · **Validated on RHOAI 3.4.2**
+:material-check-decagram: **Validated on RHOAI 3.4.2** · 7 training guides · 3 end-to-end pipelines · 4 algorithms · 6 model families
 
 </div>
 
 <div class="featured-track-buttons" markdown>
 
-[New to model customization? Start with concepts](getting-started/overview.md){ .md-button .md-button--primary }
-[Ready to code? Jump to the quickstart](getting-started/quickstart.md){ .md-button }
+[Start with concepts](getting-started/overview.md){ .md-button .md-button--primary }
+[Quickstart](getting-started/quickstart.md){ .md-button }
+[Choose an algorithm](getting-started/choosing-an-algorithm.md){ .md-button }
 
 </div>
 
@@ -30,40 +31,50 @@ Fine-tune LLMs with smaller, efficient architectures on RHOAI. This track covers
 
 <div class="track-section-item" markdown>
 
-**Knowledge Track** — Teach a model your domain knowledge (financial regulations, medical literature, product docs). Generate Q&A pairs from documents with SDG Hub, then train with SFT or OSFT.
-[Knowledge tuning pipeline →](end-to-end/knowledge-tuning.md)
+:material-book-open-variant: **Knowledge Tuning** — Teach a model your domain knowledge from documents. Generate Q&A data with SDG Hub, then train with SFT, OSFT, or LoRA.
+[Knowledge tuning pipeline :material-arrow-right:](end-to-end/knowledge-tuning.md)
 
 </div>
 
 <div class="track-section-item" markdown>
 
-**Tool-Calling Track** — Fine-tune a model to call tools from MCP servers, APIs, and databases. Generate expert tool-use traces with MCP distillation, then train with LoRA SFT. Validated end-to-end on RHOAI 3.4.2.
-[Tool-calling model pipeline (financial example) →](end-to-end/tool-calling-financial.md)
+:material-wrench: **Tool-Calling Model** — Fine-tune a model to call tools from MCP servers. Generate expert traces with MCP distillation, then train with LoRA SFT.
+[Tool-calling pipeline :material-arrow-right:](end-to-end/tool-calling-financial.md)
 
 </div>
 
 <div class="track-section-item" markdown>
 
-**Training Algorithms** — Compare SFT, OSFT, LoRA, and GRPO side by side and pick the right one for your constraints.
-[Choose an algorithm →](getting-started/choosing-an-algorithm.md)
+:material-scale-balance: **Training Algorithms** — Compare SFT, OSFT, LoRA, and GRPO side by side. Pick the right one for your GPU budget and use case.
+[Choose an algorithm :material-arrow-right:](getting-started/choosing-an-algorithm.md)
 
 </div>
 
 <div class="track-section-item" markdown>
 
-**Serving & Guardrails** — Deploy fine-tuned models with KServe + vLLM and protect them with NeMo Guardrails.
-[Deploy →](serving/index.md) · [Guardrails →](guardrails/index.md)
+:material-database-arrow-right: **Data Generation** — Use SDG Hub to create high-quality synthetic training data from documents, knowledge bases, or MCP servers.
+[SDG Hub overview :material-arrow-right:](data-generation/index.md)
 
 </div>
 
 <div class="track-section-item" markdown>
 
-**Evaluation & Utilities** — Measure quality with RAG benchmarks, estimate GPU memory, visualize training loss.
-[Evaluation →](evaluation/index.md) · [GPU planning →](reference/gpu-requirements.md)
+:material-rocket-launch: **Deploy & Serve** — Deploy fine-tuned models on RHOAI with KServe + vLLM. Add NeMo Guardrails for safety.
+[Serving :material-arrow-right:](serving/index.md) · [Guardrails :material-arrow-right:](guardrails/index.md)
+
+</div>
+
+<div class="track-section-item" markdown>
+
+:material-chart-bar: **Evaluate & Measure** — RAG benchmarks, tool-use scoring, code evaluation, GPU memory estimation, loss visualization.
+[Evaluation :material-arrow-right:](evaluation/index.md) · [GPU planning :material-arrow-right:](reference/gpu-requirements.md)
 
 </div>
 
 </div>
 
-!!! note "Disclaimer"
-    These guides are community-maintained and intended as supplementary learning material. For official product documentation, refer to the [latest Red Hat OpenShift AI documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai/latest).
+<div class="site-disclaimer" markdown>
+
+These guides are community-maintained supplementary material. For official product documentation, see the [Red Hat OpenShift AI docs](https://docs.redhat.com/en/documentation/red_hat_openshift_ai/latest).
+
+</div>
