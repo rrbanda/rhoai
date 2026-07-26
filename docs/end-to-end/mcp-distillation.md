@@ -14,7 +14,7 @@ MCP (Model Context Protocol) distillation teaches a smaller model to use tools b
 graph LR
     A[1. MCP<br/>Server] --> B[2. Generate<br/>Traces]
     B --> C[3. Format<br/>Data]
-    C --> D[4. GRPO<br/>Training]
+    C --> D[4. Train<br/>LoRA SFT]
     D --> E[5. Evaluate]
     E -->|Iterate| B
     E -->|Ready| F[6. Deploy]
@@ -52,14 +52,12 @@ def get_product(product_id: int) -> dict | None:
 ## Step 2: Generate Tool-Use Traces
 
 !!! tip "Skip this step with sample data"
-    The repository includes pre-generated sample data in `examples/sample_data/`. To jump straight to training:
+    The repository includes pre-generated sample data in `examples/sample_data/`. You can jump straight to training:
 
-    ```bash
-    # Use the included sample data — no Langflow or API keys needed
-    python 03_train_grpo.py --data-path sample_data/training_data.jsonl
-    ```
+    - **On RHOAI:** Upload `sample_data/training_data.jsonl` to the PVC and follow the [TrainJob section](#option-b-train-on-rhoai-with-trainjob-lora-sft-recommended) below.
+    - **Locally:** `python 03_train_grpo.py --data-path sample_data/training_data.jsonl`
 
-    Then continue from [Step 4](#step-4-train-with-grpo). Use this path to validate the full train → deploy → serve pipeline before investing in Langflow setup.
+    Use this path to validate the full train → deploy → serve pipeline before investing in Langflow setup.
 
 Use SDG Hub's MCP distillation flow. The teacher LLM explores your MCP server, discovering tools and generating realistic usage scenarios:
 
@@ -127,9 +125,12 @@ pd.DataFrame(training_records).to_json(
 )
 ```
 
-## Step 4: Train with GRPO
+## Step 4: Train
 
-Use GRPO (Group Relative Policy Optimization) to train the student model:
+### Option A: Train locally with GRPO
+
+!!! warning "GRPO requires local installation"
+    GRPO is **not available** in the RHOAI 3.4.2 ClusterTrainingRuntime. Use this option only when running locally or in a custom container.
 
 ```bash
 pip install training-hub[grpo,lora]
@@ -150,9 +151,9 @@ lora_grpo(
 ```
 
 !!! info "GRPO vs LoRA SFT for tool-use"
-    GRPO learns from verifiable rewards (did the tool call succeed?) rather than just imitating examples. This can produce models that generalize better to unseen tool combinations. However, LoRA SFT on expert traces is faster to train, simpler to set up, and has a [validated pipeline on RHOAI](tool-calling-financial.md). Use GRPO when you want reward-based exploration; use LoRA SFT when you have high-quality expert demonstrations from MCP distillation.
+    GRPO learns from verifiable rewards (did the tool call succeed?) rather than just imitating examples. This can produce models that generalize better to unseen tool combinations. However, LoRA SFT on expert traces is faster to train, simpler to set up, and is the [validated method on RHOAI](tool-calling-financial.md). Use GRPO when you want reward-based exploration; use LoRA SFT when you have high-quality expert demonstrations from MCP distillation.
 
-### Training on RHOAI with TrainJob (LoRA SFT)
+### Option B: Train on RHOAI with TrainJob (LoRA SFT) — Recommended
 
 The RHOAI-native approach uses the **Kubeflow Trainer** with the pre-installed `training-hub` ClusterTrainingRuntime. Since GRPO is not included in the RHOAI 3.4.2 runtime, this section uses **LoRA SFT** — the same validated approach used by the [Tool-Calling Model Pipeline](tool-calling-financial.md).
 
@@ -238,14 +239,24 @@ YAML
 
 #### Upload training data to the PVC
 
+!!! note "OpenShift permission handling"
+    OpenShift runs containers as a non-root UID. The `fsGroup: 0` setting ensures the PVC is group-writable by the OpenShift-assigned user. Do not use `securityContext.runAsUser: 0` — OpenShift SCCs will reject it.
+
 ```bash
-# Create a helper pod, copy data in, then delete
+# Create a helper pod that mounts the PVC
 oc run data-helper --image=busybox -n mcp-distillation \
   --overrides='{"spec":{"containers":[{"name":"data-helper","image":"busybox","command":["sleep","300"],"volumeMounts":[{"mountPath":"/workspace","name":"ws"}]}],"securityContext":{"fsGroup":0},"volumes":[{"name":"ws","persistentVolumeClaim":{"claimName":"mcp-workspace"}}]}}'
+
+# Wait for the pod to be ready, create the data directory, and copy
 oc wait pod/data-helper -n mcp-distillation --for=condition=Ready --timeout=60s
 oc exec data-helper -n mcp-distillation -- mkdir -p /workspace/data
 oc cp training_data.jsonl mcp-distillation/data-helper:/workspace/data/training_data.jsonl
-oc delete pod data-helper -n mcp-distillation
+
+# Verify the upload
+oc exec data-helper -n mcp-distillation -- wc -l /workspace/data/training_data.jsonl
+
+# Clean up the helper pod
+oc delete pod data-helper -n mcp-distillation --wait=false
 ```
 
 #### Submit the TrainJob
@@ -308,12 +319,18 @@ YAML
 #### Monitor and verify
 
 ```bash
+# Watch the TrainJob status until it shows Complete
 oc get trainjob mcp-distillation-lora -n mcp-distillation -w
-oc logs -f job/mcp-distillation-lora-node -n mcp-distillation
 
-# Verify checkpoint output
-oc exec data-helper -n mcp-distillation -- ls -la /workspace/output/
+# Stream training logs (loss should decrease over epochs)
+oc logs -f $(oc get pods -n mcp-distillation -l batch.kubernetes.io/job-name=mcp-distillation-lora-node -o name) -n mcp-distillation
+
+# Verify checkpoint output after training completes
+oc run verify-output --rm -i --restart=Never --image=busybox -n mcp-distillation \
+  --overrides='{"spec":{"containers":[{"name":"verify","image":"busybox","command":["ls","-la","/workspace/output/"],"volumeMounts":[{"mountPath":"/workspace","name":"ws"}]}],"securityContext":{"fsGroup":0},"volumes":[{"name":"ws","persistentVolumeClaim":{"claimName":"mcp-workspace"}}]}}'
 ```
+
+Expected output includes: `adapter_config.json`, `adapter_model.safetensors` (~132MB), `tokenizer.json`, `tokenizer_config.json`, `training_metrics.jsonl`.
 
 ## Step 5: Evaluate
 
@@ -362,6 +379,9 @@ After training, deploy the LoRA adapter on RHOAI with KServe + vLLM. This uses t
     vLLM needs the base model weights at serving time. Download the base model to the PVC before deploying. Avoid using `storageUri: pvc://` with a separate model path — mount the PVC directly in the ServingRuntime and set `--model` to the PVC path.
 
 #### Download base model to PVC
+
+!!! note "Why this works without `fsGroup`"
+    The data upload step above (using `fsGroup: 0`) made the PVC directories group-writable. This Job runs as the OpenShift-assigned UID which inherits group-write access. Do **not** add `securityContext.fsGroup: 0` to Job specs — OpenShift SCCs reject it for Jobs.
 
 ```bash
 cat <<'YAML' | oc apply -n mcp-distillation -f -

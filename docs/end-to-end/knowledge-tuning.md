@@ -350,11 +350,16 @@ YAML
 #### Step 4c: Upload training data to the PVC
 
 ```bash
-# Start a helper pod to copy data into the PVC
-oc run copy-data --rm -i --restart=Never --image=busybox \
-  -n knowledge-tuning \
-  --overrides='{"spec":{"containers":[{"name":"copy","image":"busybox","command":["sh","-c","mkdir -p /workspace/data && cat > /workspace/data/knowledge_train.jsonl"],"stdin":true,"volumeMounts":[{"mountPath":"/workspace","name":"ws"}]}],"volumes":[{"name":"ws","persistentVolumeClaim":{"claimName":"knowledge-workspace"}}]}}' \
-  < knowledge_train.jsonl
+# Create a helper pod that mounts the PVC (fsGroup:0 makes it group-writable)
+oc run data-helper --image=busybox -n knowledge-tuning \
+  --overrides='{"spec":{"containers":[{"name":"data-helper","image":"busybox","command":["sleep","300"],"volumeMounts":[{"mountPath":"/workspace","name":"ws"}]}],"securityContext":{"fsGroup":0},"volumes":[{"name":"ws","persistentVolumeClaim":{"claimName":"knowledge-workspace"}}]}}'
+
+# Wait for pod, create directory, copy data, and clean up
+oc wait pod/data-helper -n knowledge-tuning --for=condition=Ready --timeout=60s
+oc exec data-helper -n knowledge-tuning -- mkdir -p /workspace/data
+oc cp knowledge_train.jsonl knowledge-tuning/data-helper:/workspace/data/knowledge_train.jsonl
+oc exec data-helper -n knowledge-tuning -- wc -l /workspace/data/knowledge_train.jsonl
+oc delete pod data-helper -n knowledge-tuning --wait=false
 ```
 
 #### Step 4d: Submit the TrainJob
