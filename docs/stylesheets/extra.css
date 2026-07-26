@@ -109,23 +109,23 @@
 
 /* --------------- Header --------------- */
 .md-header {
-  min-height: 42px;
+  min-height: 38px;
 }
 
 .md-header__inner {
   padding: 0 0.8rem;
-  min-height: 42px;
+  min-height: 38px;
 }
 
 /* --------------- Navigation Tabs --------------- */
 .md-tabs {
   font-weight: 500;
-  min-height: 32px;
+  min-height: 28px;
 }
 
 .md-tabs__link {
-  font-size: 0.72rem;
-  padding: 0.35rem 0.8rem;
+  font-size: 0.68rem;
+  padding: 0.25rem 0.8rem;
 }
 
 .md-nav__link {
@@ -159,65 +159,43 @@
 }
 
 .md-footer__inner {
-  padding: 0.35rem 1rem;
+  padding: 0.2rem 1rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  min-height: 40px;
+  min-height: 34px;
 }
 
 .md-footer__link {
-  padding: 0.2rem 0.5rem;
+  padding: 0.15rem 0.4rem;
 }
 
 .md-footer-nav__title {
-  font-size: 0.7rem;
+  font-size: 0.66rem;
   margin: 0;
   padding: 0;
-  line-height: 1.4;
+  line-height: 1.3;
 }
 
 .md-footer-nav__direction {
-  font-size: 0.56rem;
-  line-height: 1.2;
+  font-size: 0.52rem;
+  line-height: 1;
   opacity: 0.7;
 }
 
 .md-footer-nav__link .md-icon {
-  width: 0.85rem;
-  height: 0.85rem;
+  width: 0.8rem;
+  height: 0.8rem;
 }
 
-/* "Made with Material" meta — inline with nav */
+/* Hide the "Made with Material" meta bar */
 .md-footer-meta {
-  padding: 0;
-}
-
-.md-footer-meta__inner {
-  padding: 0.15rem 1rem;
-  font-size: 0.54rem;
-  line-height: 1.2;
-  display: flex;
-  align-items: center;
-  min-height: 18px;
-}
-
-.md-footer-meta .md-copyright {
-  font-size: 0.54rem;
-}
-
-.md-footer-meta .md-social {
-  padding: 0;
-}
-
-.md-footer-meta .md-social__link svg {
-  width: 0.7rem;
-  height: 0.7rem;
+  display: none;
 }
 
 /* Prevent content from hiding behind the fixed footer */
 .md-main {
-  padding-bottom: 64px;
+  padding-bottom: 42px;
 }
 
 /* Sidebar and content scroll within remaining viewport */

@@ -32,7 +32,6 @@ theme:
     - navigation.instant
     - navigation.instant.progress
     - navigation.footer
-    - navigation.path
     - search.suggest
     - search.highlight
     - content.code.copy
