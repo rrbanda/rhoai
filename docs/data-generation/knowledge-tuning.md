@@ -12,7 +12,7 @@ Knowledge tuning flows generate Q&A training pairs from your domain documents. S
 | **Document Direct QA** | Generates Q&A directly from document content | Diverse question types |
 
 !!! tip "Use Multiple Variants"
-    Running multiple variants on the same documents produces diverse training data. The [knowledge mixing](#mixing-variants) step combines and deduplicates the results.
+    Running multiple variants on the same documents produces diverse training data. The [convert and mix](#convert-and-mix-variants) step combines and deduplicates the results.
 
 ## Generate Knowledge Data
 
