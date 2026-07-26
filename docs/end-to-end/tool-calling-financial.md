@@ -439,7 +439,7 @@ After training completes, the LoRA adapter weights are on the PVC at `/workspace
 
 ```
 serving/
-├── 01-serving-runtime.yaml          vLLM ServingRuntime (only if not preinstalled)
+├── 01-serving-runtime.yaml          vLLM LoRA Runtime (required — includes adapter mount + tool-calling args)
 ├── 02-inferenceservice-lora.yaml    Option A: LoRA adapter from PVC (recommended)
 ├── 03-inferenceservice-merged.yaml  Option B: Merged model from S3
 ├── 04-s3-data-connection.yaml       S3 credentials secret (Option B only)
@@ -452,22 +452,20 @@ serving/
 # Verify KServe is enabled (kserve component should be "Managed")
 oc get dsc default-dsc -o jsonpath='{.spec.components.kserve.managementState}' && echo
 # Expected: Managed
-
-# Verify the vLLM ServingRuntime exists
-oc get servingruntimes -n redhat-ods-applications | grep vllm
-# Expected: vllm-runtime-...   (preinstalled by RHOAI)
 ```
-
-!!! info "No vLLM runtime?"
-    The vLLM ServingRuntime is preinstalled by RHOAI 3.4+. If missing, enable it via **RHOAI Dashboard → Settings → Serving runtimes → vLLM ServingRuntime for KServe**, or apply the provided manifest: `oc apply -f serving/01-serving-runtime.yaml -n financial-agent`
 
 ### 4.2 Option A: Serve the LoRA adapter directly (recommended)
 
 vLLM natively supports LoRA adapters — no merging required. The base model (Qwen3-4B) is pulled from HuggingFace and the adapter (~50MB) is mounted from the training PVC.
 
+The LoRA adapter, tool-calling flags, and PVC volume mount are configured in the **ServingRuntime** (`01-serving-runtime.yaml`). The InferenceService (`02-inferenceservice-lora.yaml`) only specifies the base model and resources — KServe does not allow mixing `model` and `containers` in the predictor spec.
+
 **Deploy:**
 
 ```bash
+# Apply the LoRA-enabled ServingRuntime (includes PVC mount + tool-calling args)
+oc apply -f serving/01-serving-runtime.yaml -n financial-agent
+
 # Apply the InferenceService
 oc apply -f serving/02-inferenceservice-lora.yaml -n financial-agent
 

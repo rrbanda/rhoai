@@ -471,19 +471,116 @@ Compare the fine-tuned model's answers against the teacher's answers using LLM-a
 
 **RHOAI Feature:** KServe RawDeployment (GA) + vLLM ServingRuntime (GA)
 
-After training completes, deploy the model on RHOAI. You need to make the trained model accessible to KServe — either upload to S3 or serve from a PVC.
+After training completes, deploy the model on RHOAI. Two options are available:
 
-### 6.1 Upload the model to S3
+- **Option A (recommended):** Serve the LoRA adapter directly from the training PVC — no upload step needed
+- **Option B:** Upload to S3 and serve a fully merged model
+
+### 6.1 Option A: Serve LoRA adapter from PVC (recommended, validated)
+
+The LoRA adapter is already on the `knowledge-workspace` PVC at `/output`. Create a ServingRuntime that mounts the PVC and loads the adapter with vLLM:
 
 ```bash
-# Upload the trained model (from hf_format/samples_0/)
-aws s3 sync ./knowledge-model/hf_format/samples_0/ s3://your-bucket/models/knowledge-model/
-
-# For LoRA, upload just the adapter (~50MB)
-aws s3 sync ./knowledge-model/ s3://your-bucket/models/knowledge-model-lora/
+cat <<'YAML' | oc apply -n knowledge-tuning -f -
+apiVersion: serving.kserve.io/v1alpha1
+kind: ServingRuntime
+metadata:
+  name: vllm-lora-runtime
+  labels:
+    opendatahub.io/dashboard: "true"
+spec:
+  annotations:
+    prometheus.io/port: "8080"
+    prometheus.io/path: "/metrics"
+  multiModel: false
+  supportedModelFormats:
+    - name: vLLM
+      autoSelect: true
+  containers:
+    - name: kserve-container
+      image: registry.redhat.io/rhaii/vllm-cuda-rhel9@sha256:5800e12b2a465f15961fcf34b645d79ed4f91ec9161eab22b1205d12682183c8
+      command: ["python", "-m", "vllm.entrypoints.openai.api_server"]
+      args:
+        - --port=8080
+        - --model=/mnt/models
+        - --served-model-name={{.Name}}
+        - --max-model-len=4096
+        - --enable-lora
+        - --lora-modules
+        - knowledge-model=/mnt/lora-adapter/output
+        - --max-lora-rank=16
+        - --gpu-memory-utilization=0.90
+      env:
+        - name: HF_HUB_CACHE
+          value: /tmp/hf_cache
+      ports:
+        - containerPort: 8080
+          protocol: TCP
+      volumeMounts:
+        - name: lora-adapter
+          mountPath: /mnt/lora-adapter
+          readOnly: true
+        - name: shm
+          mountPath: /dev/shm
+  tolerations:
+    - key: nvidia.com/gpu
+      operator: Exists
+      effect: NoSchedule
+  volumes:
+    - name: lora-adapter
+      persistentVolumeClaim:
+        claimName: knowledge-workspace
+    - name: shm
+      emptyDir:
+        medium: Memory
+        sizeLimit: 4Gi
+YAML
 ```
 
-### 6.2 Create the S3 data connection
+Then deploy the InferenceService (the base model is pulled from HuggingFace; the LoRA adapter is loaded by the runtime):
+
+```bash
+cat <<'YAML' | oc apply -n knowledge-tuning -f -
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: knowledge-model
+  annotations:
+    serving.kserve.io/deploymentMode: RawDeployment
+  labels:
+    opendatahub.io/dashboard: "true"
+spec:
+  predictor:
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+    model:
+      modelFormat:
+        name: vLLM
+      runtime: vllm-lora-runtime
+      storageUri: hf://Qwen/Qwen3-4B
+      resources:
+        requests:
+          cpu: "2"
+          memory: "8Gi"
+          nvidia.com/gpu: "1"
+        limits:
+          cpu: "3"
+          memory: "10Gi"
+          nvidia.com/gpu: "1"
+YAML
+```
+
+### 6.2 Option B: Upload to S3 and serve merged model
+
+If you need to serve a fully merged model (without LoRA runtime overhead), merge the adapter locally and upload:
+
+```bash
+aws s3 sync ./knowledge-model/hf_format/samples_0/ s3://your-bucket/models/knowledge-model/
+```
+
+Create the S3 data connection:
 
 ```bash
 oc create secret generic aws-connection-models \
@@ -495,7 +592,7 @@ oc create secret generic aws-connection-models \
   --from-literal=AWS_S3_BUCKET="your-bucket"
 ```
 
-### 6.3 Deploy the InferenceService
+Deploy:
 
 ```bash
 cat <<'YAML' | oc apply -n knowledge-tuning -f -
@@ -506,6 +603,8 @@ metadata:
   annotations:
     serving.kserve.io/deploymentMode: RawDeployment
     serving.kserve.io/secretName: aws-connection-models
+  labels:
+    opendatahub.io/dashboard: "true"
 spec:
   predictor:
     tolerations:
@@ -515,7 +614,7 @@ spec:
     model:
       modelFormat:
         name: vLLM
-      runtime: vllm-runtime
+      runtime: vllm-lora-runtime
       storageUri: s3://your-bucket/models/knowledge-model
       resources:
         requests:
@@ -523,8 +622,8 @@ spec:
           memory: "8Gi"
           nvidia.com/gpu: "1"
         limits:
-          cpu: "4"
-          memory: "16Gi"
+          cpu: "3"
+          memory: "10Gi"
           nvidia.com/gpu: "1"
 YAML
 ```
