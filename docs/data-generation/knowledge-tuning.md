@@ -151,16 +151,19 @@ dataset = Dataset.from_dict({
 
 ## Output Format
 
-Knowledge tuning flows produce JSONL with the messages format expected by Training Hub:
+!!! warning "SDG Hub output ≠ Training Hub input"
+    Knowledge tuning flows produce rows with **`question` and `response` columns** — they do **not** output `messages` format directly. You must convert before training. See the [Convert and Mix](#convert-and-mix-variants) section above.
+
+**Raw SDG Hub output** (one JSONL row):
 
 ```json
-{
-  "messages": [
-    {"role": "system", "content": "You are a domain expert."},
-    {"role": "user", "content": "What is Models-as-a-Service in RHOAI?"},
-    {"role": "assistant", "content": "Models-as-a-Service (MaaS) in RHOAI 3.4 allows users to access hosted LLMs directly..."}
-  ]
-}
+{"question": "What is Models-as-a-Service in RHOAI?", "response": "Models-as-a-Service (MaaS) in RHOAI 3.4 allows users to access hosted LLMs directly...", "domain": "rhoai"}
+```
+
+**After conversion** (what Training Hub expects):
+
+```json
+{"messages": [{"role": "user", "content": "What is Models-as-a-Service in RHOAI?"}, {"role": "assistant", "content": "Models-as-a-Service (MaaS) in RHOAI 3.4 allows users to access hosted LLMs directly..."}], "unmask": true}
 ```
 
 ## Related

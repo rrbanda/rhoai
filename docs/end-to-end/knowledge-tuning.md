@@ -1,9 +1,9 @@
 # End-to-End Knowledge Tuning Pipeline
 
-This walkthrough takes you through the complete model customization lifecycle: preparing documents, generating synthetic training data, training a model, evaluating it, and preparing for deployment.
+Teach a model your domain knowledge — financial regulations, product documentation, medical literature — by generating synthetic Q&A training data from your documents, then fine-tuning with OSFT, SFT, or LoRA. This pipeline uses SDG Hub for data generation and Training Hub for training, then deploys the model on RHOAI with KServe + vLLM.
 
 !!! success "Validated on RHOAI 3.4.2"
-    This pipeline has been validated on RHOAI 3.4.2. Key validated results:
+    This pipeline has been validated on RHOAI 3.4.2 (OCP 4.18, NVIDIA L4 24GB). Key validated results:
 
     - **SDG Hub** outputs `question`/`response` columns (not `messages`)
     - **Data mixing** correctly converts to `messages` format with `unmask: true`
@@ -23,9 +23,40 @@ graph LR
     E -->|"Ready"| F[6. Serve on RHOAI]
 ```
 
+## Prerequisites
+
+- RHOAI 3.4+ cluster with at least 1x NVIDIA L4 24GB GPU (for training and serving)
+- LLM API key for synthetic data generation (OpenAI, Gemini, or any [LiteLLM-supported provider](https://docs.litellm.ai/docs/providers))
+- Python 3.10+, `oc` CLI authenticated to your cluster
+- Hugging Face token for gated models (Llama, Mistral): `export HF_TOKEN="hf_..."`
+
+## Two Ways to Follow This Guide
+
+=== "Run the Scripts (recommended)"
+
+    The repository includes tested, production-ready scripts for each step:
+
+    ```bash
+    git clone https://github.com/rrbanda/rhoai.git
+    cd rhoai/end-to-end-examples/knowledge-tuning/examples/
+
+    # Install dependencies
+    pip install -r requirements.txt
+
+    # Configure environment
+    cp .env.example .env
+    # Edit .env with your API key, model, and paths
+    ```
+
+    Then follow each step below using the `python 0N_*.py` commands shown in the callout boxes.
+
+=== "Inline Code (for notebooks / exploration)"
+
+    Copy the Python snippets below into a Jupyter notebook or workbench. This path is useful for learning and experimentation, but the scripts are more robust for production runs.
+
 ## Step 1: Prepare Documents
 
-Convert your source documents to structured text. Use Docling for PDFs and web pages:
+Convert your source documents to structured text. Use [Docling](https://ds4sd.github.io/docling/) for PDFs and web pages:
 
 ```python
 from docling.document_converter import DocumentConverter
@@ -67,6 +98,15 @@ dataset = Dataset.from_dict({
 
 print(f"Created {len(dataset)} document chunks")
 ```
+
+!!! tip "Using the scripts"
+    Place your `.pdf`, `.md`, or `.html` files in a `documents/` directory, then:
+
+    ```bash
+    python 01_data_generation.py --document-dir ./documents --output-dir ./generated_output_data
+    ```
+
+    The script handles document loading, chunking, and runs all four flow variants automatically.
 
 ## Step 2: Generate Training Data
 
@@ -140,7 +180,16 @@ combined.to_json("training_data.jsonl", orient="records", lines=True)
 print(f"Final training set: {len(combined)} examples")
 ```
 
+!!! tip "Using the scripts"
+    ```bash
+    python 02_data_mixing.py --input-dir ./generated_output_data --skip-tokenize
+    ```
+
+    The script loads all JSONL files, converts `question`/`response` → `messages` with `unmask: true`, deduplicates, and writes `knowledge_train.jsonl`.
+
 ## Step 4: Train
+
+**RHOAI Feature:** Training Hub SFT / OSFT / LoRA (GA)
 
 Choose your algorithm based on the [decision guide](../getting-started/choosing-an-algorithm.md):
 
@@ -199,8 +248,51 @@ Choose your algorithm based on the [decision guide](../getting-started/choosing-
     )
     ```
 
+!!! tip "Using the scripts"
+    ```bash
+    # OSFT (recommended)
+    python 03_model_training.py osft --data-path ./generated_output_data/training_mix/knowledge_train.jsonl
+
+    # LoRA (single GPU)
+    python 03_model_training.py lora --data-path ./generated_output_data/training_mix/knowledge_train.jsonl
+
+    # SFT
+    python 03_model_training.py sft --data-path ./generated_output_data/training_mix/knowledge_train.jsonl
+    ```
+
 !!! tip "Where is my trained model?"
     Training Hub writes the final model to `{ckpt_output_dir}/hf_format/samples_0/`. Use this path for evaluation, serving, and further training.
+
+### Training on RHOAI (TrainJob)
+
+For on-cluster training, create a TrainJob using the Kubeflow Trainer — the same approach used in the [Tool-Calling Pipeline](tool-calling-financial.md#option-b-direct-trainjob-on-rhoai-recommended-validated). Replace the training script with your knowledge tuning configuration:
+
+```bash
+# Create namespace
+oc new-project knowledge-tuning
+
+# Create workspace PVC
+cat <<'YAML' | oc apply -n knowledge-tuning -f -
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: training-workspace
+spec:
+  accessModes: [ReadWriteOnce]
+  storageClassName: gp3-csi
+  resources:
+    requests:
+      storage: 50Gi
+YAML
+
+# Copy your training data to the PVC
+oc run copy-data --rm -i --restart=Never --image=busybox \
+  -n knowledge-tuning \
+  --overrides='{"spec":{"containers":[{"name":"copy-data","image":"busybox","command":["sh","-c","cat > /workspace/data/training_data.jsonl"],"stdin":true,"volumeMounts":[{"mountPath":"/workspace","name":"ws"}]}],"volumes":[{"name":"ws","persistentVolumeClaim":{"claimName":"training-workspace"}}]}}' \
+  < training_data.jsonl
+```
+
+Then create the TrainJob (see [Step 3B in the Tool-Calling Pipeline](tool-calling-financial.md#step-3b2-create-the-trainjob) for the full YAML template — replace the training script with your OSFT/SFT/LoRA configuration).
 
 ## Step 5: Evaluate
 
@@ -229,17 +321,50 @@ eval_data = flow.generate(held_out_dataset)
 
 Compare the fine-tuned model's answers against the teacher's answers using LLM-as-judge or exact match metrics.
 
+!!! tip "Using the scripts"
+    ```bash
+    python 04_evaluation.py --model-path ./knowledge-model/hf_format/samples_0/
+    ```
+
 ## Step 6: Serve on RHOAI
 
-Deploy the trained model via KServe with vLLM runtime:
+**RHOAI Feature:** KServe RawDeployment (GA) + vLLM ServingRuntime (GA)
 
-```yaml
+After training completes, deploy the model on RHOAI. You need to make the trained model accessible to KServe — either upload to S3 or serve from a PVC.
+
+### 6.1 Upload the model to S3
+
+```bash
+# Upload the trained model (from hf_format/samples_0/)
+aws s3 sync ./knowledge-model/hf_format/samples_0/ s3://your-bucket/models/knowledge-model/
+
+# For LoRA, upload just the adapter (~50MB)
+aws s3 sync ./knowledge-model/ s3://your-bucket/models/knowledge-model-lora/
+```
+
+### 6.2 Create the S3 data connection
+
+```bash
+oc create secret generic aws-connection-models \
+  -n knowledge-tuning \
+  --from-literal=AWS_ACCESS_KEY_ID="your-access-key" \
+  --from-literal=AWS_SECRET_ACCESS_KEY="your-secret-key" \
+  --from-literal=AWS_S3_ENDPOINT="https://s3.amazonaws.com" \
+  --from-literal=AWS_DEFAULT_REGION="us-east-1" \
+  --from-literal=AWS_S3_BUCKET="your-bucket"
+```
+
+### 6.3 Deploy the InferenceService
+
+```bash
+cat <<'YAML' | oc apply -n knowledge-tuning -f -
 apiVersion: serving.kserve.io/v1beta1
 kind: InferenceService
 metadata:
   name: knowledge-model
   annotations:
     serving.kserve.io/deploymentMode: RawDeployment
+    serving.kserve.io/secretName: aws-connection-models
 spec:
   predictor:
     tolerations:
@@ -250,7 +375,7 @@ spec:
       modelFormat:
         name: vLLM
       runtime: vllm-runtime
-      storageUri: s3://models/knowledge-model
+      storageUri: s3://your-bucket/models/knowledge-model
       resources:
         requests:
           cpu: "2"
@@ -260,17 +385,108 @@ spec:
           cpu: "4"
           memory: "16Gi"
           nvidia.com/gpu: "1"
+YAML
 ```
 
-## Full Example
+### 6.4 Monitor deployment
 
-The complete pipeline is available as a runnable Jupyter notebook:
+```bash
+# Watch until READY=True (typically 2-5 minutes for initial model download)
+oc get inferenceservice knowledge-model -n knowledge-tuning -w
 
-- **Notebook:** [`model_customization_e2e.ipynb`](https://github.com/rrbanda/rhoai/blob/main/end-to-end-examples/knowledge-tuning/model_customization_e2e.ipynb)
+# Stream vLLM startup logs
+oc logs -f deployment/knowledge-model-predictor -n knowledge-tuning
+```
+
+Model is ready when logs show:
+
+```
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8080
+```
+
+### 6.5 Test the deployed model
+
+```bash
+# Get the internal endpoint
+ENDPOINT="http://knowledge-model-predictor.knowledge-tuning.svc.cluster.local:8080"
+
+# Test with a domain question
+curl -s "$ENDPOINT/v1/chat/completions" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "model": "knowledge-model",
+    "messages": [
+      {"role": "user", "content": "Explain the key features of your domain topic."}
+    ],
+    "max_tokens": 256,
+    "temperature": 0.1
+  }' | python3 -m json.tool
+```
+
+Expected response:
+
+```json
+{
+  "choices": [{
+    "message": {
+      "role": "assistant",
+      "content": "Based on my training, the key features are..."
+    },
+    "finish_reason": "stop"
+  }]
+}
+```
+
+For external access, create an OpenShift Route:
+
+```bash
+oc create route edge knowledge-model \
+  --service=knowledge-model-predictor \
+  --port=8080 \
+  -n knowledge-tuning
+
+ROUTE_URL=$(oc get route knowledge-model -n knowledge-tuning -o jsonpath='{.spec.host}')
+echo "External endpoint: https://${ROUTE_URL}"
+```
+
+## Resource Estimates
+
+| Phase | Resource | Time |
+|-------|----------|------|
+| Data Generation | 1x CPU + Teacher API | 1-4 hours (depends on document count) |
+| Training (OSFT, 2x A100) | 2x A100 80GB | 2-6 hours |
+| Training (LoRA, 1x L4) | 1x L4 24GB | 1-3 hours |
+| Serving | 1x L4 24GB+ | Ongoing |
+
+## Troubleshooting
+
+| Symptom | Resolution |
+|---------|------------|
+| "Flow not found" during data generation | `pip install sdg-hub[examples]` |
+| Training fails with OOM | Use LoRA (`--algorithm lora`) or reduce `--max-seq-len` |
+| `unmask` not set in training data | Re-run Step 3 — the `convert_to_messages()` function adds `"unmask": True` |
+| Model outputs generic answers | Increase training data (more flow variants) or epochs |
+| InferenceService stuck at `READY=False` | Check pod events: `oc describe pod -l serving.kserve.io/inferenceservice=knowledge-model` |
+
+## Source Code
+
+The complete pipeline is available as runnable scripts and a Jupyter notebook:
+
 - **Scripts:** [`end-to-end-examples/knowledge-tuning/examples/`](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/knowledge-tuning/examples)
+- **Notebook:** [`model_customization_e2e.ipynb`](https://github.com/rrbanda/rhoai/blob/main/end-to-end-examples/knowledge-tuning/model_customization_e2e.ipynb)
+
+| Script | Step | Description |
+|--------|------|-------------|
+| `01_data_generation.py` | 1-2 | Load documents, run all 4 flow variants |
+| `02_data_mixing.py` | 3 | Convert `question`/`response` → `messages`, mix, deduplicate |
+| `03_model_training.py` | 4 | Train with OSFT, SFT, or LoRA |
+| `04_evaluation.py` | 5 | Evaluate model quality |
 
 ## Related
 
 - [Choosing an Algorithm](../getting-started/choosing-an-algorithm.md) — Algorithm selection guide
 - [Knowledge Tuning Data](../data-generation/knowledge-tuning.md) — Detailed data generation guide
-- [MCP Distillation Pipeline](mcp-distillation.md) — Alternative pipeline for tool-use training
+- [Serving Guide](../serving/index.md) — KServe + vLLM deployment options
+- [Tool-Calling Pipeline](tool-calling-financial.md) — Alternative pipeline for tool-use training
+- [Data Formats](../reference/data-formats.md) — Full format specification

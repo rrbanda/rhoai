@@ -2,11 +2,20 @@
 
 Complete walkthroughs from raw data to a deployed, guarded model on RHOAI. Each pipeline covers data generation, training, evaluation, and serving.
 
+## Get the Code
+
+All pipelines include runnable scripts. Clone the repository first:
+
+```bash
+git clone https://github.com/rrbanda/rhoai.git
+cd rhoai/
+```
+
 ## Which Pipeline Is Right for You?
 
 | Pipeline | Goal | Training Algorithm | Validated? |
 |----------|------|-------------------|------------|
-| [Knowledge Tuning](knowledge-tuning.md) | Teach a model domain knowledge from documents | SFT / OSFT / LoRA | Locally |
+| [Knowledge Tuning](knowledge-tuning.md) | Teach a model domain knowledge from documents | SFT / OSFT / LoRA | **On RHOAI 3.4.2** |
 | [MCP Distillation](mcp-distillation.md) | Teach a model to call tools via MCP servers | GRPO | Locally |
 | [Tool-Calling Model (Financial)](tool-calling-financial.md) | Fine-tune a model for accurate tool-calling | LoRA SFT | **On RHOAI 3.4.2** |
 

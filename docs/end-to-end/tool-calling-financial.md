@@ -40,7 +40,22 @@ The core pipeline (Steps 0-7) runs fully on RHOAI 3.4. RHOAI 3.5 features are ad
 - GPU: 1x NVIDIA L4 24GB (with QLoRA 4-bit) or 1x L40/A100 for full-precision training
 - Teacher model API key (Gemini 3.6 Flash recommended for cost, or GPT-4o) for data generation
 - Langflow instance with a frontier model agent connected to the financial MCP server
-- Python 3.11+, `oc` CLI authenticated to your cluster
+- Python 3.10+, `oc` CLI authenticated to your cluster
+
+## Get the Code
+
+```bash
+git clone https://github.com/rrbanda/rhoai.git
+cd rhoai/end-to-end-examples/financial-agent/
+
+# Install dependencies
+cd examples/
+pip install -r requirements.txt
+
+# Configure environment
+cp .env.example .env
+# Edit .env: set TEACHER_API_KEY, LANGFLOW_URL, and other values
+```
 
 ## Step 0: Start the Financial MCP Server
 
@@ -53,7 +68,7 @@ oc new-project financial-agent
 The demo server provides 15 financial tools organized into domains — groups of tools covering portfolio management, market data, risk analysis, and trade execution.
 
 ```bash
-cd end-to-end-examples/financial-agent/demo_server/
+cd ../demo_server/
 pip install fastmcp
 python server.py
 # Server starts on http://localhost:8009

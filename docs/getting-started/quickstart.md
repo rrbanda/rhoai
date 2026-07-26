@@ -128,11 +128,21 @@ print(f"Generated {len(result_df)} training examples")
 !!! tip "Dry run first"
     Use `flow.dry_run(seed_data)` to validate the pipeline end-to-end without making LLM calls.
 
-The output is JSONL in the messages format expected by Training Hub:
+!!! warning "SDG Hub output needs conversion"
+    Knowledge tuning flows output `question` and `response` columns — **not** `messages` format. The code above saves the raw output. Before training, you must convert to `messages` format:
 
-```json
-{"messages": [{"role": "user", "content": "What is MaaS in RHOAI 3.4?"}, {"role": "assistant", "content": "Models-as-a-Service (MaaS) ..."}]}
-```
+    ```python
+    import pandas as pd, json
+    raw = pd.read_json("training_data.jsonl", lines=True)
+    converted = [{"messages": [
+        {"role": "user", "content": str(r["question"])},
+        {"role": "assistant", "content": str(r["response"])}
+    ], "unmask": True} for _, r in raw.iterrows() if "question" in r and "response" in r]
+    with open("training_data.jsonl", "w") as f:
+        for rec in converted:
+            f.write(json.dumps(rec) + "\n")
+    print(f"Converted {len(converted)} examples to messages format")
+    ```
 
 See [Data Formats](../reference/data-formats.md) for the full specification.
 
