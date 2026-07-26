@@ -4,9 +4,10 @@ Creates an InferenceService that loads the trained model from S3 or PVC storage
 and serves it using the vLLM runtime with GPU acceleration and tool-calling
 support enabled.
 
-RHOAI 3.5 Validated Tool-Calling Configuration (Technology Preview):
-  vLLM on RHOAI 3.5 supports structured tool-calling via the Hermes format.
-  The following arguments are validated for tool-use serving:
+RHOAI Validated Tool-Calling Configuration:
+  The RHOAI vLLM ServingRuntime accepts additional CLI flags via the
+  EXTRA_ARGS environment variable on the kserve-container. The following
+  arguments are validated for tool-use serving:
     --enable-auto-tool-choice    Enables automatic tool selection by the model
     --tool-call-parser hermes    Uses the Hermes-style tool call parsing (default
                                  for Qwen, Granite, and Llama-based models)
@@ -174,25 +175,19 @@ def build_inferenceservice(args: argparse.Namespace, namespace: str) -> dict:
     if args.storage_type == "s3":
         annotations["serving.kserve.io/secretName"] = args.storage_secret
 
-    container_env = [
-        {"name": "VLLM_MAX_MODEL_LEN", "value": str(args.max_model_len)},
-    ]
-    if args.gpu_count > 1:
-        container_env.append(
-            {"name": "VLLM_TENSOR_PARALLEL_SIZE", "value": str(args.gpu_count)}
-        )
-
-    # RHOAI 3.5 validated tool-calling configuration
-    vllm_args = [
+    extra_args_parts = [
         "--enable-auto-tool-choice",
         "--tool-call-parser", args.tool_call_parser,
+        "--max-model-len", str(args.max_model_len),
     ]
+    if args.gpu_count > 1:
+        extra_args_parts.extend(["--tensor-parallel-size", str(args.gpu_count)])
     if args.chat_template:
-        vllm_args.extend(["--chat-template", args.chat_template])
+        extra_args_parts.extend(["--chat-template", args.chat_template])
 
-    container_env.append(
-        {"name": "VLLM_ARGS", "value": " ".join(vllm_args)}
-    )
+    container_env = [
+        {"name": "EXTRA_ARGS", "value": " ".join(extra_args_parts)},
+    ]
 
     resources = {
         "requests": {
@@ -207,6 +202,35 @@ def build_inferenceservice(args: argparse.Namespace, namespace: str) -> dict:
         },
     }
 
+    predictor: dict = {
+        "tolerations": [
+            {
+                "key": "nvidia.com/gpu",
+                "operator": "Exists",
+                "effect": "NoSchedule",
+            }
+        ],
+        "model": {
+            "modelFormat": {"name": "vLLM"},
+            "runtime": args.runtime,
+            "resources": resources,
+        },
+        "containers": [
+            {
+                "name": "kserve-container",
+                "env": container_env,
+            },
+        ],
+    }
+
+    if args.storage_type == "s3":
+        predictor["model"]["storage"] = {
+            "key": args.storage_secret,
+            "path": storage_uri.replace("s3://", "").split("/", 1)[-1] + "/",
+        }
+    else:
+        predictor["model"]["storageUri"] = f"pvc://{storage_uri}"
+
     manifest = {
         "apiVersion": "serving.kserve.io/v1beta1",
         "kind": "InferenceService",
@@ -214,26 +238,15 @@ def build_inferenceservice(args: argparse.Namespace, namespace: str) -> dict:
             "name": name,
             "namespace": namespace,
             "labels": {
-                "app.kubernetes.io/part-of": "rhoai-serving",
+                "opendatahub.io/dashboard": "true",
                 "app.kubernetes.io/managed-by": "rhoai-examples",
             },
             "annotations": annotations,
         },
         "spec": {
-            "predictor": {
-                "model": {
-                    "modelFormat": {"name": "vLLM"},
-                    "runtime": args.runtime,
-                    "storageUri": storage_uri,
-                    "resources": resources,
-                    "env": container_env,
-                },
-            },
+            "predictor": predictor,
         },
     }
-
-    if args.storage_type == "pvc":
-        manifest["spec"]["predictor"]["model"]["storageUri"] = f"pvc://{storage_uri}"
 
     return manifest
 

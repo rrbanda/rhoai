@@ -334,79 +334,201 @@ oc create secret generic kubernetes-credentials \
   --from-literal=KUBERNETES_AUTH_TOKEN="$(oc whoami -t)"
 ```
 
-## Step 4: Deploy the Fine-Tuned Model
+## Step 4: Deploy the Fine-Tuned Model on RHOAI
 
-**RHOAI Feature:** KServe RawDeployment (GA)
+**RHOAI Feature:** KServe RawDeployment (GA) + vLLM ServingRuntime (GA)
 
-After training completes, the LoRA adapter weights are on the PVC at `/workspace/output`. There are two ways to serve them on RHOAI.
+After training completes, the LoRA adapter weights are on the PVC at `/workspace/output`. This step walks through deploying the model on RHOAI using KServe RawDeployment with the vLLM serving runtime.
 
-### Option A: Serve the LoRA adapter directly (recommended)
+### 4.1 Prerequisites — verify the serving stack
 
-vLLM natively supports serving LoRA adapters alongside the base model without merging. This is the fastest path from training to inference — no additional compute or storage needed.
+Before deploying, confirm that the KServe model serving platform and the vLLM runtime are available on your cluster:
 
-Create an InferenceService that loads Qwen3-4B as the base model and mounts the LoRA adapter from the training PVC:
+```bash
+# Verify KServe is enabled (kserve component should be "Managed")
+oc get dsc default-dsc -o jsonpath='{.spec.components.kserve.managementState}' && echo
+# Expected: Managed
 
-```yaml
+# Verify the vLLM ServingRuntime exists
+oc get servingruntimes -n redhat-ods-applications | grep vllm
+# Expected: vllm-runtime-...   (preinstalled by RHOAI)
+
+# If using a project-scoped runtime, check in your namespace
+oc get servingruntimes -n financial-agent
+```
+
+!!! info "No vLLM runtime?"
+    The vLLM ServingRuntime is preinstalled by RHOAI 3.4+. If missing, enable it via **RHOAI Dashboard → Settings → Serving runtimes → vLLM ServingRuntime for KServe**.
+
+### 4.2 Option A: Serve the LoRA adapter directly (recommended)
+
+vLLM natively supports serving LoRA adapters alongside the base model — no merging required. The base model (Qwen3-4B, ~8GB) is pulled from HuggingFace, and the LoRA adapter (~50MB) is mounted from the training PVC. This is the fastest path from training to inference.
+
+**Step 4A.1:** Save the InferenceService manifest:
+
+```bash
+cat <<'YAML' > /tmp/financial-agent-isvc.yaml
 apiVersion: serving.kserve.io/v1beta1
 kind: InferenceService
 metadata:
   name: financial-agent-lora
   annotations:
     serving.kserve.io/deploymentMode: RawDeployment
+  labels:
+    opendatahub.io/dashboard: "true"
 spec:
   predictor:
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
     model:
       modelFormat:
         name: vLLM
       runtime: vllm-runtime
       storageUri: hf://Qwen/Qwen3-4B
       resources:
-        limits:
+        requests:
+          cpu: "2"
+          memory: "16Gi"
           nvidia.com/gpu: "1"
+        limits:
           cpu: "4"
           memory: "24Gi"
-      env:
-        - name: VLLM_ARGS
-          value: >-
-            --enable-lora
-            --lora-modules financial-agent=/mnt/lora-adapter
-            --max-lora-rank 16
-            --enable-auto-tool-choice
-            --tool-call-parser hermes
-      volumeMounts:
-        - name: lora-adapter
-          mountPath: /mnt/lora-adapter
+          nvidia.com/gpu: "1"
+    containers:
+      - name: kserve-container
+        env:
+          - name: EXTRA_ARGS
+            value: >-
+              --enable-lora
+              --lora-modules financial-agent=/mnt/lora-adapter
+              --max-lora-rank 16
+              --enable-auto-tool-choice
+              --tool-call-parser hermes
+              --max-model-len 4096
+        volumeMounts:
+          - name: lora-adapter
+            mountPath: /mnt/lora-adapter
+            readOnly: true
     volumes:
       - name: lora-adapter
         persistentVolumeClaim:
           claimName: training-workspace
-          subPath: output
+YAML
 ```
 
-Once deployed, use the adapter name as the `model` in API requests:
+!!! warning "Key YAML details"
+    - `EXTRA_ARGS` (not `VLLM_ARGS`) is the env var used by the RHOAI vLLM ServingRuntime to pass additional CLI flags
+    - `tolerations` go at the `predictor` level, matching RHOAI's InferenceService structure
+    - `containers[].name` must be `kserve-container` to override the default container in the ServingRuntime
+    - The PVC `training-workspace` is the same one created during training — adapter files are in the `/output` subdirectory
+
+**Step 4A.2:** Apply the manifest:
 
 ```bash
-curl -X POST "https://financial-agent-lora.apps.your-cluster.com/v1/chat/completions" \
+oc apply -f /tmp/financial-agent-isvc.yaml -n financial-agent
+```
+
+**Step 4A.3:** Monitor deployment readiness:
+
+```bash
+# Watch the InferenceService status
+oc get inferenceservice financial-agent-lora -n financial-agent -w
+
+# NAME                    URL   READY   PREV   LATEST   AGE
+# financial-agent-lora          False                    10s
+# financial-agent-lora    ...   True                     2m30s
+
+# Check the predictor pod is running
+oc get pods -n financial-agent -l serving.kserve.io/inferenceservice=financial-agent-lora
+
+# View pod logs (model loading, LoRA adapter loading)
+oc logs -f deployment/financial-agent-lora-predictor -n financial-agent
+```
+
+The model is ready when the pod logs show:
+
+```
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8080
+```
+
+**Step 4A.4:** Get the inference endpoint:
+
+```bash
+# For RawDeployment, get the OpenShift route
+ROUTE_URL=$(oc get route financial-agent-lora -n financial-agent -o jsonpath='{.spec.host}' 2>/dev/null)
+
+# If no route exists, create one
+if [ -z "$ROUTE_URL" ]; then
+  oc expose svc financial-agent-lora-predictor -n financial-agent --name=financial-agent-lora
+  ROUTE_URL=$(oc get route financial-agent-lora -n financial-agent -o jsonpath='{.spec.host}')
+fi
+
+echo "Inference endpoint: https://${ROUTE_URL}"
+```
+
+**Step 4A.5:** Verify with a tool-calling request:
+
+```bash
+curl -sk "https://${ROUTE_URL}/v1/chat/completions" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "financial-agent",
-    "messages": [{"role": "user", "content": "Show me my portfolio performance this quarter"}],
-    "tools": [{"type": "function", "function": {"name": "get_portfolio_performance", "parameters": {"type": "object", "properties": {"portfolio_id": {"type": "string"}}, "required": ["portfolio_id"]}}}]
+    "messages": [
+      {"role": "user", "content": "What is the current price of AAPL?"}
+    ],
+    "tools": [{
+      "type": "function",
+      "function": {
+        "name": "get_stock_quote",
+        "description": "Get a real-time stock quote",
+        "parameters": {
+          "type": "object",
+          "properties": {
+            "ticker": {"type": "string", "description": "Stock ticker symbol"}
+          },
+          "required": ["ticker"]
+        }
+      }
+    }],
+    "tool_choice": "auto",
+    "max_tokens": 256
   }'
 ```
 
+Expected response includes a `tool_calls` array:
+
+```json
+{
+  "choices": [{
+    "message": {
+      "role": "assistant",
+      "tool_calls": [{
+        "function": {
+          "name": "get_stock_quote",
+          "arguments": "{\"ticker\": \"AAPL\"}"
+        }
+      }]
+    }
+  }]
+}
+```
+
 !!! tip "Why serve the adapter directly?"
-    - No merge step required — deploy immediately after training
-    - Base model weights stay frozen — adapter adds only ~50MB vs 8GB+ for a merged model
-    - Multi-adapter support — serve multiple fine-tuned variants (e.g., financial, medical) from the same base model
-    - Per-request adapter selection — switch adapters at inference time via the `model` field
+    - **No merge step** — deploy immediately after training completes
+    - **Storage efficient** — adapter is ~50MB vs 8GB+ for a merged model
+    - **Multi-adapter support** — serve financial, medical, and other adapters from the same base model simultaneously
+    - **Per-request switching** — select the adapter at inference time via the `model` field in the API request
 
-### Option B: Merge the adapter and deploy as a standalone model
+### 4.3 Option B: Merge the adapter and deploy as a standalone model
 
-If you prefer a single merged model (simpler to manage, slightly lower inference latency), merge the LoRA weights into the base model, upload to S3, and deploy:
+If you prefer a single merged model (simpler deployment, slightly lower inference latency):
+
+**Step 4B.1:** Merge LoRA weights into the base model (run in a workbench or notebook with GPU access):
 
 ```python
-# Run this in a notebook or workbench with GPU access
 from peft import PeftModel
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
@@ -418,20 +540,82 @@ merged.save_pretrained("/workspace/merged-model")
 AutoTokenizer.from_pretrained("Qwen/Qwen3-4B").save_pretrained("/workspace/merged-model")
 ```
 
-Then upload to S3 and deploy:
+**Step 4B.2:** Upload the merged model to S3:
 
 ```bash
-# Upload to S3
+# Create an S3 connection in your RHOAI project (Dashboard → Data connections → Add)
+# Or upload via CLI:
 aws s3 sync /workspace/merged-model s3://your-bucket/models/financial-agent-merged/
+```
 
-# Deploy via the provided script
+**Step 4B.3:** Create a data connection secret for the S3 bucket:
+
+```bash
+oc create secret generic aws-connection-models \
+  --from-literal=AWS_ACCESS_KEY_ID="your-access-key" \
+  --from-literal=AWS_SECRET_ACCESS_KEY="your-secret-key" \
+  --from-literal=AWS_S3_ENDPOINT="https://s3.amazonaws.com" \
+  --from-literal=AWS_S3_BUCKET="your-bucket" \
+  --from-literal=AWS_DEFAULT_REGION="us-east-1" \
+  -n financial-agent
+```
+
+**Step 4B.4:** Deploy the merged model:
+
+```bash
 python 04_deploy_model.py \
   --model-path s3://your-bucket/models/financial-agent-merged \
   --namespace financial-agent \
+  --storage-secret aws-connection-models \
   --tool-call-parser hermes
 ```
 
-The `04_deploy_model.py` script creates a KServe InferenceService with vLLM and tool-calling support (`--enable-auto-tool-choice --tool-call-parser hermes`).
+Or apply the manifest directly:
+
+```bash
+cat <<'YAML' | oc apply -n financial-agent -f -
+apiVersion: serving.kserve.io/v1beta1
+kind: InferenceService
+metadata:
+  name: financial-agent-merged
+  annotations:
+    serving.kserve.io/deploymentMode: RawDeployment
+  labels:
+    opendatahub.io/dashboard: "true"
+spec:
+  predictor:
+    tolerations:
+      - key: nvidia.com/gpu
+        operator: Exists
+        effect: NoSchedule
+    model:
+      modelFormat:
+        name: vLLM
+      runtime: vllm-runtime
+      storage:
+        key: aws-connection-models
+        path: models/financial-agent-merged/
+      resources:
+        requests:
+          cpu: "2"
+          memory: "16Gi"
+          nvidia.com/gpu: "1"
+        limits:
+          cpu: "4"
+          memory: "24Gi"
+          nvidia.com/gpu: "1"
+    containers:
+      - name: kserve-container
+        env:
+          - name: EXTRA_ARGS
+            value: >-
+              --enable-auto-tool-choice
+              --tool-call-parser hermes
+              --max-model-len 4096
+YAML
+```
+
+**Step 4B.5:** Monitor and verify (same as Option A steps 4A.3–4A.5, using `financial-agent-merged` as the InferenceService name).
 
 ## Step 5: Evaluate
 
