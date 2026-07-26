@@ -12,7 +12,7 @@ GRPO is a reinforcement learning algorithm that trains models to use tools effec
 !!! note "Install the GRPO extra"
     GRPO requires additional dependencies not included in the base package:
     ```bash
-    pip install training-hub[grpo]
+    pip install training-hub[grpo,lora]
     ```
 
 ## Quick Start

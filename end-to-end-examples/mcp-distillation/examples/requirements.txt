@@ -1,5 +1,5 @@
 sdg-hub[dev]
-training-hub[grpo]
+training-hub[grpo,lora]
 fastmcp
 pandas
 python-dotenv

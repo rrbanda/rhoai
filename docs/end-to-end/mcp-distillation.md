@@ -93,22 +93,20 @@ The teacher model:
 
 ## Step 3: Format Training Data
 
-Convert the raw traces into the messages format expected by Training Hub:
+Convert the raw traces into the messages format expected by Training Hub. The MCP distillation flow outputs an `extract_agent_text_tool_trace` column containing structured tool-call traces:
 
 ```python
+import json
 import pandas as pd
+from sdg_hub.core.utils.message_formatter import tool_trace_to_messages
 
 df = pd.read_json("tool_traces.jsonl", lines=True)
 
 training_records = []
 for _, row in df.iterrows():
-    messages = []
-    for turn in row["conversation"]:
-        messages.append({
-            "role": turn["role"],
-            "content": turn.get("content"),
-            "tool_calls": turn.get("tool_calls"),
-        })
+    tool_trace = row["extract_agent_text_tool_trace"]
+    question = row["question"]
+    messages = tool_trace_to_messages(question, tool_trace)
     training_records.append({"messages": messages})
 
 pd.DataFrame(training_records).to_json(
@@ -121,7 +119,7 @@ pd.DataFrame(training_records).to_json(
 Use GRPO (Group Relative Policy Optimization) to train the student model:
 
 ```bash
-pip install training-hub[grpo]
+pip install training-hub[grpo,lora]
 ```
 
 ```python
@@ -133,7 +131,7 @@ lora_grpo(
     ckpt_output_dir="./tool-use-model",
     num_iterations=15,
     lora_r=16,
-    lora_alpha=32,
+    lora_alpha=8,
     backend="art",
 )
 ```
