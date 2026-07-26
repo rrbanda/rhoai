@@ -3,7 +3,7 @@
 MCP (Model Context Protocol) distillation teaches a smaller model to use tools by learning from a frontier model's tool-use behavior. A teacher model explores your MCP servers, generating high-quality tool-use traces that train the student model.
 
 !!! tip "Looking for a validated, production-ready example?"
-    The [Financial Agent Pipeline](financial-agent.md) uses MCP distillation + **LoRA SFT** (not GRPO) and has been validated end-to-end on RHOAI 3.4.2. This page documents the generic GRPO-based pipeline for reference.
+    The [Tool-Calling Model Pipeline](financial-agent.md) uses MCP distillation + **LoRA SFT** (not GRPO) and has been validated end-to-end on RHOAI 3.4.2. This page documents the generic GRPO-based pipeline for reference.
 
 ## Pipeline Overview
 
@@ -161,7 +161,7 @@ Evaluation metrics:
 
 ## Related
 
-- [Financial Agent Pipeline](financial-agent.md) — Full end-to-end example using MCP distillation + LoRA SFT for financial services (validated on RHOAI 3.4.2)
+- [Tool-Calling Model Pipeline](financial-agent.md) — Full end-to-end example using MCP distillation + LoRA SFT for financial services (validated on RHOAI 3.4.2)
 - [GRPO](../training/grpo.md) — Training algorithm details
 - [Agent Evaluation](../evaluation/agent-evaluation.md) — Evaluate tool-use models
 - [Knowledge Tuning Pipeline](knowledge-tuning.md) — Alternative pipeline for knowledge injection

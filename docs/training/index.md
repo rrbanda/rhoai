@@ -23,9 +23,9 @@ Not sure which to pick? Use the [decision flowchart](../getting-started/choosing
     - **SFT** — Maximum learning capacity when you have abundant data and don't need base knowledge retention
     - **LoRA** — Memory-efficient option when GPU resources are limited
 
-=== "Agent Track"
+=== "Tool-Calling Track"
 
-    Building a tool-calling agent (MCP servers, APIs):
+    Fine-tuning a model for tool-calling (MCP servers, APIs):
 
     - **LoRA SFT** (recommended, [validated on RHOAI](../end-to-end/financial-agent.md)) — Train on expert demonstrations from MCP distillation
     - **GRPO** — Learn from rewards when expert traces are unavailable

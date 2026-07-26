@@ -230,5 +230,5 @@ For cluster-scale distributed inference, see the [llm-d documentation](https://l
 ## Related
 
 - [Guardrails](../guardrails/index.md) — Add safety rails before exposing the endpoint
-- [Financial Agent Deployment](../end-to-end/financial-agent.md#step-4-deploy-the-fine-tuned-model) — Worked example with tool-calling
+- [Tool-Calling Model Deployment](../end-to-end/financial-agent.md#step-4-deploy-the-fine-tuned-model-on-rhoai) — Worked example with financial services
 - [GPU Requirements](../reference/gpu-requirements.md) — Hardware planning for serving

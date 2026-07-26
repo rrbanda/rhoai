@@ -9,7 +9,7 @@ This guide covers fine-tuning models for financial services — from knowledge-b
 | **Knowledge injection** | SFT / OSFT | Answer questions about financial products, regulations, markets | "Explain the wash-sale rule" |
 | **Tool-calling agent** | LoRA SFT | Call financial APIs, execute trades, manage portfolios | "Buy 100 shares of AAPL in my portfolio" |
 
-For a full end-to-end worked example of the agent path, see the [Financial Agent Pipeline](../end-to-end/financial-agent.md).
+For a full end-to-end worked example of the tool-calling path, see the [Tool-Calling Model Pipeline](../end-to-end/financial-agent.md).
 
 ## Path 1: Financial Knowledge Tuning
 
@@ -139,7 +139,7 @@ After training, deploy the model with tool-calling support via KServe + vLLM. Tw
 - **LoRA adapter serving** (recommended) — Serve the adapter directly from the training PVC without merging
 - **Merged model** — Merge adapter into base model and deploy from S3
 
-Full YAML manifests and step-by-step deployment instructions are in the [Financial Agent Pipeline Step 4](../end-to-end/financial-agent.md#step-4-deploy-the-fine-tuned-model-on-rhoai) and the [`serving/` directory](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent/serving).
+Full YAML manifests and step-by-step deployment instructions are in the [Tool-Calling Model Pipeline Step 4](../end-to-end/financial-agent.md#step-4-deploy-the-fine-tuned-model-on-rhoai) and the [`serving/` directory](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent/serving).
 
 ### Add Financial Guardrails
 
@@ -164,11 +164,11 @@ Financial agents require compliance rails. See [Guardrails](../guardrails/index.
 ## Validated Environment
 
 !!! success "Tested on RHOAI 3.4.2"
-    The tool-calling agent path (MCP distillation → LoRA SFT → vLLM deployment) has been validated end-to-end on RHOAI 3.4.2 / OpenShift 4.18.21 with an NVIDIA L4 GPU. The full walkthrough is in the [Financial Agent Pipeline](../end-to-end/financial-agent.md).
+    The tool-calling model path (MCP distillation → LoRA SFT → vLLM deployment) has been validated end-to-end on RHOAI 3.4.2 / OpenShift 4.18.21 with an NVIDIA L4 GPU. The full walkthrough is in the [Tool-Calling Model Pipeline](../end-to-end/financial-agent.md).
 
 ## Related
 
-- [Financial Agent Pipeline](../end-to-end/financial-agent.md) — Full end-to-end walkthrough
+- [Tool-Calling Model Pipeline](../end-to-end/financial-agent.md) — Full end-to-end walkthrough
 - [Training Hub LoRA docs](https://github.com/Red-Hat-AI-Innovation-Team/training_hub/blob/main/docs/algorithms/lora.md) — LoRA SFT algorithm details
 - [Guardrails](../guardrails/index.md) — NeMo Guardrails configuration
 - [Medical Domain](medical.md) — Similar approach for medical knowledge

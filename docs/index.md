@@ -37,8 +37,8 @@ Fine-tune LLMs with smaller, efficient architectures on RHOAI. This track covers
 
 <div class="track-section-item" markdown>
 
-**Agent Track** — Build a tool-calling agent that can use MCP servers, APIs, and databases. Generate expert tool-use traces with MCP distillation, then train with LoRA SFT. Validated end-to-end on RHOAI 3.4.2.
-[Financial agent pipeline →](end-to-end/financial-agent.md)
+**Tool-Calling Track** — Fine-tune a model to call tools from MCP servers, APIs, and databases. Generate expert tool-use traces with MCP distillation, then train with LoRA SFT. Validated end-to-end on RHOAI 3.4.2.
+[Tool-calling model pipeline (financial example) →](end-to-end/financial-agent.md)
 
 </div>
 

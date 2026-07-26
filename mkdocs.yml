@@ -112,7 +112,7 @@ nav:
       - Overview: end-to-end/index.md
       - Knowledge Tuning: end-to-end/knowledge-tuning.md
       - MCP Distillation: end-to-end/mcp-distillation.md
-      - Financial Agent: end-to-end/financial-agent.md
+      - Tool-Calling Model (Financial): end-to-end/financial-agent.md
     - Evaluation:
       - Overview: evaluation/index.md
       - RAG Evaluation: evaluation/rag-evaluation.md

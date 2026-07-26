@@ -188,7 +188,7 @@ This ensures every tool call from the agent passes through guardrail checks befo
 
 ## Related
 
-- [Financial Agent Guardrails](../end-to-end/financial-agent.md#step-6-configure-guardrails) — Worked example with financial compliance rails
+- [Financial Guardrails Example](../end-to-end/financial-agent.md#step-6-configure-guardrails) — Worked example with financial compliance rails
 - [Serving](../serving/index.md) — Deploy models before adding guardrails
 - [Agent Evaluation](../evaluation/agent-evaluation.md) — Evaluate tool-use quality before deploying
 - [NeMo Guardrails on RHOAI (Official Docs)](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/ensuring_ai_safety_with_guardrails)

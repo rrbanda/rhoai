@@ -18,7 +18,7 @@ graph LR
 ```
 
 !!! info "LoRA SFT vs GRPO for tool-use"
-    Both train tool-calling agents, but from different data. **LoRA SFT** learns from expert demonstrations (MCP distillation traces where a frontier model shows the correct tool calls). **GRPO** learns from rewards (the model explores tool calls and is rewarded when they succeed). LoRA SFT is faster to train and has a validated end-to-end pipeline on RHOAI — see the [Financial Agent Pipeline](../end-to-end/financial-agent.md). GRPO can generalize better to unseen tool combinations but requires more compute.
+    Both produce tool-calling models, but from different data. **LoRA SFT** learns from expert demonstrations (MCP distillation traces where a frontier model shows the correct tool calls). **GRPO** learns from rewards (the model explores tool calls and is rewarded when they succeed). LoRA SFT is faster to train and has a validated end-to-end pipeline on RHOAI — see the [Tool-Calling Model Pipeline](../end-to-end/financial-agent.md). GRPO can generalize better to unseen tool combinations but requires more compute.
 
 ## Side-by-Side Comparison
 
@@ -101,7 +101,7 @@ graph LR
     )
     ```
 
-    **When to use:** You have limited GPU resources (single GPU), want fast iteration, or need to maintain multiple task-specific adapters for the same base model. Also the recommended algorithm for **tool-calling agents** trained on MCP distillation traces — see the [Financial Agent Pipeline](../end-to-end/financial-agent.md).
+    **When to use:** You have limited GPU resources (single GPU), want fast iteration, or need to maintain multiple task-specific adapters for the same base model. Also the recommended algorithm for **tool-calling models** trained on MCP distillation traces — see the [Tool-Calling Model Pipeline](../end-to-end/financial-agent.md).
 
 === "GRPO"
 
@@ -158,9 +158,9 @@ Now that you've chosen an algorithm, pick a track:
     1. [Knowledge Tuning Pipeline](../end-to-end/knowledge-tuning.md) — Full end-to-end walkthrough (data generation → training → evaluation → serving)
     2. [GPU Requirements](../reference/gpu-requirements.md) — VRAM estimates for your chosen algorithm and model
 
-=== "Agent Track"
+=== "Tool-Calling Track"
 
-    Build a tool-calling agent that uses MCP servers, APIs, or databases:
+    Fine-tune a model to call tools from MCP servers, APIs, or databases:
 
-    1. [Financial Agent Pipeline](../end-to-end/financial-agent.md) — Validated end-to-end on RHOAI 3.4.2 (MCP distillation → LoRA SFT → vLLM serving → guardrails)
+    1. [Tool-Calling Model Pipeline](../end-to-end/financial-agent.md) — Validated end-to-end on RHOAI 3.4.2 (MCP distillation → LoRA SFT → vLLM serving → guardrails), uses financial services as the example domain
     2. [MCP Distillation](../end-to-end/mcp-distillation.md) — Generic pipeline for any MCP server

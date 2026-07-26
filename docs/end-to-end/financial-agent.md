@@ -1,6 +1,6 @@
-# End-to-End Financial Agent Pipeline
+# Tool-Calling Model Pipeline (Financial Example)
 
-Build a tool-calling agent for financial services by fine-tuning Qwen3-4B with LoRA SFT on domain-specific tool-calling demonstrations, then deploying it behind NeMo Guardrails for compliance. This pipeline uses SDG Hub's MCP distillation to generate training data from a financial MCP server with 15 tools.
+Fine-tune a model to make accurate tool calls by training on domain-specific demonstrations, then deploy it with vLLM tool-calling support behind NeMo Guardrails. This pipeline uses SDG Hub's MCP distillation to generate training data from a financial MCP server with 15 tools. The same technique works with any MCP server and any supported base model — financial services is the validated example.
 
 ## RHOAI Feature Matrix
 
@@ -624,7 +624,7 @@ The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestrat
 
 ## Source Code
 
-- [Financial Agent Example](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent)
+- [Source Code (Financial Example)](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/financial-agent)
 
 ## Related
 

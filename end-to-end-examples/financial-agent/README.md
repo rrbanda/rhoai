@@ -1,6 +1,6 @@
-# Financial Agent Model Customization on RHOAI
+# Tool-Calling Model Customization on RHOAI (Financial Example)
 
-Fine-tune a small language model (Qwen3-4B) to be an expert tool-calling agent for financial services. Uses SDG Hub to generate domain-specific training data from the financial MCP server, then Training Hub's LoRA SFT to fine-tune the model on tool-calling demonstrations. The fine-tuned model is deployed on RHOAI behind NeMo Guardrails for financial compliance and wrapped in a Deep Agent harness for production use.
+Fine-tune a small language model (Qwen3-4B) to make accurate tool calls for financial services. Uses SDG Hub's MCP distillation to generate domain-specific training data from the financial MCP server, then Training Hub's LoRA SFT to fine-tune the model on tool-calling demonstrations. The fine-tuned model is deployed on RHOAI with vLLM tool-calling support behind NeMo Guardrails. The same technique applies to any domain with any MCP server.
 
 ## RHOAI Feature Matrix
 
