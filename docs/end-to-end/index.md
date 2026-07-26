@@ -8,7 +8,7 @@ Complete walkthroughs from raw data to a deployed, guarded model on RHOAI. Each 
 |----------|------|-------------------|------------|
 | [Knowledge Tuning](knowledge-tuning.md) | Teach a model domain knowledge from documents | SFT / OSFT / LoRA | Locally |
 | [MCP Distillation](mcp-distillation.md) | Teach a model to call tools via MCP servers | GRPO | Locally |
-| [Tool-Calling Model (Financial)](financial-agent.md) | Fine-tune a model for accurate tool-calling | LoRA SFT | **On RHOAI 3.4.2** |
+| [Tool-Calling Model (Financial)](tool-calling-financial.md) | Fine-tune a model for accurate tool-calling | LoRA SFT | **On RHOAI 3.4.2** |
 
 ## Recommended Starting Points
 
@@ -24,9 +24,9 @@ Complete walkthroughs from raw data to a deployed, guarded model on RHOAI. Each 
 
     You want to fine-tune a model to call tools from MCP servers or APIs:
 
-    1. Start with [Tool-Calling Model Pipeline](financial-agent.md) — the most complete and validated pipeline (uses financial services as the example domain)
+    1. Start with [Tool-Calling Model Pipeline](tool-calling-financial.md) — the most complete and validated pipeline (uses financial services as the example domain)
     2. Adapt the MCP server and training data for your domain
-    3. Deploy with [LoRA adapter serving](financial-agent.md#42-option-a-serve-the-lora-adapter-directly-recommended) and [guardrails](../guardrails/index.md)
+    3. Deploy with [LoRA adapter serving](tool-calling-financial.md#42-option-a-serve-the-lora-adapter-directly-recommended) and [guardrails](../guardrails/index.md)
 
 ## Pipeline Comparison
 

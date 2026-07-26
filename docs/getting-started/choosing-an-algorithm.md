@@ -18,7 +18,7 @@ graph LR
 ```
 
 !!! info "LoRA SFT vs GRPO for tool-use"
-    Both produce tool-calling models, but from different data. **LoRA SFT** learns from expert demonstrations (MCP distillation traces where a frontier model shows the correct tool calls). **GRPO** learns from rewards (the model explores tool calls and is rewarded when they succeed). LoRA SFT is faster to train and has a validated end-to-end pipeline on RHOAI — see the [Tool-Calling Model Pipeline](../end-to-end/financial-agent.md). GRPO can generalize better to unseen tool combinations but requires more compute.
+    Both produce tool-calling models, but from different data. **LoRA SFT** learns from expert demonstrations (MCP distillation traces where a frontier model shows the correct tool calls). **GRPO** learns from rewards (the model explores tool calls and is rewarded when they succeed). LoRA SFT is faster to train and has a validated end-to-end pipeline on RHOAI — see the [Tool-Calling Model Pipeline](../end-to-end/tool-calling-financial.md). GRPO can generalize better to unseen tool combinations but requires more compute.
 
 ## Side-by-Side Comparison
 
@@ -101,7 +101,7 @@ graph LR
     )
     ```
 
-    **When to use:** You have limited GPU resources (single GPU), want fast iteration, or need to maintain multiple task-specific adapters for the same base model. Also the recommended algorithm for **tool-calling models** trained on MCP distillation traces — see the [Tool-Calling Model Pipeline](../end-to-end/financial-agent.md).
+    **When to use:** You have limited GPU resources (single GPU), want fast iteration, or need to maintain multiple task-specific adapters for the same base model. Also the recommended algorithm for **tool-calling models** trained on MCP distillation traces — see the [Tool-Calling Model Pipeline](../end-to-end/tool-calling-financial.md).
 
 === "GRPO"
 
@@ -125,7 +125,7 @@ graph LR
     )
     ```
 
-    **When to use:** You want the model to learn tool-use through exploration and reward signals rather than expert demonstrations. GRPO can generalize better to unseen tool combinations but is slower to train. If you have expert traces from MCP distillation, use **LoRA SFT** instead — it's faster and has a [validated pipeline on RHOAI](../end-to-end/financial-agent.md).
+    **When to use:** You want the model to learn tool-use through exploration and reward signals rather than expert demonstrations. GRPO can generalize better to unseen tool combinations but is slower to train. If you have expert traces from MCP distillation, use **LoRA SFT** instead — it's faster and has a [validated pipeline on RHOAI](../end-to-end/tool-calling-financial.md).
 
 ## Detailed Comparison Table
 
@@ -162,5 +162,5 @@ Now that you've chosen an algorithm, pick a track:
 
     Fine-tune a model to call tools from MCP servers, APIs, or databases:
 
-    1. [Tool-Calling Model Pipeline](../end-to-end/financial-agent.md) — Validated end-to-end on RHOAI 3.4.2 (MCP distillation → LoRA SFT → vLLM serving → guardrails), uses financial services as the example domain
+    1. [Tool-Calling Model Pipeline](../end-to-end/tool-calling-financial.md) — Validated end-to-end on RHOAI 3.4.2 (MCP distillation → LoRA SFT → vLLM serving → guardrails), uses financial services as the example domain
     2. [MCP Distillation](../end-to-end/mcp-distillation.md) — Generic pipeline for any MCP server

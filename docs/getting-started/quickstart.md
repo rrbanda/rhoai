@@ -3,7 +3,7 @@
 This page walks through environment setup, package installation, and a minimal end-to-end pipeline: generate training data from a document, train a model, and verify convergence.
 
 !!! info "This quickstart follows the Knowledge Track"
-    The pipeline below demonstrates **knowledge tuning** — generating Q&A training data from documents and fine-tuning with SFT, OSFT, or LoRA. If your goal is to fine-tune a model for **tool calling** (MCP servers, APIs), start with the [Tool-Calling Model Pipeline](../end-to-end/financial-agent.md) instead.
+    The pipeline below demonstrates **knowledge tuning** — generating Q&A training data from documents and fine-tuning with SFT, OSFT, or LoRA. If your goal is to fine-tune a model for **tool calling** (MCP servers, APIs), start with the [Tool-Calling Model Pipeline](../end-to-end/tool-calling-financial.md) instead.
 
 For conceptual background on model customization, see the [Overview](overview.md).
 
@@ -213,7 +213,7 @@ Then pick a track:
 
     Fine-tune a model to call tools from MCP servers and APIs:
 
-    1. [Tool-Calling Model Pipeline](../end-to-end/financial-agent.md) — Validated end-to-end on RHOAI 3.4.2 (MCP distillation + LoRA SFT + vLLM serving + guardrails), uses financial services as the example domain
+    1. [Tool-Calling Model Pipeline](../end-to-end/tool-calling-financial.md) — Validated end-to-end on RHOAI 3.4.2 (MCP distillation + LoRA SFT + vLLM serving + guardrails), uses financial services as the example domain
     2. [MCP Distillation](../end-to-end/mcp-distillation.md) — Generic MCP distillation pipeline
 
 [GPU Requirements](../reference/gpu-requirements.md) — Per-model VRAM estimates and hardware guidance

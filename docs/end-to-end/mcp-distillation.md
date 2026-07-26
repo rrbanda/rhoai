@@ -3,7 +3,7 @@
 MCP (Model Context Protocol) distillation teaches a smaller model to use tools by learning from a frontier model's tool-use behavior. A teacher model explores your MCP servers, generating high-quality tool-use traces that train the student model. This page documents the **GRPO-based** variant of the pipeline.
 
 !!! tip "Looking for a validated, production-ready example?"
-    The [Tool-Calling Model Pipeline](financial-agent.md) uses MCP distillation + **LoRA SFT** (not GRPO) and has been validated end-to-end on RHOAI 3.4.2. This page documents the generic GRPO-based pipeline for reference.
+    The [Tool-Calling Model Pipeline](tool-calling-financial.md) uses MCP distillation + **LoRA SFT** (not GRPO) and has been validated end-to-end on RHOAI 3.4.2. This page documents the generic GRPO-based pipeline for reference.
 
 ## Pipeline Overview
 
@@ -122,7 +122,7 @@ lora_grpo(
 ```
 
 !!! info "GRPO vs LoRA SFT for tool-use"
-    GRPO learns from verifiable rewards (did the tool call succeed?) rather than just imitating examples. This can produce models that generalize better to unseen tool combinations. However, LoRA SFT on expert traces is faster to train, simpler to set up, and has a [validated pipeline on RHOAI](financial-agent.md). Use GRPO when you want reward-based exploration; use LoRA SFT when you have high-quality expert demonstrations from MCP distillation.
+    GRPO learns from verifiable rewards (did the tool call succeed?) rather than just imitating examples. This can produce models that generalize better to unseen tool combinations. However, LoRA SFT on expert traces is faster to train, simpler to set up, and has a [validated pipeline on RHOAI](tool-calling-financial.md). Use GRPO when you want reward-based exploration; use LoRA SFT when you have high-quality expert demonstrations from MCP distillation.
 
 ## Step 5: Evaluate
 
@@ -155,7 +155,7 @@ Evaluation metrics:
 
 ## Step 6: Deploy
 
-After training, deploy the GRPO-tuned model on RHOAI with KServe + vLLM. The deployment process is the same as for any LoRA adapter — see the [Serving Guide](../serving/index.md) for full KServe RawDeployment instructions, or follow the [Tool-Calling Model Pipeline Step 4](financial-agent.md#step-4-deploy-the-fine-tuned-model-on-rhoai) for a worked example with YAML manifests.
+After training, deploy the GRPO-tuned model on RHOAI with KServe + vLLM. The deployment process is the same as for any LoRA adapter — see the [Serving Guide](../serving/index.md) for full KServe RawDeployment instructions, or follow the [Tool-Calling Model Pipeline Step 4](tool-calling-financial.md#step-4-deploy-the-fine-tuned-model-on-rhoai) for a worked example with YAML manifests.
 
 ## Full Example
 
@@ -165,7 +165,7 @@ After training, deploy the GRPO-tuned model on RHOAI with KServe + vLLM. The dep
 
 ## Related
 
-- [Tool-Calling Model Pipeline](financial-agent.md) — Full end-to-end example using MCP distillation + LoRA SFT for financial services (validated on RHOAI 3.4.2)
+- [Tool-Calling Model Pipeline](tool-calling-financial.md) — Full end-to-end example using MCP distillation + LoRA SFT for financial services (validated on RHOAI 3.4.2)
 - [GRPO](../training/grpo.md) — Training algorithm details
 - [Agent Evaluation](../evaluation/agent-evaluation.md) — Evaluate tool-use models
 - [Knowledge Tuning Pipeline](knowledge-tuning.md) — Alternative pipeline for knowledge injection

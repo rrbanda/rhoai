@@ -27,7 +27,7 @@ Not sure which to pick? Use the [decision flowchart](../getting-started/choosing
 
     Fine-tuning a model for tool-calling (MCP servers, APIs):
 
-    - **LoRA SFT** (recommended, [validated on RHOAI](../end-to-end/financial-agent.md)) — Train on expert demonstrations from MCP distillation
+    - **LoRA SFT** (recommended, [validated on RHOAI](../end-to-end/tool-calling-financial.md)) — Train on expert demonstrations from MCP distillation
     - **GRPO** — Learn from rewards when expert traces are unavailable
 
 ## After Training: Next Steps
@@ -54,7 +54,7 @@ All training algorithms produce model artifacts in your `ckpt_output_dir`. To de
 
 === "LoRA adapter (no merge)"
 
-    If you trained with LoRA, vLLM can serve the adapter directly without merging. Mount the adapter PVC alongside the base model — see the [Tool-Calling Model Pipeline Step 4](../end-to-end/financial-agent.md#step-4-deploy-the-fine-tuned-model-on-rhoai) for a worked example.
+    If you trained with LoRA, vLLM can serve the adapter directly without merging. Mount the adapter PVC alongside the base model — see the [Tool-Calling Model Pipeline Step 4](../end-to-end/tool-calling-financial.md#step-4-deploy-the-fine-tuned-model-on-rhoai) for a worked example.
 
 See the [Serving Guide](../serving/index.md) for full KServe + vLLM deployment instructions and YAML manifests.
 

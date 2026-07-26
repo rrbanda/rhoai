@@ -112,7 +112,7 @@ nav:
       - Overview: end-to-end/index.md
       - Knowledge Tuning Pipeline: end-to-end/knowledge-tuning.md
       - MCP Distillation (GRPO): end-to-end/mcp-distillation.md
-      - Tool-Calling Model (Financial): end-to-end/financial-agent.md
+      - Tool-Calling Model (Financial): end-to-end/tool-calling-financial.md
     - Evaluation:
       - Overview: evaluation/index.md
       - RAG Evaluation: evaluation/rag-evaluation.md
