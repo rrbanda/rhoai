@@ -86,6 +86,11 @@ nav:
       - Overview: getting-started/overview.md
       - Setup & First Pipeline: getting-started/quickstart.md
       - Choosing an Algorithm: getting-started/choosing-an-algorithm.md
+    - Pipelines (Try It):
+      - Which Pipeline?: end-to-end/index.md
+      - Tool-Calling Model: end-to-end/tool-calling-financial.md
+      - Knowledge Tuning: end-to-end/knowledge-tuning.md
+      - MCP Distillation (GRPO): end-to-end/mcp-distillation.md
     - Data Generation:
       - SDG Hub Overview: data-generation/index.md
       - Knowledge Tuning Data: data-generation/knowledge-tuning.md
@@ -103,20 +108,15 @@ nav:
       - Deploy & Serve: serving/index.md
     - Guardrails:
       - Safety & Compliance: guardrails/index.md
-    - Domains:
-      - Medical: domains/medical.md
-      - Financial: domains/financial.md
-      - Model-Specific Configs: domains/model-specific.md
-    - End-to-End:
-      - Overview: end-to-end/index.md
-      - Knowledge Tuning Pipeline: end-to-end/knowledge-tuning.md
-      - MCP Distillation (GRPO): end-to-end/mcp-distillation.md
-      - Tool-Calling Model (Financial): end-to-end/tool-calling-financial.md
     - Evaluation:
       - Overview: evaluation/index.md
       - RAG Evaluation: evaluation/rag-evaluation.md
       - Code Evaluation: evaluation/code-evaluation.md
       - Tool-Use Evaluation: evaluation/agent-evaluation.md
+    - Domains:
+      - Medical: domains/medical.md
+      - Financial: domains/financial.md
+      - Model-Specific Configs: domains/model-specific.md
     - Utilities:
       - Memory Estimator: utilities/memory-estimator.md
       - Plot Loss: utilities/plot-loss.md
