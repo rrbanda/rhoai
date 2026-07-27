@@ -175,7 +175,7 @@ torchrun --nproc-per-node=2 03_train_lora_sft.py
 
 ### Option B: Direct TrainJob on RHOAI (recommended, validated)
 
-This approach creates a Kubeflow `TrainJob` custom resource that uses the `training-hub` ClusterTrainingRuntime. It runs directly on the GPU node with no pipeline server or RWX storage required.
+This approach creates a Kubeflow `TrainJob` custom resource that uses the `training-hub` ClusterTrainingRuntime. It runs directly on the GPU node with no pipeline server required.
 
 **Prerequisite:** The `trainer` component must be enabled in your DataScienceCluster, and the `training-hub` ClusterTrainingRuntime must exist:
 
@@ -396,7 +396,7 @@ oc get trainjob tool-calling-financial-lora-sft -n tool-calling-financial
 The KFP pipeline wraps the same LoRA SFT algorithm in a four-stage automated pipeline. Use this when you need automatic dataset download, evaluation, and model registry as a repeatable workflow.
 
 !!! info "Validation status"
-    The KFP pipeline was successfully compiled and uploaded to the DSPA pipeline server on RHOAI 3.4.2. Pipeline **execution** was not tested due to RWX storage class requirements (the test cluster only has RWO/gp3-csi). The training logic inside the pipeline is the same `training-hub` LoRA SFT that was runtime-validated via direct TrainJob (Option B).
+    The KFP pipeline was compiled, uploaded to the DSPA pipeline server, and executed on RHOAI 3.4.2. The pipeline uses **RWO** storage (`gp3-csi`) — RWX is not required. Dataset download completed successfully. The training step requires nodes with sufficient ephemeral storage (~16GB free) for the 7.5GB training image (`odh-th06-cpu-torch291-py312`). The training logic inside the pipeline is the same `training-hub` LoRA SFT that was runtime-validated via direct TrainJob (Option B).
 
 ```bash
 # Compile the pipeline YAML
@@ -432,7 +432,8 @@ Prerequisites for KFP pipeline:
 - `dashboard`, `trainer`, `aipipelines` components enabled in RHOAI
 - `argoWorkflowsControllers` set to `Managed` in the DataScienceCluster
 - Pipeline server (DSPA) running in your namespace
-- RWX storage class (default: `nfs-csi`), or switch to RWO (see [cluster notes](#important-cluster-notes))
+- Storage class with `ReadWriteOnce` support (default: `gp3-csi`); RWX is **not** required
+- Nodes with at least 16GB free ephemeral storage (the training image is 7.5GB)
 - `kubernetes-credentials` secret with cluster API access
 
 Create the required secret:
@@ -691,8 +692,9 @@ The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestrat
 | "MCP Server Distillation flow not found" | `pip install sdg-hub[dev]` |
 | "CUDA out of memory during training" | Enable QLoRA: `--load-in-4bit` (default), or reduce `--max-seq-len` |
 | "Tool call parser error" during inference | Verify `--tool-call-parser` matches model (`hermes` for Qwen3) |
-| KFP pipeline: "storageclass not found" | Set `--storage-class` to your cluster's RWX class |
-| KFP pipeline: "kubernetes-credentials not found" | Create the secret (see Step 3B prerequisites) |
+| KFP pipeline: "storageclass not found" | Set `--storage-class` to your cluster's storage class (default: `gp3-csi`) |
+| KFP pipeline: "kubernetes-credentials not found" | Create the secret (see Step 3C prerequisites) |
+| KFP pipeline: pod evicted (ephemeral-storage) | The training image is 7.5GB; nodes need ≥16GB free ephemeral storage. Prune unused images: `oc debug node/<name> -- chroot /host crictl rmi --prune` |
 
 ## Validated on RHOAI
 
@@ -705,7 +707,7 @@ The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestrat
 | SDG Hub | MCP distillation flow loads, teacher model (Gemini 3.6 Flash) connects | Flow discovers 22 blocks, input dataset builds | Runtime |
 | Data Formatting | Parquet → chat-format JSONL | `tool_calls` structure validated | Runtime |
 | LoRA SFT Training | Kubeflow Trainer (`training-hub` runtime), Qwen3-4B, 50 examples, 1 epoch | Loss 1.817→1.511 in 38 seconds | Runtime |
-| KFP Pipeline | Compile → upload to DSPA pipeline server | 2,367-line YAML, pipeline visible in dashboard | Compile + upload only |
+| KFP Pipeline | Compile → upload → execute on DSPA | PVC binds (RWO/gp3-csi), dataset download completes; training step needs ≥16GB ephemeral storage | Runtime (partial) |
 | Model Deployment | KServe RawDeployment + vLLM | Manifest generates correctly; same pattern runtime-validated via MCP Distillation | Manifest |
 | Evaluation | Tool-use evaluation script | Manifest-validated; requires Langflow + API key | Manifest |
 | Guardrails | NemoGuardrails CR + PII regex rails | PII detection blocked SSN input; clean requests passed through | Runtime |
@@ -719,7 +721,7 @@ The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestrat
     On `g6.xlarge` (3.5 CPU allocatable, ~14GB RAM), use `cpu: 2, memory: 10Gi` for training pod requests. Scale down the model predictor deployment before training if the GPU node is shared.
 
 !!! tip "KFP Storage"
-    The KFP pipeline creates PVCs that default to `ReadWriteMany` (RWX). If your cluster only has RWO storage (e.g., `gp3-csi`), either switch to `ReadWriteOnce` in the pipeline parameters or use the direct TrainJob approach with `03_train_lora_sft.py`.
+    The KFP pipeline creates PVCs with `ReadWriteOnce` (RWO) and `gp3-csi` by default — RWX is **not** required. If your cluster uses a different storage class, pass `--storage-class your-class` when compiling. The training image (`odh-th06-cpu-torch291-py312`) is 7.5GB, so nodes need at least 16GB free ephemeral storage. If pods get evicted, prune unused images: `oc debug node/<name> -- chroot /host crictl rmi --prune`.
 
 !!! info "Argo Workflows"
     If KFP pipeline runs stay in pending state, enable the Argo workflow controller: `oc patch dsc default-dsc --type=merge -p '{"spec":{"components":{"aipipelines":{"argoWorkflowsControllers":{"managementState":"Managed"}}}}}'`

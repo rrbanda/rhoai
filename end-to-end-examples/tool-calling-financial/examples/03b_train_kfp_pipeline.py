@@ -14,7 +14,7 @@ The pipeline executes four stages on the RHOAI cluster:
 Prerequisites:
   - RHOAI 3.4+ with dashboard, trainer, and aipipelines components enabled
   - Pipeline server running in your Data Science Project
-  - RWX storage class available (default: nfs-csi)
+  - Storage class available (default: gp3-csi with ReadWriteOnce)
   - kubernetes-credentials secret created (see README.md)
 
 Source:
@@ -136,8 +136,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--storage-class",
         type=str,
-        default="nfs-csi",
-        help="RWX storage class name (default: nfs-csi)",
+        default="gp3-csi",
+        help="Storage class name (default: gp3-csi with ReadWriteOnce)",
     )
     return parser.parse_args()
 
@@ -159,11 +159,11 @@ def clone_and_compile(storage_class: str) -> Path:
         print("The pipelines-components repository structure may have changed.")
         sys.exit(1)
 
-    if storage_class != "nfs-csi":
+    if storage_class != "gp3-csi":
         print(f"Updating PVC_STORAGE_CLASS to '{storage_class}'...")
         content = pipeline_script.read_text()
         content = content.replace(
-            'PVC_STORAGE_CLASS = "nfs-csi"',
+            'PVC_STORAGE_CLASS = "gp3-csi"',
             f'PVC_STORAGE_CLASS = "{storage_class}"',
         )
         pipeline_script.write_text(content)

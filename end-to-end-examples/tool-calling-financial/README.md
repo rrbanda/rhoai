@@ -42,7 +42,7 @@ Both use the same algorithm (LoRA + SFT via Unsloth backend) and produce identic
 
 **For the KFP pipeline (step 03b):**
 - Pipeline server running in your Data Science Project
-- RWX storage class (default: `nfs-csi`)
+- Storage class with `ReadWriteOnce` support (default: `gp3-csi`)
 - `kubernetes-credentials` secret with cluster API access
 
 ## Directory Structure
@@ -165,7 +165,7 @@ torchrun --nproc-per-node=2 03_train_lora_sft.py
 
 #### Option B: Direct TrainJob on RHOAI (recommended, validated)
 
-This creates a Kubeflow `TrainJob` CR using the `training-hub` ClusterTrainingRuntime. It runs directly on the GPU node — no pipeline server, no RWX storage needed.
+This creates a Kubeflow `TrainJob` CR using the `training-hub` ClusterTrainingRuntime. It runs directly on the GPU node — no pipeline server needed.
 
 **Prerequisite:** `trainer` enabled in the DataScienceCluster and the `training-hub` ClusterTrainingRuntime exists:
 
@@ -392,7 +392,7 @@ The four pipeline stages:
 | RHOAI components | `dashboard`, `trainer`, `aipipelines` enabled |
 | Argo Workflows | `argoWorkflowsControllers` set to `Managed` in DSC |
 | Pipeline server | DSPA running in your namespace |
-| Storage class | RWX with `nfs-csi` (or configure `--storage-class`) |
+| Storage class | RWO with `gp3-csi` (or configure `--storage-class`) |
 | Secret | `kubernetes-credentials` with `KUBERNETES_SERVER_URL` and `KUBERNETES_AUTH_TOKEN` |
 | KFP SDK | `kfp==2.15.2` (for pipeline YAML compilation) |
 
@@ -651,7 +651,7 @@ This pipeline has been validated end-to-end on the following environment:
 - GPU nodes with taint `nvidia.com/gpu=True:NoSchedule` require a toleration in TrainJob `podTemplateOverrides`
 - On `g6.xlarge` (3.5 CPU, 14GB RAM), use `cpu: 2, memory: 10Gi` for training pod requests
 - Scale down the model predictor before training if the GPU node is shared (only 1 GPU)
-- The KFP pipeline requires RWX storage (`nfs-csi` or EFS). For EBS-only clusters, use the direct TrainJob approach
+- The KFP pipeline uses RWO storage (`gp3-csi`) by default — RWX is not required. Nodes need ≥16GB free ephemeral storage for the 7.5GB training image
 - Enable `argoWorkflowsControllers` in the DataScienceCluster if the pipeline workflow stays pending
 
 ## Troubleshooting
@@ -662,7 +662,7 @@ This pipeline has been validated end-to-end on the following environment:
 | "CUDA out of memory during training" | Enable QLoRA: `--load-in-4bit` (default), or reduce `--max-seq-len` |
 | "Tool call parser error" during inference | Verify `--tool-call-parser` matches model (use `hermes` for Qwen3) |
 | "Guardrails CR not ready" | Check TrustyAI operator is installed |
-| KFP pipeline: "storageclass not found" | Set `--storage-class` to your cluster's RWX class |
+| KFP pipeline: "storageclass not found" | Set `--storage-class` to your cluster's storage class (default: `gp3-csi`) |
 | KFP pipeline: "kubernetes-credentials not found" | Create the secret (see Step 3 Option B prerequisites) |
 | Langflow agent times out | Increase `LANGFLOW_TIMEOUT` or check MCP server reachability |
 | TrainJob pod stays Pending (GPU taint) | Add `tolerations` for `nvidia.com/gpu` in `podTemplateOverrides` |
