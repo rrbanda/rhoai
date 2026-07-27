@@ -18,7 +18,7 @@ These folders in the [repository root](https://github.com/rrbanda/rhoai) contain
 | `08-evaluation/` | Model evaluation and benchmarking | LM-Eval harness, tool-use evaluation |
 | `09-safety-guardrails/` | Safety rails and content filtering | NeMo Guardrails for production |
 | `10-monitoring/` | Observability and metrics | Monitoring served model health |
-| `11-pipelines/` | Data Science Pipelines (KFP) | Automating the training pipeline |
+| `11-pipelines/` | AI Pipelines (Kubeflow Pipelines) | Automating the training pipeline |
 | `12-administration/` | RBAC, quotas, cluster admin | Platform governance |
 
 ## Relationship to These Guides

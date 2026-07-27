@@ -270,7 +270,6 @@ metadata:
 spec:
   runtimeRef:
     name: training-hub
-    apiGroup: trainer.kubeflow.org
     kind: ClusterTrainingRuntime
   trainer:
     command:

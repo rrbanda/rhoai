@@ -13,7 +13,7 @@ Large frontier models (70B+ parameters) are powerful but expensive to serve. A w
 
 ## The RHOAI Model Customization Stack
 
-The RHOAI model customization workflow uses two open-source Python libraries, both officially referenced in RHOAI 3.4 documentation and included in Red Hat-curated workbench images:
+The RHOAI model customization workflow uses two open-source Python libraries, pre-installed in RHOAI training and workbench images. These are community libraries maintained by the Red Hat AI Innovation Team — not official RHOAI product components with GA support SLAs. The underlying platform capabilities (Kubeflow Trainer, KServe, AI Pipelines) carry full Red Hat support.
 
 ### SDG Hub — Synthetic Data Generation
 

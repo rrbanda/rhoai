@@ -19,6 +19,9 @@ RawDeployment is the recommended mode for fine-tuned models. It provides stable,
 
 The ServingRuntime defines the vLLM container image, command-line flags, and volume mounts. For LoRA adapter serving, the runtime includes the PVC mount and `--enable-lora` flag. For tool-calling models, it also includes `--enable-auto-tool-choice` and `--tool-call-parser`.
 
+!!! note "vLLM image"
+    The examples below use `registry.redhat.io/rhaii/vllm-cuda-rhel9` (the Red Hat AI production image). The RHOAI dashboard's pre-installed vLLM runtime uses `quay.io/modh/vllm`. Both are functionally equivalent — use whichever matches your cluster's image pull policies. For LoRA and tool-calling, a custom ServingRuntime is needed regardless of image choice.
+
 ```yaml
 apiVersion: serving.kserve.io/v1alpha1
 kind: ServingRuntime
