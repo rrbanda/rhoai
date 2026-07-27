@@ -144,8 +144,8 @@ lora_grpo(
     data_path="grpo_training_data.jsonl",
     ckpt_output_dir="./tool-use-model",
     num_iterations=15,
-    lora_r=16,
-    lora_alpha=8,
+    lora_r=32,
+    lora_alpha=64,
     backend="art",
 )
 ```

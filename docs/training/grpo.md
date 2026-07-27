@@ -89,8 +89,8 @@ GRPO expects tool-use traces in messages format with tool calls and results:
 | `group_size` | int | 8 | Number of candidate responses per prompt |
 | `prompt_batch_size` | int | 100 | Number of prompts per iteration |
 | `learning_rate` | float | 1e-5 | Learning rate |
-| `lora_r` | int | 16 | LoRA adapter rank |
-| `lora_alpha` | int | 8 | LoRA scaling factor |
+| `lora_r` | int | 32 | LoRA adapter rank |
+| `lora_alpha` | int | 64 | LoRA scaling factor |
 | `temperature` | float | 0.7 | Sampling temperature for candidate generation |
 | `max_tokens` | int | 512 | Max tokens per generated response |
 | `max_prompt_length` | int | 16384 | Max prompt length |

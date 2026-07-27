@@ -64,14 +64,14 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument(
         "--lora-r",
         type=int,
-        default=16,
-        help="LoRA rank (default: 16)",
+        default=32,
+        help="LoRA rank (default: 32)",
     )
     parser.add_argument(
         "--lora-alpha",
         type=int,
-        default=8,
-        help="LoRA alpha scaling factor (default: 8)",
+        default=64,
+        help="LoRA alpha scaling factor (default: 64)",
     )
     parser.add_argument(
         "--group-size",
