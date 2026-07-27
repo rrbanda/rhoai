@@ -9,7 +9,7 @@ hide:
 
 ### :material-tune-vertical: Model Customization on RHOAI
 
-Fine-tune LLMs with smaller, efficient architectures on Red Hat OpenShift AI. Generate synthetic training data with **SDG Hub**, train with **Training Hub** (SFT, OSFT, LoRA, GRPO), evaluate, and deploy — all on your RHOAI cluster.
+End-to-end practical guides for fine-tuning LLMs on Red Hat OpenShift AI — from raw documents to a deployed, guardrailed model. These guides build on the [official RHOAI platform docs](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4) with integrated workflows using **SDG Hub** (data generation) and **Training Hub** (SFT, OSFT, LoRA, GRPO).
 
 <div class="featured-track-meta" markdown>
 
