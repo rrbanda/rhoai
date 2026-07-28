@@ -226,25 +226,33 @@ source .venv/bin/activate
 python 07_deep_agent.py "What is the current price of AAPL?"
 ```
 
-Expected output:
+The agent follows this flow:
+
+```mermaid
+sequenceDiagram
+    participant User
+    participant Agent as Deep Agent
+    participant vLLM as vLLM (RHOAI)
+    participant MCP as MCP Server
+
+    User->>Agent: "What is the current price of AAPL?"
+    Agent->>vLLM: Chat completion (with tool schemas)
+    vLLM-->>Agent: tool_call: get_stock_quote(ticker="AAPL")
+    Agent->>MCP: get_stock_quote(AAPL)
+    MCP-->>Agent: {price: 611.54, change: +2.93%, ...}
+    Agent->>vLLM: Tool result → generate response
+    vLLM-->>Agent: "Apple Inc. is $611.54, up 2.93% ..."
+    Agent-->>User: Formatted answer with specific numbers
+```
+
+The terminal output looks like:
 
 ```
-Financial Insights Deep Agent
-Model: financial-agent @ http://localhost:8000/v1
-MCP:   http://localhost:8009/mcp
-
-╭─── You ───╮
-│ What is the current price of AAPL? │
-╰───────────╯
   >> get_stock_quote(ticker='AAPL')
   ✓ get_stock_quote: {"ticker": "AAPL", "name": "Apple Inc.", ...}
 
-╭─── Agent ───╮
-│ The current price of Apple Inc. (AAPL) is $611.54 on the NASDAQ.  │
-│ • Daily change: +$17.43 (+2.93%)                                  │
-│ • Day's range: $592.40 to $618.71                                 │
-│ • Market cap: $1.00T                                              │
-╰─────────────╯
+  Agent: The current price of Apple Inc. (AAPL) is $611.54 on the NASDAQ.
+         Daily change: +$17.43 (+2.93%). Market cap: $1.00T.
 ```
 
 ### Multi-tool chaining
