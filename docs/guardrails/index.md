@@ -27,7 +27,7 @@ graph LR
 ```
 
 !!! success "Runtime-validated on RHOAI 3.4.2"
-    NeMo Guardrails has been runtime-validated on RHOAI 3.4.2. The NemoGuardrails CR deployed successfully, PII detection (Presidio) correctly blocked SSN-containing input ("I'm sorry, I can't respond to that"), and clean requests were passed through to the model endpoint. CRD schema follows the [official RHOAI 3.4 documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails/index).
+    NeMo Guardrails has been runtime-validated on RHOAI 3.4.2. The NemoGuardrails CR deployed successfully, PII detection (Presidio) correctly blocked SSN-containing input ("I'm sorry, I can't respond to that"), and clean requests were passed through to the model endpoint. CRD schema follows the [official RHOAI 3.4 documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/ensuring_ai_safety_with_guardrails/index).
 
 ### Core Capabilities
 
@@ -198,4 +198,4 @@ This ensures every tool call from the agent passes through guardrail checks befo
 - [Financial Guardrails Example](../end-to-end/tool-calling-financial.md#step-6-configure-guardrails) — Worked example with financial compliance rails
 - [Serving](../serving/index.md) — Deploy models before adding guardrails
 - [Tool-Use Evaluation](../evaluation/agent-evaluation.md) — Evaluate tool-calling quality before deploying
-- [NeMo Guardrails on RHOAI (Official Docs)](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails/index)
+- [NeMo Guardrails on RHOAI (Official Docs)](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/ensuring_ai_safety_with_guardrails/index)

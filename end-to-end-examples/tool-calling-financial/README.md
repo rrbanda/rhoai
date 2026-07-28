@@ -63,6 +63,7 @@ tool-calling-financial/
 ├── guardrails/
 │   ├── config.yml                          NeMo Guardrails configuration
 │   ├── config.co                           Colang 2.0 financial compliance flows
+│   ├── nemoguardrails_configmap.yaml       NeMo Guardrails ConfigMap
 │   ├── nemoguardrails_cr.yaml              NemoGuardrails CR (GA)
 │   └── mcpgateway_extension_cr.yaml        MCPGatewayExtension CR (3.5 TP)
 └── examples/
@@ -721,6 +722,6 @@ This pipeline has been validated end-to-end on the following environment:
 - [Training Hub LoRA docs](https://github.com/Red-Hat-AI-Innovation-Team/training_hub/blob/main/docs/algorithms/lora.md)
 - [LoRA KFP Pipeline](https://github.com/red-hat-data-services/pipelines-components/tree/main/pipelines/training/finetuning/lora)
 - [KFP Pipeline Guide](https://github.com/red-hat-data-services/red-hat-ai-examples/tree/main/examples/fine-tuning/pipelines/training-hub)
-- [SDG Hub MCP Distillation](https://github.com/red-hat-data-services/sdg_hub/tree/main/examples/agentic/mcp_distillation_training)
+- [SDG Hub MCP Distillation](https://github.com/Red-Hat-AI-Innovation-Team/sdg_hub/tree/main/examples/agentic/mcp_distillation_training)
 - [NeMo Guardrails on RHOAI](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/ensuring_ai_safety_with_guardrails)
 - [KServe RawDeployment](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/serving_models)

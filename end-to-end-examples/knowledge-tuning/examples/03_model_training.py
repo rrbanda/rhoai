@@ -152,9 +152,11 @@ def train_lora(
         lora_r=16,
         lora_alpha=32,
         num_epochs=num_epochs,
+        effective_batch_size=effective_batch_size,
         learning_rate=learning_rate,
         load_in_4bit=True,
         max_seq_len=max_seq_len,
+        nproc_per_node=nproc_per_node,
     )
 
 

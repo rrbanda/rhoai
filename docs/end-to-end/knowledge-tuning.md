@@ -159,6 +159,7 @@ def convert_to_messages(df):
             continue
         records.append({
             "messages": [
+                {"role": "system", "content": "You are a knowledgeable assistant."},
                 {"role": "user", "content": str(row["question"])},
                 {"role": "assistant", "content": str(row["response"])},
             ],

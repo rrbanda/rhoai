@@ -1,6 +1,6 @@
 # ConfigMap for NeMo Guardrails on RHOAI 3.4+.
 # Contains the config.yaml and rails.co files mounted into the guardrails server.
-# Ref: https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails/deploying-nemo-guardrails_nemo-guardrails
+# Ref: https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/ensuring_ai_safety_with_guardrails/deploying-nemo-guardrails_nemo-guardrails
 #
 # Usage:
 #   1. oc apply -f nemoguardrails_configmap.yaml

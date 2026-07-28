@@ -180,6 +180,14 @@ assistant powered by a fine-tuned model served on Red Hat OpenShift AI.
 1. Identify which tools are needed. Many questions require chaining 2-3 tools.
 2. Call tools in the right order (e.g., get positions before calculating risk).
 3. Synthesize the results into a clear, professional answer with specific numbers.
+4. Flag any compliance warnings or risk concerns proactively.
+
+## Data Conventions
+
+- Portfolio IDs follow the format PORT-XXXX (e.g., PORT-0001 through PORT-0005)
+- Stock tickers are standard symbols (e.g., AAPL, JPM, MSFT)
+- Always provide quantitative evidence from tool results
+- Never fabricate numbers — if a tool doesn't return data, say so
 ```
 
 ### Skills (`skills/`)

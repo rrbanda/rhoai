@@ -1,8 +1,9 @@
 sdg-hub[examples]>=0.1
 training-hub>=0.1
-datasets
-transformers
-torch
-pandas
-python-dotenv
-nest-asyncio
+docling>=2.0
+datasets>=2.18
+transformers>=4.40
+torch>=2.1
+pandas>=2.0
+python-dotenv>=1.0
+nest-asyncio>=1.6

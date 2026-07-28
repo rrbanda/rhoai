@@ -1,6 +1,6 @@
 # NemoGuardrails custom resource for the financial advisory agent.
 # GA in RHOAI 3.4+.
-# Ref: https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails/deploying-nemo-guardrails_nemo-guardrails
+# Ref: https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/ensuring_ai_safety_with_guardrails/deploying-nemo-guardrails_nemo-guardrails
 apiVersion: trustyai.opendatahub.io/v1alpha1
 kind: NemoGuardrails
 metadata:

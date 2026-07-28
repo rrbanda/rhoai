@@ -655,7 +655,7 @@ python 06_configure_guardrails.py \
 - **MCP Gateway (3.5 TP):** Auto-enforcement of guardrails on all tool calls via MCP Gateway Extension
 
 !!! info "Manifest-validated"
-    Guardrails configuration has been manifest-validated (CRs generate correctly). See the [official RHOAI 3.4 guardrails documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails/index) for the latest CRD schema.
+    Guardrails configuration has been manifest-validated (CRs generate correctly). See the [official RHOAI 3.4 guardrails documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/ensuring_ai_safety_with_guardrails/index) for the latest CRD schema.
 
 ## Step 7: Deep Agent Harness
 

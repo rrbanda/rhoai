@@ -1,6 +1,6 @@
 # NeMo Guardrails configuration for the financial advisory agent.
 # Deploys on RHOAI 3.4+ with GA guardrails support.
-# See: https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails
+# See: https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/ensuring_ai_safety_with_guardrails
 #
 # This file is mounted into the NeMo Guardrails server as config.yaml
 # via a Kubernetes ConfigMap referenced in the NemoGuardrails CR.

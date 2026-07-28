@@ -404,7 +404,7 @@
 }
 
 .mermaid svg {
-  max-height: 320px;
+  max-height: 500px;
   width: auto;
   display: block;
   margin: 0 auto;

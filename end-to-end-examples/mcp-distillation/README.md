@@ -202,4 +202,4 @@ For multiple MCP servers, modify `build_input_dataset()` in `01_generate_tool_da
 
 ## Official Documentation
 
-- [SDG Hub MCP Distillation Examples](https://github.com/red-hat-data-services/sdg_hub/tree/main/examples/agentic/mcp_distillation_training)
+- [SDG Hub MCP Distillation Examples](https://github.com/Red-Hat-AI-Innovation-Team/sdg_hub/tree/main/examples/agentic/mcp_distillation_training)

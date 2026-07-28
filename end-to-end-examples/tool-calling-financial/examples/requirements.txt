@@ -19,7 +19,6 @@ requests>=2.31
 
 # Evaluation (Step 05)
 datasets>=2.18
-tabulate>=0.9
 
 # Guardrails (Step 06)
 pyyaml>=6.0
