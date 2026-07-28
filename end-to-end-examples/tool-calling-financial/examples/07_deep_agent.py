@@ -12,13 +12,13 @@ The agent is configured through filesystem primitives:
 
 Quick start:
   1. Start the MCP server:  cd demo_server && python server.py
-  2. Port-forward vLLM:     oc port-forward -n financial-agent deployment/financial-agent-lora-predictor 8000:8080
+  2. Set MODEL_ENDPOINT in .env to your InferenceService Route URL
   3. Headless:              uv run python 07_deep_agent.py "What is the price of AAPL?"
   4. Interactive:           uv run langgraph dev --allow-blocking
 
 Environment variables (set in .env):
   MODEL_ENDPOINT    vLLM endpoint URL        (default: http://localhost:8000/v1)
-  MODEL_NAME        Model name at endpoint   (default: financial-agent)
+  MODEL_NAME        Model name at endpoint   (default: tool-calling-financial)
   MCP_SERVER_URL    MCP server URL           (default: http://localhost:8009/mcp)
   OPENAI_API_KEY    API key for vLLM         (default: not-needed)
 """
@@ -57,7 +57,7 @@ def create_financial_agent():
     """
     model = ChatOpenAI(
         base_url=os.environ.get("MODEL_ENDPOINT", "http://localhost:8000/v1"),
-        model=os.environ.get("MODEL_NAME", "financial-agent"),
+        model=os.environ.get("MODEL_NAME", "tool-calling-financial"),
         api_key=os.environ.get("OPENAI_API_KEY", "not-needed"),
         temperature=0.1,
         max_tokens=4096,
@@ -140,7 +140,7 @@ async def main():
     console.print()
     console.print("[bold blue]Financial Insights Deep Agent[/]")
     console.print(
-        f"[dim]Model: {os.environ.get('MODEL_NAME', 'financial-agent')} "
+        f"[dim]Model: {os.environ.get('MODEL_NAME', 'tool-calling-financial')} "
         f"@ {os.environ.get('MODEL_ENDPOINT', 'http://localhost:8000/v1')}[/]"
     )
     console.print(f"[dim]MCP:   {os.environ.get('MCP_SERVER_URL', 'http://localhost:8009/mcp')}[/]")

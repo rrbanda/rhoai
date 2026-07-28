@@ -616,18 +616,18 @@ uv pip install -e .
 
 # Create .env (do NOT commit — already in .gitignore)
 cat > .env << 'EOF'
-MODEL_ENDPOINT=http://localhost:8000/v1
-MODEL_NAME=financial-agent
+MODEL_ENDPOINT=https://<your-model-route>/v1
+MODEL_NAME=tool-calling-financial
 MCP_SERVER_URL=http://localhost:8009/mcp
 OPENAI_API_KEY=not-needed
 EOF
 
+# Get the model Route URL for your .env
+oc get route -n tool-calling-financial -l serving.kserve.io/inferenceservice \
+  -o jsonpath='{.items[0].spec.host}'
+
 # Start MCP server (separate terminal)
 cd ../demo_server && source ../examples/.venv/bin/activate && python server.py
-
-# Port-forward to vLLM (separate terminal)
-oc port-forward -n tool-calling-financial \
-  deployment/tool-calling-financial-lora-predictor 8000:8080
 
 # Run the agent
 python 07_deep_agent.py "What is the current price of AAPL?"
