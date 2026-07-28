@@ -79,6 +79,12 @@ tool-calling-financial/
     ├── 07_deep_agent.py                    Deep Agent harness (LangGraph)
     ├── financial_tools.py                  15 @tool wrappers for MCP server
     ├── financial_prompts.py                System prompt for Financial Insights Agent
+    ├── pyproject.toml                      Agent dependencies (deepagents>=0.6.12)
+    ├── AGENTS.md                           Agent identity and tool-usage guidelines
+    ├── skills/
+    │   ├── portfolio-analysis/SKILL.md     Multi-step portfolio analysis workflow
+    │   ├── market-research/SKILL.md        Stock screening and market overview
+    │   └── trade-evaluation/SKILL.md       Compliance check + order submission
     └── pipelines-components/               Auto-cloned on first KFP run (Step 3C)
 ```
 
@@ -591,23 +597,52 @@ python 06_configure_guardrails.py
 - Automatic guardrail enforcement on all tool calls routed through the MCP Gateway
 - Policy-based tool access control
 
-### Step 7: Run the Deep Agent Harness (Optional — Not Yet Validated)
+### Step 7: Deep Agent Harness (Runtime-Validated)
 
-> **This step is optional.** The model customization pipeline is complete at Step 6. Steps 1-6 produce a fine-tuned, served, and guarded model with a standard OpenAI-compatible `/v1/chat/completions` endpoint that supports tool-calling. You can integrate it into any agent framework (LangChain, CrewAI, LangGraph, etc.).
+Wire the fine-tuned model into an autonomous agent using [LangChain Deep Agents](https://github.com/langchain-ai/deepagents). The agent adds task planning, multi-tool orchestration, persistent memory, and on-demand skills on top of the model's tool-calling ability.
 
-> **Known issue:** The `deepagents` library has compatibility issues with vLLM-served Qwen models regarding `tool_call_id` handling. Use an alternative agent framework if you encounter this.
+> **Important:** Deep Agents requires `--max-model-len=16384` or higher on the vLLM deployment. The middleware stack adds ~3,500 tokens of system prompt.
 
 ```bash
-pip install deepagents langchain-openai langgraph-cli[inmem]
+# Increase vLLM context window (one-time)
+oc patch servingruntime vllm-lora-runtime -n tool-calling-financial \
+  --type='json' \
+  -p='[{"op":"replace","path":"/spec/containers/0/args/3","value":"--max-model-len=16384"}]'
 
-export MODEL_ENDPOINT=https://tool-calling-financial-predictor.apps.your-cluster.com/v1
-
+# Install agent dependencies
 cd examples/
-langgraph dev
+uv venv --python 3.12 && source .venv/bin/activate
+uv pip install -e .
 
-# Or run headless:
-python 07_deep_agent.py "What is the risk-adjusted performance of portfolio PORT-0001?"
+# Create .env (do NOT commit — already in .gitignore)
+cat > .env << 'EOF'
+MODEL_ENDPOINT=http://localhost:8000/v1
+MODEL_NAME=financial-agent
+MCP_SERVER_URL=http://localhost:8009/mcp
+OPENAI_API_KEY=not-needed
+EOF
+
+# Start MCP server (separate terminal)
+cd ../demo_server && source ../examples/.venv/bin/activate && python server.py
+
+# Port-forward to vLLM (separate terminal)
+oc port-forward -n tool-calling-financial \
+  deployment/tool-calling-financial-lora-predictor 8000:8080
+
+# Run the agent
+python 07_deep_agent.py "What is the current price of AAPL?"
+python 07_deep_agent.py "What is the risk-adjusted performance of PORT-0001?"
+
+# Or launch the interactive LangGraph Studio UI
+langgraph dev --allow-blocking
 ```
+
+The agent was validated with three query types:
+- **Single-tool:** `get_stock_quote(AAPL)` — correct tool selection and response synthesis
+- **Multi-tool chaining:** `get_portfolio_performance` + `calculate_portfolio_risk` called in parallel
+- **Compliance workflow:** `check_compliance` with proper risk tolerance reporting
+
+The model also exposes a standard `/v1/chat/completions` endpoint, so you can integrate it with any OpenAI-compatible agent framework (LangChain, CrewAI, etc.).
 
 ## Resource Estimates
 

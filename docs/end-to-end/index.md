@@ -17,7 +17,7 @@ cd rhoai/
 |----------|------|-------------------|------------|
 | [Knowledge Tuning](knowledge-tuning.md) | Teach a model domain knowledge from documents | SFT / OSFT / LoRA | **On RHOAI 3.4.2** |
 | [MCP Distillation](mcp-distillation.md) | Teach a model to call tools via MCP servers | GRPO | Locally |
-| [Tool-Calling Model (Financial)](tool-calling-financial.md) | Fine-tune a model for accurate tool-calling | LoRA SFT | **On RHOAI 3.4.2** |
+| [Tool-Calling Model (Financial)](tool-calling-financial.md) | Fine-tune a model for accurate tool-calling, then wire it into a [Deep Agent](deep-agent.md) | LoRA SFT | **On RHOAI 3.4.2** |
 
 ## Recommended Starting Points
 
@@ -36,6 +36,7 @@ cd rhoai/
     1. Start with [Tool-Calling Model Pipeline](tool-calling-financial.md) — the most complete and validated pipeline (uses financial services as the example domain)
     2. Adapt the MCP server and training data for your domain
     3. Deploy with [LoRA adapter serving](tool-calling-financial.md#42-option-a-serve-the-lora-adapter-directly-recommended) and [guardrails](../guardrails/index.md)
+    4. Wire the model into an autonomous [Deep Agent](deep-agent.md) with planning, memory, and skills
 
 ## Pipeline Comparison
 
@@ -52,5 +53,6 @@ graph TD
         A2 --> A3["Train<br/>(LoRA SFT)"]
         A3 --> A4["Evaluate<br/>(Tool-Use Metrics)"]
         A4 --> A5["Deploy + Guardrails<br/>(KServe + NeMo)"]
+        A5 --> A6["Deep Agent<br/>(LangGraph)"]
     end
 ```

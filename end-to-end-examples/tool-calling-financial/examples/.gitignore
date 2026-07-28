@@ -5,3 +5,5 @@ pipelines-components/
 __pycache__/
 *.pyc
 .venv/
+*.egg-info/
+.langgraph_api/

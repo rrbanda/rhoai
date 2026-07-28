@@ -63,7 +63,7 @@ def _call_mcp(tool_name: str, arguments: dict) -> dict:
             headers=headers,
         )
         if init_resp.status_code == 200:
-            new_sid = init_resp.headers.get("Mcp-Session-Id")
+            new_sid = init_resp.headers.get("mcp-session-id") or init_resp.headers.get("Mcp-Session-Id")
             if new_sid:
                 _mcp_session_id._sid = new_sid
                 headers["Mcp-Session-Id"] = new_sid
@@ -87,11 +87,22 @@ def _call_mcp(tool_name: str, arguments: dict) -> dict:
         },
         headers=headers,
     )
-    data = resp.json()
+    data = _parse_mcp_response(resp)
     content = data.get("result", {}).get("content", [])
     if content and content[0].get("type") == "text":
         return json.loads(content[0]["text"])
     return data
+
+
+def _parse_mcp_response(resp: httpx.Response) -> dict:
+    """Parse an MCP response that may be plain JSON or SSE (text/event-stream)."""
+    content_type = resp.headers.get("content-type", "")
+    if "text/event-stream" in content_type:
+        for line in resp.text.splitlines():
+            if line.startswith("data: "):
+                return json.loads(line[6:])
+        return {}
+    return resp.json()
 
 
 # ---------------------------------------------------------------------------

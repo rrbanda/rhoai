@@ -1,145 +1,176 @@
+#!/usr/bin/env python3
 """Financial Insights Deep Agent — powered by a fine-tuned model on RHOAI.
 
-Creates a LangChain Deep Agent that wraps a fine-tuned Qwen3-4B served via
-vLLM on RHOAI with 15 financial tools from the FinanceInsights MCP server.
+Adapts the content-builder-agent pattern from langchain-ai/deepagents to wrap
+a fine-tuned Qwen3-4B served via vLLM on RHOAI with 15 financial tools from
+the FinanceInsights MCP server.
 
-The agent uses the ``deepagents`` library (built on LangGraph) which provides:
-  - Task planning and decomposition
-  - Tool calling with automatic schema inference
-  - Long-term memory via AGENTS.md
-  - Subagent spawning for parallel tasks
-  - Context offloading for long conversations
-
-Architecture:
-  ┌──────────────────────────────────────────────────────┐
-  │  LangGraph Runtime (http://127.0.0.1:2024)           │
-  │                                                      │
-  │  ┌──────────────────────────────────────────────────┐ │
-  │  │  Deep Agent (Financial Insights)                 │ │
-  │  │                                                  │ │
-  │  │  LLM: ChatOpenAI -> vLLM on RHOAI               │ │
-  │  │       (fine-tuned Qwen3-4B with LoRA adapter)    │ │
-  │  │                                                  │ │
-  │  │  Tools: 15 financial @tool functions             │ │
-  │  │         -> HTTP calls to MCP server              │ │
-  │  │                                                  │ │
-  │  │  Memory: /memory/AGENTS.md (persistent)          │ │
-  │  └──────────────────────────────────────────────────┘ │
-  └──────────────────────────────────────────────────────┘
+The agent is configured through filesystem primitives:
+  - AGENTS.md         — agent identity and tool usage guidelines (always loaded)
+  - skills/           — on-demand workflows for portfolio, market, and trade tasks
+  - financial_tools   — 15 @tool wrappers calling the MCP server
 
 Quick start:
-  1. Start the MCP server: cd demo_server && python server.py
-  2. Set MODEL_ENDPOINT to your vLLM route URL
-  3. Interactive: langgraph dev
-  4. Headless:   python 07_deep_agent.py
+  1. Start the MCP server:  cd demo_server && python server.py
+  2. Port-forward vLLM:     oc port-forward -n financial-agent deployment/financial-agent-lora-predictor 8000:8080
+  3. Headless:              uv run python 07_deep_agent.py "What is the price of AAPL?"
+  4. Interactive:           uv run langgraph dev --allow-blocking
 
-Environment variables:
-  MODEL_ENDPOINT    vLLM endpoint URL (e.g. https://tool-calling-financial.apps.cluster.com/v1)
-  MODEL_NAME        Model name at the endpoint (default: default)
-  MCP_SERVER_URL    MCP server URL (default: http://localhost:8009/mcp)
-  OPENAI_API_KEY    API key for the vLLM endpoint (default: not-needed)
+Environment variables (set in .env):
+  MODEL_ENDPOINT    vLLM endpoint URL        (default: http://localhost:8000/v1)
+  MODEL_NAME        Model name at endpoint   (default: financial-agent)
+  MCP_SERVER_URL    MCP server URL           (default: http://localhost:8009/mcp)
+  OPENAI_API_KEY    API key for vLLM         (default: not-needed)
 """
 
-from __future__ import annotations
-
+import asyncio
 import os
 import sys
-from datetime import datetime
+from pathlib import Path
 
 from dotenv import load_dotenv
+from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_openai import ChatOpenAI
+from rich.console import Console
+from rich.markdown import Markdown
+from rich.panel import Panel
+from rich.spinner import Spinner
+from rich.live import Live
+
+from deepagents import create_deep_agent
+from deepagents.backends import FilesystemBackend
+
+from financial_tools import ALL_TOOLS
 
 load_dotenv()
 
+EXAMPLE_DIR = Path(__file__).parent
+console = Console()
 
-def _build_agent():
-    """Construct the Deep Agent graph.
 
-    Separated into a function so langgraph.json can import ``agent`` at
-    module level without triggering side effects during import.
+def create_financial_agent():
+    """Create a Financial Insights Deep Agent with full middleware stack.
+
+    Requires vLLM to be deployed with --max-model-len=16384 or higher, since
+    the Deep Agents middleware (todo, filesystem, skills, memory, subagents,
+    summarization) adds ~3500 tokens of system prompt.
     """
-    from deepagents import create_deep_agent
-    from langchain_openai import ChatOpenAI
-
-    from financial_prompts import FINANCIAL_AGENT_INSTRUCTIONS
-    from financial_tools import ALL_TOOLS
-
-    model_endpoint = os.environ.get(
-        "MODEL_ENDPOINT", "http://localhost:8000/v1"
-    )
-    model_name = os.environ.get("MODEL_NAME", "default")
-    api_key = os.environ.get("OPENAI_API_KEY", "not-needed")
-
     model = ChatOpenAI(
-        base_url=model_endpoint,
-        model=model_name,
-        api_key=api_key,
+        base_url=os.environ.get("MODEL_ENDPOINT", "http://localhost:8000/v1"),
+        model=os.environ.get("MODEL_NAME", "financial-agent"),
+        api_key=os.environ.get("OPENAI_API_KEY", "not-needed"),
         temperature=0.1,
         max_tokens=4096,
     )
 
-    current_date = datetime.now().strftime("%Y-%m-%d")
-
     return create_deep_agent(
         model=model,
         tools=ALL_TOOLS,
-        system_prompt=FINANCIAL_AGENT_INSTRUCTIONS.format(date=current_date),
-        memory=["/memory/AGENTS.md"],
+        memory=["./AGENTS.md"],
+        skills=["./skills/"],
+        subagents=[],
+        backend=FilesystemBackend(root_dir=EXAMPLE_DIR),
     )
 
 
-def _get_agent():
-    """Lazy-build the agent so imports don't fail at parse time."""
-    global _agent_instance
-    try:
-        return _agent_instance
-    except NameError:
-        _agent_instance = _build_agent()
-        return _agent_instance
+# Module-level export for langgraph.json ("./07_deep_agent.py:agent")
+agent = create_financial_agent()
 
 
-def __getattr__(name: str):
-    """Module-level __getattr__ so ``langgraph dev`` can find ``agent``."""
-    if name == "agent":
-        return _get_agent()
-    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+class AgentDisplay:
+    """Rich-based display for agent progress, adapted from content_writer.py."""
+
+    def __init__(self):
+        self.printed_count = 0
+        self.spinner = Spinner("dots", text="Thinking...")
+
+    def update_status(self, status: str):
+        self.spinner = Spinner("dots", text=status)
+
+    def print_message(self, msg):
+        if isinstance(msg, HumanMessage):
+            console.print(Panel(str(msg.content), title="You", border_style="blue"))
+
+        elif isinstance(msg, AIMessage):
+            content = msg.content
+            if isinstance(content, list):
+                text_parts = [
+                    p.get("text", "")
+                    for p in content
+                    if isinstance(p, dict) and p.get("type") == "text"
+                ]
+                content = "\n".join(text_parts)
+
+            if content and content.strip():
+                console.print(
+                    Panel(Markdown(content), title="Agent", border_style="green")
+                )
+
+            if msg.tool_calls:
+                for tc in msg.tool_calls:
+                    name = tc.get("name", "unknown")
+                    args = tc.get("args", {})
+                    if name == "write_file":
+                        path = args.get("file_path", "file")
+                        console.print(f"  [bold yellow]>> Writing:[/] {path}")
+                    else:
+                        args_summary = ", ".join(
+                            f"{k}={v!r}" for k, v in list(args.items())[:3]
+                        )
+                        console.print(
+                            f"  [bold cyan]>> {name}[/]({args_summary})"
+                        )
+                        self.update_status(f"Calling {name}...")
+
+        elif isinstance(msg, ToolMessage):
+            name = getattr(msg, "name", "")
+            content = msg.content or ""
+            if len(content) > 120:
+                content = content[:120] + "..."
+            console.print(f"  [green]✓ {name}:[/] {content}")
 
 
-def main() -> None:
-    """Run the agent with a sample prompt for smoke-testing."""
-    test_prompts = [
-        "What is the current price of AAPL and how does it compare to the broader market?",
-        "What is the risk-adjusted performance of portfolio PORT-0001?",
-        "Check if buying 50 shares of JPM in PORT-0002 would be compliant, and if so, what would the sector exposure look like after the trade?",
-    ]
-
-    prompt = test_prompts[0]
+async def main():
+    """Run the financial agent with streaming output."""
     if len(sys.argv) > 1:
-        prompt = " ".join(sys.argv[1:])
+        task = " ".join(sys.argv[1:])
+    else:
+        task = "What is the current price of AAPL and how does it compare to the broader market?"
 
-    print("=" * 60)
-    print("Financial Insights Deep Agent")
-    print("=" * 60)
-    print(f"  Model endpoint: {os.environ.get('MODEL_ENDPOINT', 'http://localhost:8000/v1')}")
-    print(f"  MCP server:     {os.environ.get('MCP_SERVER_URL', 'http://localhost:8009/mcp')}")
-    print(f"  Prompt:         {prompt}")
-    print("=" * 60)
-
-    result = _get_agent().invoke(
-        {"messages": [{"role": "user", "content": prompt}]}
+    console.print()
+    console.print("[bold blue]Financial Insights Deep Agent[/]")
+    console.print(
+        f"[dim]Model: {os.environ.get('MODEL_NAME', 'financial-agent')} "
+        f"@ {os.environ.get('MODEL_ENDPOINT', 'http://localhost:8000/v1')}[/]"
     )
+    console.print(f"[dim]MCP:   {os.environ.get('MCP_SERVER_URL', 'http://localhost:8009/mcp')}[/]")
+    console.print(f"[dim]Task:  {task}[/]")
+    console.print()
 
-    print("\n--- Agent Response ---")
-    for msg in result.get("messages", []):
-        role = msg.get("type", msg.get("role", "unknown"))
-        content = msg.get("content", "")
-        if content:
-            print(f"\n[{role}] {content[:500]}")
-        if msg.get("tool_calls"):
-            for tc in msg["tool_calls"]:
-                print(f"\n[tool_call] {tc['name']}({tc.get('args', {})})")
+    display = AgentDisplay()
 
-    print("\n" + "=" * 60)
+    with Live(display.spinner, console=console, refresh_per_second=10, transient=True) as live:
+        async for chunk in agent.astream(
+            {"messages": [("user", task)]},
+            config={"configurable": {"thread_id": "financial-agent-demo"}},
+            stream_mode="values",
+        ):
+            if "messages" in chunk:
+                messages = chunk["messages"]
+                if len(messages) > display.printed_count:
+                    live.stop()
+                    for msg in messages[display.printed_count :]:
+                        display.print_message(msg)
+                    display.printed_count = len(messages)
+                    live.start()
+                    live.update(display.spinner)
+
+    console.print()
+    console.print("[bold green]✓ Done![/]")
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        console.print("\n[yellow]Interrupted[/]")

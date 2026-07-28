@@ -94,11 +94,12 @@ nav:
   - Model Customization:
     - Getting Started:
       - Overview: getting-started/overview.md
-      - Setup & First Pipeline: getting-started/quickstart.md
+      - Setup & First Pipeline: getting-started/setup.md
       - Choosing an Algorithm: getting-started/choosing-an-algorithm.md
     - Pipelines (Try It):
       - Which Pipeline?: end-to-end/index.md
       - Tool-Calling Model: end-to-end/tool-calling-financial.md
+      - Deep Agent (Agentic): end-to-end/deep-agent.md
       - Knowledge Tuning: end-to-end/knowledge-tuning.md
       - MCP Distillation (GRPO): end-to-end/mcp-distillation.md
     - Data Generation:

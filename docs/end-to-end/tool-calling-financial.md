@@ -29,7 +29,7 @@ The core pipeline (Steps 0-7) runs fully on RHOAI 3.4. RHOAI 3.5 features are ad
     - **Gemini 3.6 Flash** validated as teacher model for data generation
     - **KFP pipeline** compiled and uploaded to DSPA pipeline server
 
-    Steps 4 and 5 (deployment, evaluation) have been **manifest-validated** — YAML generates correctly and passes dry-run. The deployment pattern (KServe + vLLM LoRA serving) was independently runtime-validated on the [MCP Distillation Pipeline](mcp-distillation.md) and [Knowledge Tuning Pipeline](knowledge-tuning.md). Step 6 (guardrails) has been **runtime-validated** — PII detection correctly blocked sensitive input.
+    Steps 4 and 5 (deployment, evaluation) have been **manifest-validated** — YAML generates correctly and passes dry-run. The deployment pattern (KServe + vLLM LoRA serving) was independently runtime-validated on the [MCP Distillation Pipeline](mcp-distillation.md) and [Knowledge Tuning Pipeline](knowledge-tuning.md). Step 6 (guardrails) has been **runtime-validated** — PII detection correctly blocked sensitive input. Step 7 (Deep Agent) has been **runtime-validated** — the agent successfully called tools, chained multi-tool queries, and synthesized professional responses.
 
 ## Pipeline Overview
 
@@ -41,6 +41,7 @@ graph LR
     D --> E["4. Deploy<br/>(KServe + vLLM)"]
     E --> F["5. Evaluate<br/>(Tool-Use Metrics)"]
     F --> G["6. Guardrails<br/>(NeMo)"]
+    G --> H["7. Deep Agent<br/>(LangGraph)"]
 ```
 
 ## Prerequisites
@@ -656,23 +657,42 @@ python 06_configure_guardrails.py \
 !!! info "Manifest-validated"
     Guardrails configuration has been manifest-validated (CRs generate correctly). See the [official RHOAI 3.4 guardrails documentation](https://docs.redhat.com/en/documentation/red_hat_openshift_ai_self-managed/3.4/html/enabling_ai_safety_with_guardrails/index) for the latest CRD schema.
 
-## Step 7: Run the Deep Agent Harness (Optional)
+## Step 7: Deep Agent Harness
 
-!!! warning "Not yet validated on RHOAI"
-    This step is optional and has not been validated on-cluster. The `deepagents` library has known compatibility issues with vLLM-served Qwen models (specifically `tool_call_id` handling). The model customization pipeline is complete at Step 6 — Steps 1-6 produce a fine-tuned, served, and guarded model ready for integration into any agent framework.
+Wire the fine-tuned model into an autonomous agent using [LangChain Deep Agents](https://github.com/langchain-ai/deepagents). The agent adds task planning, tool orchestration, and persistent memory on top of the model's tool-calling ability.
+
+!!! success "Runtime-validated"
+    The Deep Agent has been runtime-validated against the fine-tuned Qwen3-4B LoRA adapter served via vLLM on RHOAI 3.4.2. Successfully tested: single-tool queries, multi-tool chaining (portfolio risk analysis), and compliance workflows.
+
+For the full walkthrough — environment setup, architecture, skills, troubleshooting — see the dedicated **[Deep Agent Guide](deep-agent.md)**.
+
+**Quick start** (after completing Steps 0-4):
 
 ```bash
-pip install deepagents langchain-openai langgraph-cli[inmem]
-export MODEL_ENDPOINT=https://tool-calling-financial-predictor.apps.your-cluster.com/v1
-
 cd end-to-end-examples/tool-calling-financial/examples/
-langgraph dev
 
-# Or headless:
-python 07_deep_agent.py "What is the risk-adjusted performance of portfolio PORT-0001?"
+# Install agent dependencies
+uv venv --python 3.12 && source .venv/bin/activate
+uv pip install -e .
+
+# Start MCP server (separate terminal)
+cd ../demo_server && python server.py
+
+# Port-forward to vLLM (separate terminal)
+oc port-forward -n tool-calling-financial \
+  deployment/tool-calling-financial-lora-predictor 8000:8080
+
+# Run the agent
+python 07_deep_agent.py "What is the risk-adjusted performance of PORT-0001?"
+
+# Or launch the interactive LangGraph Studio UI
+langgraph dev --allow-blocking
 ```
 
-The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestration, and long-term memory via the `deepagents` library. Alternatively, use any OpenAI-compatible agent framework (LangChain, CrewAI, etc.) since the model exposes a standard `/v1/chat/completions` endpoint with tool-calling support.
+!!! tip "Context window"
+    Deep Agents requires `--max-model-len=16384` or higher on the vLLM deployment. See the [Deep Agent Guide](deep-agent.md#step-1-increase-the-model-context-window) for the patch command.
+
+The model also exposes a standard `/v1/chat/completions` endpoint with tool-calling support, so you can integrate it with any OpenAI-compatible agent framework (LangChain, CrewAI, etc.).
 
 ## Resource Estimates
 
@@ -710,6 +730,7 @@ The Deep Agent wraps the fine-tuned Qwen3-4B with task planning, tool orchestrat
 | Model Deployment | KServe RawDeployment + vLLM | Manifest generates correctly; same pattern runtime-validated via MCP Distillation | Manifest |
 | Evaluation | Tool-use evaluation script | Manifest-validated; requires Langflow + API key | Manifest |
 | Guardrails | NemoGuardrails CR + PII regex rails | PII detection blocked SSN input; clean requests passed through | Runtime |
+| Deep Agent | LangChain Deep Agents + 15 MCP tools | Single-tool, multi-tool chaining, compliance workflows all pass | Runtime |
 
 ### Important Cluster Notes
 
