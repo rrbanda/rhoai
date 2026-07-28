@@ -350,7 +350,7 @@ def test_tool_calling(url: str) -> None:
     ]
 
     payload = {
-        "model": "default",
+        "model": os.environ.get("MODEL_NAME", "tool-calling-financial"),
         "messages": [
             {"role": "user", "content": "What is the current price of AAPL?"},
         ],

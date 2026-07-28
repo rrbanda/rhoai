@@ -469,7 +469,7 @@ Compare the fine-tuned model's answers against the teacher's answers using LLM-a
 
 !!! tip "Using the scripts"
     ```bash
-    python 04_evaluation.py --model-path ./knowledge-model/hf_format/samples_0/
+    python 04_evaluation.py --tuned-model ./knowledge-model/hf_format/samples_0/
     ```
 
 ## Step 6: Serve on RHOAI

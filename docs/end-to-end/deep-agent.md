@@ -331,8 +331,8 @@ tool-calling-financial         root=/mnt/lora-adapter/output  parent=tool-callin
 
 ## Source Code
 
-- [Agent script (`07_deep_agent.py`)](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/tool-calling-financial/examples/07_deep_agent.py)
-- [Tool wrappers (`financial_tools.py`)](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/tool-calling-financial/examples/financial_tools.py)
-- [Agent identity (`AGENTS.md`)](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/tool-calling-financial/examples/AGENTS.md)
+- [Agent script (`07_deep_agent.py`)](https://github.com/rrbanda/rhoai/blob/main/end-to-end-examples/tool-calling-financial/examples/07_deep_agent.py)
+- [Tool wrappers (`financial_tools.py`)](https://github.com/rrbanda/rhoai/blob/main/end-to-end-examples/tool-calling-financial/examples/financial_tools.py)
+- [Agent identity (`AGENTS.md`)](https://github.com/rrbanda/rhoai/blob/main/end-to-end-examples/tool-calling-financial/examples/AGENTS.md)
 - [Skills directory](https://github.com/rrbanda/rhoai/tree/main/end-to-end-examples/tool-calling-financial/examples/skills/)
 - [Deep Agents library](https://github.com/langchain-ai/deepagents)

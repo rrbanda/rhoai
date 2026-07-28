@@ -28,7 +28,7 @@ from dotenv import load_dotenv
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Format distillation output into function-calling JSONL"
+        description="Format distillation output into tool-calling JSONL"
     )
     parser.add_argument(
         "--input-file",
@@ -56,7 +56,7 @@ def format_tool_trace(
     tool_list: list[dict],
     question: str,
 ) -> dict | None:
-    """Convert a single row's tool trace into a function-calling conversation.
+    """Convert a single row's tool trace into a tool-calling conversation.
 
     Parameters
     ----------
@@ -181,7 +181,7 @@ def main() -> None:
         sys.exit(1)
 
     # -- Format each row into a training conversation -------------------------
-    print("\nFormatting tool traces into function-calling conversations...")
+    print("\nFormatting tool traces into tool-calling conversations...")
 
     formatted = []
     skipped = 0

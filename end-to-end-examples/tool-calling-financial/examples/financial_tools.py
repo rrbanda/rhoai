@@ -17,8 +17,11 @@ from typing import Optional
 import httpx
 from langchain_core.tools import tool
 
-_MCP_URL = os.environ.get("MCP_SERVER_URL", "http://localhost:8009/mcp")
 _client: httpx.Client | None = None
+
+
+def _mcp_url() -> str:
+    return os.environ.get("MCP_SERVER_URL", "http://localhost:8009/mcp")
 
 
 def _get_client() -> httpx.Client:
@@ -49,7 +52,7 @@ def _call_mcp(tool_name: str, arguments: dict) -> dict:
 
     if not sid:
         init_resp = client.post(
-            _MCP_URL,
+            _mcp_url(),
             json={
                 "jsonrpc": "2.0",
                 "id": "init",
@@ -69,7 +72,7 @@ def _call_mcp(tool_name: str, arguments: dict) -> dict:
                 headers["Mcp-Session-Id"] = new_sid
 
             client.post(
-                _MCP_URL,
+                _mcp_url(),
                 json={
                     "jsonrpc": "2.0",
                     "method": "notifications/initialized",
@@ -78,7 +81,7 @@ def _call_mcp(tool_name: str, arguments: dict) -> dict:
             )
 
     resp = client.post(
-        _MCP_URL,
+        _mcp_url(),
         json={
             "jsonrpc": "2.0",
             "id": 1,

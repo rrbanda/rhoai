@@ -48,7 +48,7 @@ graph LR
 
 - RHOAI 3.4+ cluster (3.5 EA2 for MCP Gateway)
 - GPU: 1x NVIDIA L4 24GB (with QLoRA 4-bit) or 1x L40/A100 for full-precision training
-- Python 3.10+, `oc` CLI authenticated to your cluster
+- Python 3.11+, `oc` CLI authenticated to your cluster
 - **(Optional, for Step 1 only)** Teacher model API key + Langflow instance — not needed if using the included sample data
 
 ## Get the Code
@@ -708,7 +708,7 @@ The model also exposes a standard `/v1/chat/completions` endpoint with tool-call
 
 | Symptom | Resolution |
 |---------|------------|
-| "MCP Server Distillation flow not found" | `pip install sdg-hub[dev]` |
+| "MCP Server Distillation flow not found" | `pip install sdg-hub[examples]` |
 | "CUDA out of memory during training" | Enable QLoRA: `--load-in-4bit` (default), or reduce `--max-seq-len` |
 | "Tool call parser error" during inference | Verify `--tool-call-parser` matches model (`hermes` for Qwen3) |
 | KFP pipeline: "storageclass not found" | Set `--storage-class` to your cluster's storage class (default: `gp3-csi`) |

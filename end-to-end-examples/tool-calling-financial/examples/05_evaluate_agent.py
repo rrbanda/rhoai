@@ -301,7 +301,7 @@ def run_model_inference(
     ]
 
     payload = {
-        "model": "default",
+        "model": os.environ.get("MODEL_NAME", "tool-calling-financial"),
         "messages": [{"role": "user", "content": question}],
         "tools": openai_tools,
         "tool_choice": "auto",
