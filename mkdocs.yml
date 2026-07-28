@@ -121,6 +121,7 @@ nav:
       - Safety & Compliance: guardrails/index.md
     - Evaluation:
       - Overview: evaluation/index.md
+      - Benchmark Results: evaluation/benchmark-results.md
       - RAG Evaluation: evaluation/rag-evaluation.md
       - Code Evaluation: evaluation/code-evaluation.md
       - Tool-Use Evaluation: evaluation/agent-evaluation.md

@@ -28,6 +28,7 @@ The core pipeline (Steps 0-7) runs fully on RHOAI 3.4. RHOAI 3.5 features are ad
     - **LoRA SFT TrainJob** completed successfully on-cluster (loss 1.817 → 1.511)
     - **Gemini 3.6 Flash** validated as teacher model for data generation
     - **KFP pipeline** compiled and uploaded to DSPA pipeline server
+    - **Benchmark results:** 100% tool selection accuracy on financial tools; 58/100 on generic tool-eval-bench (no catastrophic forgetting). See [full benchmark results](../evaluation/benchmark-results.md).
 
     Steps 4 and 5 (deployment, evaluation) have been **manifest-validated** — YAML generates correctly and passes dry-run. The deployment pattern (KServe + vLLM LoRA serving) was independently runtime-validated on the [MCP Distillation Pipeline](mcp-distillation.md) and [Knowledge Tuning Pipeline](knowledge-tuning.md). Step 6 (guardrails) has been **runtime-validated** — PII detection correctly blocked sensitive input. Step 7 (Deep Agent) has been **runtime-validated** — the agent successfully called tools, chained multi-tool queries, and synthesized professional responses.
 

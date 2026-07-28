@@ -1,0 +1,519 @@
+{
+  "benchmark": "domain-specific-financial-tools",
+  "tools_count": 15,
+  "queries_count": 20,
+  "models": {
+    "financial-agent-lora": {
+      "tool_selection_accuracy": 100.0,
+      "parameter_accuracy": 100.0,
+      "format_compliance": 100.0,
+      "full_pass_rate": 100.0,
+      "avg_latency_ms": 8264.540255069733,
+      "per_query": [
+        {
+          "query": "What's the current price of Tesla stock?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_stock_quote",
+          "actual_params": {
+            "ticker": "TSLA"
+          },
+          "latency_ms": 6337.265968322754
+        },
+        {
+          "query": "Show me Apple's stock price history for the last 3 months.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_historical_prices",
+          "actual_params": {
+            "ticker": "AAPL",
+            "period": "3mo",
+            "interval": "1d"
+          },
+          "latency_ms": 7091.55011177063
+        },
+        {
+          "query": "How is the overall market doing today?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_market_summary",
+          "actual_params": {},
+          "latency_ms": 4391.948223114014
+        },
+        {
+          "query": "Find technology stocks with market cap over 100 billion and PE ratio under 30.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "screen_stocks",
+          "actual_params": {
+            "sector": "Technology",
+            "min_market_cap": 100,
+            "max_pe_ratio": 30
+          },
+          "latency_ms": 8171.374082565308
+        },
+        {
+          "query": "What positions do I have in portfolio ACME-401K?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_portfolio_positions",
+          "actual_params": {
+            "portfolio_id": "ACME-401K"
+          },
+          "latency_ms": 7130.1891803741455
+        },
+        {
+          "query": "How has my retirement portfolio RET-2024 performed year to date?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_portfolio_performance",
+          "actual_params": {
+            "portfolio_id": "RET-2024",
+            "period": "ytd"
+          },
+          "latency_ms": 7717.726945877075
+        },
+        {
+          "query": "What's the total value and cash balance in my main-portfolio account?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_account_summary",
+          "actual_params": {
+            "portfolio_id": "main-portfolio"
+          },
+          "latency_ms": 7458.079099655151
+        },
+        {
+          "query": "Show me all buy transactions for NVDA in portfolio GROWTH-1 from January to March 2024.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_transaction_history",
+          "actual_params": {
+            "portfolio_id": "GROWTH-1",
+            "ticker": "NVDA",
+            "transaction_type": "buy",
+            "start_date": "2024-01-01",
+            "end_date": "2024-03-31"
+          },
+          "latency_ms": 12818.317174911499
+        },
+        {
+          "query": "Calculate the risk metrics for my aggressive portfolio AGG-PORT.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "calculate_portfolio_risk",
+          "actual_params": {
+            "portfolio_id": "AGG-PORT"
+          },
+          "latency_ms": 7591.56608581543
+        },
+        {
+          "query": "What sectors is my portfolio BALANCED-1 exposed to?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_sector_exposure",
+          "actual_params": {
+            "portfolio_id": "BALANCED-1"
+          },
+          "latency_ms": 5663.794994354248
+        },
+        {
+          "query": "Run a market crash stress test on my portfolio CONSERVATIVE-A.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "run_stress_test",
+          "actual_params": {
+            "portfolio_id": "CONSERVATIVE-A",
+            "scenario": "market_crash"
+          },
+          "latency_ms": 8993.315935134888
+        },
+        {
+          "query": "Give me a full analysis of Microsoft stock.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "analyze_stock",
+          "actual_params": {
+            "ticker": "MSFT"
+          },
+          "latency_ms": 5889.569044113159
+        },
+        {
+          "query": "Buy 50 shares of Google at market price in my TECH-FUND portfolio.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "submit_trade_order",
+          "actual_params": {
+            "portfolio_id": "TECH-FUND",
+            "ticker": "GOOGL",
+            "action": "buy",
+            "quantity": 50,
+            "order_type": "market"
+          },
+          "latency_ms": 9308.47692489624
+        },
+        {
+          "query": "Can I buy 200 shares of AMD in portfolio GROWTH-1 without violating compliance rules?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "check_compliance",
+          "actual_params": {
+            "portfolio_id": "GROWTH-1",
+            "ticker": "AMD",
+            "action": "buy",
+            "quantity": 200
+          },
+          "latency_ms": 8158.604860305786
+        },
+        {
+          "query": "Check the regulatory compliance status of portfolio INST-FUND-7.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_regulatory_status",
+          "actual_params": {
+            "portfolio_id": "INST-FUND-7"
+          },
+          "latency_ms": 5115.012645721436
+        },
+        {
+          "query": "Place a limit order to sell 100 shares of AMZN at $200 in my MAIN account.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "submit_trade_order",
+          "actual_params": {
+            "portfolio_id": "MAIN",
+            "ticker": "AMZN",
+            "action": "sell",
+            "quantity": 100,
+            "order_type": "limit",
+            "limit_price": 200
+          },
+          "latency_ms": 10560.769081115723
+        },
+        {
+          "query": "What would happen to my pension fund PENSION-2024 if interest rates spike?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "run_stress_test",
+          "actual_params": {
+            "portfolio_id": "PENSION-2024",
+            "scenario": "rate_hike"
+          },
+          "latency_ms": 14884.917736053467
+        },
+        {
+          "query": "Show me NVIDIA weekly price data for the past year.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_historical_prices",
+          "actual_params": {
+            "ticker": "NVDA",
+            "period": "1y",
+            "interval": "1wk"
+          },
+          "latency_ms": 7762.676954269409
+        },
+        {
+          "query": "Find high-dividend healthcare stocks with at least 3% yield.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "screen_stocks",
+          "actual_params": {
+            "sector": "Healthcare",
+            "min_dividend_yield": 3
+          },
+          "latency_ms": 6479.530096054077
+        },
+        {
+          "query": "Show me the dividend payments received in portfolio INCOME-1 during 2024.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_transaction_history",
+          "actual_params": {
+            "portfolio_id": "INCOME-1",
+            "transaction_type": "dividend",
+            "start_date": "2024-01-01",
+            "end_date": "2024-12-31"
+          },
+          "latency_ms": 13766.119956970215
+        }
+      ]
+    },
+    "financial-agent": {
+      "tool_selection_accuracy": 100.0,
+      "parameter_accuracy": 100.0,
+      "format_compliance": 100.0,
+      "full_pass_rate": 100.0,
+      "avg_latency_ms": 9035.084438323975,
+      "per_query": [
+        {
+          "query": "What's the current price of Tesla stock?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_stock_quote",
+          "actual_params": {
+            "ticker": "TSLA"
+          },
+          "latency_ms": 6656.071186065674
+        },
+        {
+          "query": "Show me Apple's stock price history for the last 3 months.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_historical_prices",
+          "actual_params": {
+            "ticker": "AAPL",
+            "period": "3mo",
+            "interval": "1d"
+          },
+          "latency_ms": 7735.469818115234
+        },
+        {
+          "query": "How is the overall market doing today?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_market_summary",
+          "actual_params": {},
+          "latency_ms": 4555.660963058472
+        },
+        {
+          "query": "Find technology stocks with market cap over 100 billion and PE ratio under 30.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "screen_stocks",
+          "actual_params": {
+            "sector": "Technology",
+            "min_market_cap": 100,
+            "max_pe_ratio": 30
+          },
+          "latency_ms": 8782.48405456543
+        },
+        {
+          "query": "What positions do I have in portfolio ACME-401K?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_portfolio_positions",
+          "actual_params": {
+            "portfolio_id": "ACME-401K"
+          },
+          "latency_ms": 7586.036920547485
+        },
+        {
+          "query": "How has my retirement portfolio RET-2024 performed year to date?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_portfolio_performance",
+          "actual_params": {
+            "portfolio_id": "RET-2024",
+            "period": "ytd"
+          },
+          "latency_ms": 9372.545003890991
+        },
+        {
+          "query": "What's the total value and cash balance in my main-portfolio account?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_account_summary",
+          "actual_params": {
+            "portfolio_id": "main-portfolio"
+          },
+          "latency_ms": 8023.912191390991
+        },
+        {
+          "query": "Show me all buy transactions for NVDA in portfolio GROWTH-1 from January to March 2024.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_transaction_history",
+          "actual_params": {
+            "portfolio_id": "GROWTH-1",
+            "ticker": "NVDA",
+            "transaction_type": "buy",
+            "start_date": "2024-01-01",
+            "end_date": "2024-03-31"
+          },
+          "latency_ms": 14383.095026016235
+        },
+        {
+          "query": "Calculate the risk metrics for my aggressive portfolio AGG-PORT.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "calculate_portfolio_risk",
+          "actual_params": {
+            "portfolio_id": "AGG-PORT"
+          },
+          "latency_ms": 8147.353887557983
+        },
+        {
+          "query": "What sectors is my portfolio BALANCED-1 exposed to?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_sector_exposure",
+          "actual_params": {
+            "portfolio_id": "BALANCED-1"
+          },
+          "latency_ms": 6082.820177078247
+        },
+        {
+          "query": "Run a market crash stress test on my portfolio CONSERVATIVE-A.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "run_stress_test",
+          "actual_params": {
+            "portfolio_id": "CONSERVATIVE-A",
+            "scenario": "market_crash"
+          },
+          "latency_ms": 9496.642112731934
+        },
+        {
+          "query": "Give me a full analysis of Microsoft stock.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "analyze_stock",
+          "actual_params": {
+            "ticker": "MSFT"
+          },
+          "latency_ms": 6090.624809265137
+        },
+        {
+          "query": "Buy 50 shares of Google at market price in my TECH-FUND portfolio.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "submit_trade_order",
+          "actual_params": {
+            "portfolio_id": "TECH-FUND",
+            "ticker": "GOOGL",
+            "action": "buy",
+            "quantity": 50,
+            "order_type": "market"
+          },
+          "latency_ms": 9822.836875915527
+        },
+        {
+          "query": "Can I buy 200 shares of AMD in portfolio GROWTH-1 without violating compliance rules?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "check_compliance",
+          "actual_params": {
+            "portfolio_id": "GROWTH-1",
+            "ticker": "AMD",
+            "action": "buy",
+            "quantity": 200
+          },
+          "latency_ms": 8880.51986694336
+        },
+        {
+          "query": "Check the regulatory compliance status of portfolio INST-FUND-7.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_regulatory_status",
+          "actual_params": {
+            "portfolio_id": "INST-FUND-7"
+          },
+          "latency_ms": 5478.765249252319
+        },
+        {
+          "query": "Place a limit order to sell 100 shares of AMZN at $200 in my MAIN account.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "submit_trade_order",
+          "actual_params": {
+            "portfolio_id": "MAIN",
+            "ticker": "AMZN",
+            "action": "sell",
+            "quantity": 100,
+            "order_type": "limit",
+            "limit_price": 200
+          },
+          "latency_ms": 11212.18729019165
+        },
+        {
+          "query": "What would happen to my pension fund PENSION-2024 if interest rates spike?",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "run_stress_test",
+          "actual_params": {
+            "portfolio_id": "PENSION-2024",
+            "scenario": "rate_hike"
+          },
+          "latency_ms": 16005.676984786987
+        },
+        {
+          "query": "Show me NVIDIA weekly price data for the past year.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_historical_prices",
+          "actual_params": {
+            "ticker": "NVDA",
+            "period": "1y",
+            "interval": "1wk"
+          },
+          "latency_ms": 7853.562831878662
+        },
+        {
+          "query": "Find high-dividend healthcare stocks with at least 3% yield.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "screen_stocks",
+          "actual_params": {
+            "sector": "Healthcare",
+            "min_dividend_yield": 3
+          },
+          "latency_ms": 10085.259675979614
+        },
+        {
+          "query": "Show me the dividend payments received in portfolio INCOME-1 during 2024.",
+          "tool_correct": true,
+          "params_correct": true,
+          "format_valid": true,
+          "actual_tool": "get_transaction_history",
+          "actual_params": {
+            "portfolio_id": "INCOME-1",
+            "transaction_type": "dividend",
+            "start_date": "2024-01-01",
+            "end_date": "2024-12-31"
+          },
+          "latency_ms": 14450.163841247559
+        }
+      ]
+    }
+  }
+}

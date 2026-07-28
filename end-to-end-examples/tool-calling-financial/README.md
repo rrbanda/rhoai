@@ -569,6 +569,23 @@ oc apply -f serving/05-route.yaml -n tool-calling-financial
 
 **RHOAI Feature:** Tool-Use Evaluation (GA)
 
+**Option A: Industry-standard benchmark (recommended)**
+
+```bash
+# Install tool-eval-bench
+uv tool install 'tool-eval-bench[perf] @ git+https://github.com/SeraphimSerapis/tool-eval-bench.git'
+
+# Run 84-scenario benchmark
+ROUTE=$(oc get route financial-agent-model -n financial-agent -o jsonpath='{.spec.host}')
+tool-eval-bench --seed 42 --hardmode --trials 3 \
+  --model financial-agent-lora --backend vllm \
+  --base-url "https://${ROUTE}" --no-think
+```
+
+**Validated results:** Both base and fine-tuned models score 58/100 on generic tool-calling, 100% on domain-specific financial tool selection. See `eval/` for full benchmark scripts and results.
+
+**Option B: Custom evaluation with LLM-as-judge**
+
 ```bash
 python 05_evaluate_agent.py \
   --model-endpoint http://tool-calling-financial-lora-predictor.tool-calling-financial.svc.cluster.local:8080 \

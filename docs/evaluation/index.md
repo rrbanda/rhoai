@@ -2,13 +2,14 @@
 
 Evaluation is critical to knowing whether your fine-tuned model actually improved. RHOAI supports three evaluation approaches, each targeting a different model capability.
 
-!!! info "Validation status"
-    The evaluation workflows documented here have not been runtime-validated on RHOAI. They describe recommended patterns using SDG Hub and LLM-as-judge scoring. Each approach requires external dependencies (API keys, judge models, MCP servers) — see the prerequisites on each page.
+!!! success "Validated Benchmark Results Available"
+    The [Tool-Calling Financial Pipeline](../end-to-end/tool-calling-financial.md) has been benchmarked end-to-end on RHOAI 3.4.2. See the **[full benchmark results](benchmark-results.md)** for a side-by-side comparison of base vs fine-tuned model using industry-standard tools.
 
 ## Evaluation Approaches
 
 | Approach | What it measures | When to use |
 |----------|-----------------|-------------|
+| [Benchmark Results](benchmark-results.md) | Validated base vs LoRA comparison | Reference results from the tool-calling financial pipeline |
 | [RAG Evaluation](rag-evaluation.md) | Retrieval-augmented generation quality | Models used in RAG pipelines |
 | [Code Evaluation](code-evaluation.md) | Code generation correctness (pass@1) | Models generating code |
 | [Tool-Use Evaluation](agent-evaluation.md) | Tool-calling accuracy with LLM-as-judge | Models calling tools / APIs |
@@ -49,6 +50,7 @@ See [Plot Loss](../utilities/plot-loss.md) for more details.
 
 ## Related
 
+- [Benchmark Results](benchmark-results.md) — Validated base vs LoRA results from the financial pipeline
 - [RAG Evaluation](rag-evaluation.md) — Generate RAG evaluation datasets
 - [Code Evaluation](code-evaluation.md) — Benchmark code generation
 - [Tool-Use Evaluation](agent-evaluation.md) — Evaluate tool-calling quality

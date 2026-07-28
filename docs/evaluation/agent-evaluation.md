@@ -2,6 +2,9 @@
 
 Evaluate tool-calling models using LLM-as-judge scoring. An evaluator model assesses whether the model correctly selects tools, constructs arguments, and uses results to answer user queries. Use this after [GRPO training](../training/grpo.md) or [MCP distillation](../end-to-end/mcp-distillation.md) to measure tool-use quality before deployment.
 
+!!! tip "Looking for validated results?"
+    See the [Benchmark Results](benchmark-results.md) page for a complete side-by-side comparison of base vs LoRA-tuned Qwen3-4B on the financial tool-calling pipeline, using both generic and domain-specific benchmarks.
+
 ## When to Use Tool-Use Evaluation
 
 - You've trained a model with [GRPO](../training/grpo.md) for tool use
