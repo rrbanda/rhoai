@@ -98,6 +98,32 @@ To verify fine-tuning did not degrade the model's general tool-calling ability, 
 
 ## How to Reproduce
 
+### Evaluation Methodology
+
+Three complementary evaluation techniques are used, each targeting a different dimension of tool-calling quality:
+
+**1. Hard Query Evaluation (`eval/compare_models.py`)**
+
+Sends 35 challenging queries to both models via the OpenAI-compatible `/v1/chat/completions` endpoint with all 15 financial tool schemas provided. Each query is scored on:
+
+- **Tool selection**: Did the model call the expected tool(s)?
+- **Call count**: Did the model issue the minimum required number of tool calls? (e.g., "check compliance then submit trade" requires 2 calls)
+- **Parameter accuracy**: For queries with expected parameters (like `period=ytd` for "this year"), are the arguments correct?
+
+A query **passes** only if all three criteria are met. Queries are categorized into multi-step chains, parallel calls, complex parameter inference, implicit/ambiguous routing, and no-tool abstention. The script runs both models back-to-back with `temperature=0.0` for deterministic output and produces a JSON report with per-query results.
+
+**2. Domain-Specific Evaluation (`eval/domain_eval.py`)**
+
+Tests 20 straightforward single-tool queries against the 15 financial tools — one query per tool plus extras for tools with complex parameter combinations. Measures tool selection accuracy, parameter extraction accuracy, and output format compliance (valid `tool_calls` JSON structure). This confirms baseline correctness on simple cases.
+
+**3. General Capability Check ([tool-eval-bench](https://github.com/SeraphimSerapis/tool-eval-bench))**
+
+An open-source, industry-standard benchmark with 84 deterministic scenarios across 15 categories (multi-step chains, error recovery, safety boundaries, structured output, etc.). Runs 3 trials with a fixed seed for statistical stability. This detects catastrophic forgetting — if fine-tuning degraded capabilities the model previously had.
+
+**Training Data Generation (`generate_multistep_data.py`)**
+
+Programmatically generates tool-calling training examples using template-based randomization over the 15 financial tool schemas. Produces examples in the same JSONL format as the SDG Hub distillation pipeline (`{"messages": [system, user, assistant(tool_calls), tool(response), assistant(final_answer)]}`). Covers four patterns: multi-step chains (42%), temporal parameter inference (23%), implicit routing (24%), and parallel calls (11%).
+
 ### Prerequisites
 
 ```bash
