@@ -1,0 +1,1153 @@
+{
+  "timestamp": "2026-07-28T21:10:40",
+  "endpoint": "https://financial-agent-model-financial-agent.apps.cluster-4l6x6.4l6x6.sandbox1213.opentlc.com",
+  "num_queries": 35,
+  "base_model": "financial-agent-lora",
+  "lora_model": "financial-agent",
+  "base_results": [
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "check_compliance",
+        "submit_trade_order"
+      ],
+      "id": 1,
+      "query": "I want to buy 200 shares of NVDA in my GROWTH-1 portfolio. First check if it passes compliance, and if so, submit the market order.",
+      "category": "multi-step",
+      "expected_tools": [
+        "check_compliance",
+        "submit_trade_order"
+      ],
+      "latency_ms": 1602.5869846343994
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_stock_quote",
+        "analyze_stock"
+      ],
+      "id": 2,
+      "query": "Get me the current price of TSLA, then analyze the stock to decide if it's a good buy.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_stock_quote",
+        "analyze_stock"
+      ],
+      "latency_ms": 610.525369644165
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "calculate_portfolio_risk",
+        "run_stress_test"
+      ],
+      "id": 3,
+      "query": "Check the risk of my AGGRESSIVE-1 portfolio and run a market crash stress test on it.",
+      "category": "multi-step",
+      "expected_tools": [
+        "calculate_portfolio_risk",
+        "run_stress_test"
+      ],
+      "latency_ms": 820.1689720153809
+    },
+    {
+      "pass": false,
+      "reason": "too_few_calls (1 < 2)",
+      "tool_calls": 1,
+      "tools_called": [
+        "get_sector_exposure"
+      ],
+      "id": 4,
+      "query": "Look at my IRA-2024 portfolio positions and tell me the sector exposure breakdown.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_portfolio_positions",
+        "get_sector_exposure"
+      ],
+      "latency_ms": 458.19091796875
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "check_compliance",
+        "submit_trade_order"
+      ],
+      "id": 5,
+      "query": "I need to sell 100 shares of AAPL from TECH-FUND. Check compliance first, then submit the sell order at market price.",
+      "category": "multi-step",
+      "expected_tools": [
+        "check_compliance",
+        "submit_trade_order"
+      ],
+      "latency_ms": 1279.7658443450928
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_portfolio_performance",
+        "calculate_portfolio_risk"
+      ],
+      "id": 6,
+      "query": "Get the performance of my BALANCED-1 portfolio for the year, and also calculate its risk metrics.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_portfolio_performance",
+        "calculate_portfolio_risk"
+      ],
+      "latency_ms": 769.5081233978271
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_historical_prices",
+        "get_stock_quote"
+      ],
+      "id": 7,
+      "query": "Show me AMZN historical prices for the last 3 months, and also get the current quote.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_historical_prices",
+        "get_stock_quote"
+      ],
+      "latency_ms": 780.9469699859619
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "check_compliance",
+        "get_account_summary"
+      ],
+      "id": 8,
+      "query": "Before buying 500 shares of GME in MEME-PORT, check compliance and also check the account summary to see if I have enough cash.",
+      "category": "multi-step",
+      "expected_tools": [
+        "check_compliance",
+        "get_account_summary"
+      ],
+      "latency_ms": 930.5689334869385
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_regulatory_status",
+        "run_stress_test"
+      ],
+      "id": 9,
+      "query": "Get the regulatory status of INST-FUND-7 and also run an inflation spike stress test.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_regulatory_status",
+        "run_stress_test"
+      ],
+      "latency_ms": 832.9122066497803
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "analyze_stock",
+        "analyze_stock"
+      ],
+      "id": 10,
+      "query": "Analyze both AAPL and MSFT stocks for me.",
+      "category": "parallel",
+      "expected_tools": [
+        "analyze_stock"
+      ],
+      "latency_ms": 571.2170600891113
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 3,
+      "tools_called": [
+        "get_stock_quote",
+        "get_stock_quote",
+        "get_stock_quote"
+      ],
+      "id": 11,
+      "query": "Compare the current stock prices of GOOGL, AMZN, and META.",
+      "category": "parallel",
+      "expected_tools": [
+        "get_stock_quote"
+      ],
+      "latency_ms": 868.4191703796387
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "calculate_portfolio_risk",
+        "calculate_portfolio_risk"
+      ],
+      "id": 12,
+      "query": "Get risk metrics for both my AGGRESSIVE-1 and CONSERVATIVE-2 portfolios.",
+      "category": "parallel",
+      "expected_tools": [
+        "calculate_portfolio_risk"
+      ],
+      "latency_ms": 734.2140674591064
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 3,
+      "tools_called": [
+        "get_sector_exposure",
+        "get_sector_exposure",
+        "get_sector_exposure"
+      ],
+      "id": 13,
+      "query": "Check the sector exposure of my three portfolios: GROWTH-1, BALANCED-1, and INCOME-1.",
+      "category": "parallel",
+      "expected_tools": [
+        "get_sector_exposure"
+      ],
+      "latency_ms": 1031.317949295044
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "run_stress_test",
+        "run_stress_test"
+      ],
+      "id": 14,
+      "query": "Run a recession stress test on GROWTH-1 and a rate hike stress test on CONSERVATIVE-2.",
+      "category": "parallel",
+      "expected_tools": [
+        "run_stress_test"
+      ],
+      "latency_ms": 922.2209453582764
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 5,
+      "tools_called": [
+        "get_stock_quote",
+        "get_stock_quote",
+        "get_stock_quote",
+        "get_stock_quote",
+        "get_stock_quote"
+      ],
+      "id": 15,
+      "query": "Get quotes for the FAANG stocks: META, AAPL, AMZN, NFLX, and GOOGL.",
+      "category": "parallel",
+      "expected_tools": [
+        "get_stock_quote"
+      ],
+      "latency_ms": 1416.2712097167969
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "screen_stocks"
+      ],
+      "id": 16,
+      "query": "Find me undervalued tech stocks with a PE under 20.",
+      "category": "complex-params",
+      "expected_tools": [
+        "screen_stocks"
+      ],
+      "latency_ms": 445.526123046875
+    },
+    {
+      "pass": false,
+      "reason": "wrong_param: period=1y (expected ytd)",
+      "tool_calls": 1,
+      "tools_called": [
+        "get_portfolio_performance"
+      ],
+      "id": 17,
+      "query": "Show me how my retirement fund RET-2024 has done this year.",
+      "category": "complex-params",
+      "expected_tools": [
+        "get_portfolio_performance"
+      ],
+      "latency_ms": 471.3749885559082
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "submit_trade_order"
+      ],
+      "id": 18,
+      "query": "I want to place a limit order to buy 75 shares of AMD at $150 in my TECH-FUND.",
+      "category": "complex-params",
+      "expected_tools": [
+        "submit_trade_order"
+      ],
+      "latency_ms": 795.4912185668945
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "get_transaction_history"
+      ],
+      "id": 19,
+      "query": "What dividends have I received in INCOME-1 this year?",
+      "category": "complex-params",
+      "expected_tools": [
+        "get_transaction_history"
+      ],
+      "latency_ms": 458.4012031555176
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "screen_stocks"
+      ],
+      "id": 20,
+      "query": "Screen for high-yield energy stocks paying at least 4% dividends.",
+      "category": "complex-params",
+      "expected_tools": [
+        "screen_stocks"
+      ],
+      "latency_ms": 425.5862236022949
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "get_sector_exposure"
+      ],
+      "id": 21,
+      "query": "Am I diversified enough in GROWTH-1?",
+      "category": "implicit",
+      "expected_tools": [
+        "get_sector_exposure"
+      ],
+      "latency_ms": 869.5878982543945
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "calculate_portfolio_risk"
+      ],
+      "id": 22,
+      "query": "How risky is my AGGRESSIVE-1 portfolio right now?",
+      "category": "implicit",
+      "expected_tools": [
+        "calculate_portfolio_risk"
+      ],
+      "latency_ms": 387.04991340637207
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "get_account_summary"
+      ],
+      "id": 23,
+      "query": "What's my cash situation in MAIN-ACCOUNT?",
+      "category": "implicit",
+      "expected_tools": [
+        "get_account_summary"
+      ],
+      "latency_ms": 347.99885749816895
+    },
+    {
+      "pass": false,
+      "reason": "too_few_calls (0 < 1)",
+      "tool_calls": 0,
+      "tools_called": [],
+      "id": 24,
+      "query": "How much money am I making on BALANCED-1?",
+      "category": "implicit",
+      "expected_tools": [
+        "get_portfolio_performance"
+      ],
+      "latency_ms": 1260.6821060180664
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "run_stress_test"
+      ],
+      "id": 25,
+      "query": "What would happen to CONSERVATIVE-2 if the market tanks?",
+      "category": "implicit",
+      "expected_tools": [
+        "run_stress_test"
+      ],
+      "latency_ms": 497.56312370300293
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_market_summary",
+        "screen_stocks"
+      ],
+      "id": 26,
+      "query": "Get the market overview and then find cheap healthcare stocks.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_market_summary",
+        "screen_stocks"
+      ],
+      "latency_ms": 868.3819770812988
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_portfolio_performance",
+        "get_portfolio_positions"
+      ],
+      "id": 27,
+      "query": "Check my GROWTH-1 performance this quarter and also get all my positions.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_portfolio_performance",
+        "get_portfolio_positions"
+      ],
+      "latency_ms": 784.1620445251465
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 4,
+      "tools_called": [
+        "get_portfolio_positions",
+        "get_portfolio_performance",
+        "calculate_portfolio_risk",
+        "get_sector_exposure"
+      ],
+      "id": 28,
+      "query": "I need a full review: get positions, performance, risk, and sector exposure for BALANCED-1.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_portfolio_positions",
+        "get_portfolio_performance",
+        "calculate_portfolio_risk",
+        "get_sector_exposure"
+      ],
+      "latency_ms": 1405.1258563995361
+    },
+    {
+      "pass": false,
+      "reason": "too_few_calls (1 < 2)",
+      "tool_calls": 1,
+      "tools_called": [
+        "check_compliance"
+      ],
+      "id": 29,
+      "query": "Sell 50 shares of MSFT from IRA-2024 with a stop order at $400. First verify compliance.",
+      "category": "multi-step",
+      "expected_tools": [
+        "check_compliance",
+        "submit_trade_order"
+      ],
+      "latency_ms": 724.539041519165
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_transaction_history",
+        "get_portfolio_positions"
+      ],
+      "id": 30,
+      "query": "Get me transaction history and current positions for INCOME-1.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_transaction_history",
+        "get_portfolio_positions"
+      ],
+      "latency_ms": 741.9500350952148
+    },
+    {
+      "pass": true,
+      "reason": "correctly_no_tool",
+      "tool_calls": 0,
+      "tools_called": [],
+      "id": 31,
+      "query": "What is a Sharpe ratio and why does it matter?",
+      "category": "no-tool",
+      "expected_tools": [],
+      "latency_ms": 1737.3759746551514
+    },
+    {
+      "pass": true,
+      "reason": "correctly_no_tool",
+      "tool_calls": 0,
+      "tools_called": [],
+      "id": 32,
+      "query": "Explain the difference between a market order and a limit order.",
+      "category": "no-tool",
+      "expected_tools": [],
+      "latency_ms": 1711.7831707000732
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 6,
+      "tools_called": [
+        "get_portfolio_positions",
+        "get_portfolio_performance",
+        "calculate_portfolio_risk",
+        "get_sector_exposure",
+        "run_stress_test",
+        "run_stress_test"
+      ],
+      "id": 33,
+      "query": "Do a complete health check on PENSION-2024: positions, performance YTD, risk analysis, sector concentration, and run both a recession and rate hike stress test.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_portfolio_positions",
+        "get_portfolio_performance",
+        "calculate_portfolio_risk",
+        "get_sector_exposure",
+        "run_stress_test"
+      ],
+      "latency_ms": 2459.784984588623
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "screen_stocks",
+        "analyze_stock"
+      ],
+      "id": 34,
+      "query": "Screen for large-cap tech stocks, then analyze the top one (assume AAPL) in detail.",
+      "category": "multi-step",
+      "expected_tools": [
+        "screen_stocks",
+        "analyze_stock"
+      ],
+      "latency_ms": 684.6868991851807
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "check_compliance",
+        "check_compliance"
+      ],
+      "id": 35,
+      "query": "Check if GROWTH-1 can buy 1000 shares of NVDA, and also check CONSERVATIVE-2 for the same trade.",
+      "category": "parallel",
+      "expected_tools": [
+        "check_compliance"
+      ],
+      "latency_ms": 1254.7199726104736
+    }
+  ],
+  "lora_results": [
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "check_compliance",
+        "submit_trade_order"
+      ],
+      "id": 1,
+      "query": "I want to buy 200 shares of NVDA in my GROWTH-1 portfolio. First check if it passes compliance, and if so, submit the market order.",
+      "category": "multi-step",
+      "expected_tools": [
+        "check_compliance",
+        "submit_trade_order"
+      ],
+      "latency_ms": 1515.5830383300781
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_stock_quote",
+        "analyze_stock"
+      ],
+      "id": 2,
+      "query": "Get me the current price of TSLA, then analyze the stock to decide if it's a good buy.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_stock_quote",
+        "analyze_stock"
+      ],
+      "latency_ms": 670.6182956695557
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "calculate_portfolio_risk",
+        "run_stress_test"
+      ],
+      "id": 3,
+      "query": "Check the risk of my AGGRESSIVE-1 portfolio and run a market crash stress test on it.",
+      "category": "multi-step",
+      "expected_tools": [
+        "calculate_portfolio_risk",
+        "run_stress_test"
+      ],
+      "latency_ms": 905.0617218017578
+    },
+    {
+      "pass": false,
+      "reason": "too_few_calls (1 < 2)",
+      "tool_calls": 1,
+      "tools_called": [
+        "get_sector_exposure"
+      ],
+      "id": 4,
+      "query": "Look at my IRA-2024 portfolio positions and tell me the sector exposure breakdown.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_portfolio_positions",
+        "get_sector_exposure"
+      ],
+      "latency_ms": 437.41512298583984
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "check_compliance",
+        "submit_trade_order"
+      ],
+      "id": 5,
+      "query": "I need to sell 100 shares of AAPL from TECH-FUND. Check compliance first, then submit the sell order at market price.",
+      "category": "multi-step",
+      "expected_tools": [
+        "check_compliance",
+        "submit_trade_order"
+      ],
+      "latency_ms": 1415.0311946868896
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_portfolio_performance",
+        "calculate_portfolio_risk"
+      ],
+      "id": 6,
+      "query": "Get the performance of my BALANCED-1 portfolio for the year, and also calculate its risk metrics.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_portfolio_performance",
+        "calculate_portfolio_risk"
+      ],
+      "latency_ms": 853.2521724700928
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_historical_prices",
+        "get_stock_quote"
+      ],
+      "id": 7,
+      "query": "Show me AMZN historical prices for the last 3 months, and also get the current quote.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_historical_prices",
+        "get_stock_quote"
+      ],
+      "latency_ms": 867.3989772796631
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "check_compliance",
+        "get_account_summary"
+      ],
+      "id": 8,
+      "query": "Before buying 500 shares of GME in MEME-PORT, check compliance and also check the account summary to see if I have enough cash.",
+      "category": "multi-step",
+      "expected_tools": [
+        "check_compliance",
+        "get_account_summary"
+      ],
+      "latency_ms": 1046.748161315918
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_regulatory_status",
+        "run_stress_test"
+      ],
+      "id": 9,
+      "query": "Get the regulatory status of INST-FUND-7 and also run an inflation spike stress test.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_regulatory_status",
+        "run_stress_test"
+      ],
+      "latency_ms": 924.6399402618408
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "analyze_stock",
+        "analyze_stock"
+      ],
+      "id": 10,
+      "query": "Analyze both AAPL and MSFT stocks for me.",
+      "category": "parallel",
+      "expected_tools": [
+        "analyze_stock"
+      ],
+      "latency_ms": 629.504919052124
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 3,
+      "tools_called": [
+        "get_stock_quote",
+        "get_stock_quote",
+        "get_stock_quote"
+      ],
+      "id": 11,
+      "query": "Compare the current stock prices of GOOGL, AMZN, and META.",
+      "category": "parallel",
+      "expected_tools": [
+        "get_stock_quote"
+      ],
+      "latency_ms": 1061.4120960235596
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "calculate_portfolio_risk",
+        "calculate_portfolio_risk"
+      ],
+      "id": 12,
+      "query": "Get risk metrics for both my AGGRESSIVE-1 and CONSERVATIVE-2 portfolios.",
+      "category": "parallel",
+      "expected_tools": [
+        "calculate_portfolio_risk"
+      ],
+      "latency_ms": 808.9108467102051
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 3,
+      "tools_called": [
+        "get_sector_exposure",
+        "get_sector_exposure",
+        "get_sector_exposure"
+      ],
+      "id": 13,
+      "query": "Check the sector exposure of my three portfolios: GROWTH-1, BALANCED-1, and INCOME-1.",
+      "category": "parallel",
+      "expected_tools": [
+        "get_sector_exposure"
+      ],
+      "latency_ms": 1184.4100952148438
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "run_stress_test",
+        "run_stress_test"
+      ],
+      "id": 14,
+      "query": "Run a recession stress test on GROWTH-1 and a rate hike stress test on CONSERVATIVE-2.",
+      "category": "parallel",
+      "expected_tools": [
+        "run_stress_test"
+      ],
+      "latency_ms": 1127.269983291626
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 5,
+      "tools_called": [
+        "get_stock_quote",
+        "get_stock_quote",
+        "get_stock_quote",
+        "get_stock_quote",
+        "get_stock_quote"
+      ],
+      "id": 15,
+      "query": "Get quotes for the FAANG stocks: META, AAPL, AMZN, NFLX, and GOOGL.",
+      "category": "parallel",
+      "expected_tools": [
+        "get_stock_quote"
+      ],
+      "latency_ms": 1637.1047496795654
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "screen_stocks"
+      ],
+      "id": 16,
+      "query": "Find me undervalued tech stocks with a PE under 20.",
+      "category": "complex-params",
+      "expected_tools": [
+        "screen_stocks"
+      ],
+      "latency_ms": 539.8602485656738
+    },
+    {
+      "pass": false,
+      "reason": "wrong_param: period=1y (expected ytd)",
+      "tool_calls": 1,
+      "tools_called": [
+        "get_portfolio_performance"
+      ],
+      "id": 17,
+      "query": "Show me how my retirement fund RET-2024 has done this year.",
+      "category": "complex-params",
+      "expected_tools": [
+        "get_portfolio_performance"
+      ],
+      "latency_ms": 518.0191993713379
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "submit_trade_order"
+      ],
+      "id": 18,
+      "query": "I want to place a limit order to buy 75 shares of AMD at $150 in my TECH-FUND.",
+      "category": "complex-params",
+      "expected_tools": [
+        "submit_trade_order"
+      ],
+      "latency_ms": 877.9251575469971
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "get_transaction_history"
+      ],
+      "id": 19,
+      "query": "What dividends have I received in INCOME-1 this year?",
+      "category": "complex-params",
+      "expected_tools": [
+        "get_transaction_history"
+      ],
+      "latency_ms": 623.2161521911621
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "screen_stocks"
+      ],
+      "id": 20,
+      "query": "Screen for high-yield energy stocks paying at least 4% dividends.",
+      "category": "complex-params",
+      "expected_tools": [
+        "screen_stocks"
+      ],
+      "latency_ms": 491.3489818572998
+    },
+    {
+      "pass": false,
+      "reason": "too_few_calls (0 < 1)",
+      "tool_calls": 0,
+      "tools_called": [],
+      "id": 21,
+      "query": "Am I diversified enough in GROWTH-1?",
+      "category": "implicit",
+      "expected_tools": [
+        "get_sector_exposure"
+      ],
+      "latency_ms": 203.30286026000977
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "calculate_portfolio_risk"
+      ],
+      "id": 22,
+      "query": "How risky is my AGGRESSIVE-1 portfolio right now?",
+      "category": "implicit",
+      "expected_tools": [
+        "calculate_portfolio_risk"
+      ],
+      "latency_ms": 421.3719367980957
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "get_account_summary"
+      ],
+      "id": 23,
+      "query": "What's my cash situation in MAIN-ACCOUNT?",
+      "category": "implicit",
+      "expected_tools": [
+        "get_account_summary"
+      ],
+      "latency_ms": 420.01986503601074
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "get_portfolio_performance"
+      ],
+      "id": 24,
+      "query": "How much money am I making on BALANCED-1?",
+      "category": "implicit",
+      "expected_tools": [
+        "get_portfolio_performance"
+      ],
+      "latency_ms": 499.97901916503906
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 1,
+      "tools_called": [
+        "run_stress_test"
+      ],
+      "id": 25,
+      "query": "What would happen to CONSERVATIVE-2 if the market tanks?",
+      "category": "implicit",
+      "expected_tools": [
+        "run_stress_test"
+      ],
+      "latency_ms": 545.0770854949951
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_market_summary",
+        "screen_stocks"
+      ],
+      "id": 26,
+      "query": "Get the market overview and then find cheap healthcare stocks.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_market_summary",
+        "screen_stocks"
+      ],
+      "latency_ms": 998.1937408447266
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_portfolio_performance",
+        "get_portfolio_positions"
+      ],
+      "id": 27,
+      "query": "Check my GROWTH-1 performance this quarter and also get all my positions.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_portfolio_performance",
+        "get_portfolio_positions"
+      ],
+      "latency_ms": 861.6189956665039
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 4,
+      "tools_called": [
+        "get_portfolio_positions",
+        "get_portfolio_performance",
+        "calculate_portfolio_risk",
+        "get_sector_exposure"
+      ],
+      "id": 28,
+      "query": "I need a full review: get positions, performance, risk, and sector exposure for BALANCED-1.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_portfolio_positions",
+        "get_portfolio_performance",
+        "calculate_portfolio_risk",
+        "get_sector_exposure"
+      ],
+      "latency_ms": 1550.0779151916504
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "check_compliance",
+        "submit_trade_order"
+      ],
+      "id": 29,
+      "query": "Sell 50 shares of MSFT from IRA-2024 with a stop order at $400. First verify compliance.",
+      "category": "multi-step",
+      "expected_tools": [
+        "check_compliance",
+        "submit_trade_order"
+      ],
+      "latency_ms": 1565.6356811523438
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "get_portfolio_positions",
+        "get_transaction_history"
+      ],
+      "id": 30,
+      "query": "Get me transaction history and current positions for INCOME-1.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_transaction_history",
+        "get_portfolio_positions"
+      ],
+      "latency_ms": 1371.5031147003174
+    },
+    {
+      "pass": true,
+      "reason": "correctly_no_tool",
+      "tool_calls": 0,
+      "tools_called": [],
+      "id": 31,
+      "query": "What is a Sharpe ratio and why does it matter?",
+      "category": "no-tool",
+      "expected_tools": [],
+      "latency_ms": 642.5580978393555
+    },
+    {
+      "pass": true,
+      "reason": "correctly_no_tool",
+      "tool_calls": 0,
+      "tools_called": [],
+      "id": 32,
+      "query": "Explain the difference between a market order and a limit order.",
+      "category": "no-tool",
+      "expected_tools": [],
+      "latency_ms": 573.1279850006104
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 6,
+      "tools_called": [
+        "get_portfolio_positions",
+        "get_portfolio_performance",
+        "calculate_portfolio_risk",
+        "get_sector_exposure",
+        "run_stress_test",
+        "run_stress_test"
+      ],
+      "id": 33,
+      "query": "Do a complete health check on PENSION-2024: positions, performance YTD, risk analysis, sector concentration, and run both a recession and rate hike stress test.",
+      "category": "multi-step",
+      "expected_tools": [
+        "get_portfolio_positions",
+        "get_portfolio_performance",
+        "calculate_portfolio_risk",
+        "get_sector_exposure",
+        "run_stress_test"
+      ],
+      "latency_ms": 2719.788074493408
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "screen_stocks",
+        "analyze_stock"
+      ],
+      "id": 34,
+      "query": "Screen for large-cap tech stocks, then analyze the top one (assume AAPL) in detail.",
+      "category": "multi-step",
+      "expected_tools": [
+        "screen_stocks",
+        "analyze_stock"
+      ],
+      "latency_ms": 1017.3461437225342
+    },
+    {
+      "pass": true,
+      "reason": "all_correct",
+      "tool_calls": 2,
+      "tools_called": [
+        "check_compliance",
+        "check_compliance"
+      ],
+      "id": 35,
+      "query": "Check if GROWTH-1 can buy 1000 shares of NVDA, and also check CONSERVATIVE-2 for the same trade.",
+      "category": "parallel",
+      "expected_tools": [
+        "check_compliance"
+      ],
+      "latency_ms": 1385.7839107513428
+    }
+  ],
+  "summary": {
+    "base_pass": 31,
+    "lora_pass": 32,
+    "total": 35
+  }
+}
